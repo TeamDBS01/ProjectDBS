@@ -10,16 +10,11 @@ import lombok.NoArgsConstructor;
 public class ReviewDTO {
 
 	private int reviewId;
-	private int userId;
-	private String bookId;
-	private int rating;
+	private float rating;
 	private String comment;
 	
-//	@ManyToMany
-//	private List<BookDTO> book;
-//	@ManyToOne
-//	@JoinColumn(name = "userid")
-//	private UserDTO user;
+	private BookDTO book;
+	private UserDTO user;
 
 	
 }
