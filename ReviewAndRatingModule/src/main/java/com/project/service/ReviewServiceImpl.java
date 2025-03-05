@@ -1,6 +1,6 @@
 package com.project.service;
 
-import com.project.entities.Review;
+import com.project.models.Review;
 
 public class ReviewServiceImpl implements ReviewService {
 

@@ -1,4 +1,4 @@
-package com.project.entities;
+package com.project.models;
 
 import java.util.List;
 
@@ -33,9 +33,9 @@ public class Review {
 	private String comment;
 	
 //	@ManyToMany
-//	private List<Book> book;
+//	private List<BookDTO> book;
 //	@ManyToOne
 //	@JoinColumn(name = "userid")
-//	private User user;
+//	private UserDTO user;
 
 }
