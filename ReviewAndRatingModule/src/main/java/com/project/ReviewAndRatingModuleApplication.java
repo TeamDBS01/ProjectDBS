@@ -7,7 +7,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 
 @SpringBootApplication
 //@EnableFeignClients
-@EnableDiscoveryClient(autoRegister = true)
+//@EnableDiscoveryClient(autoRegister = true)
 public class ReviewAndRatingModuleApplication {
 
 	public static void main(String[] args) {
