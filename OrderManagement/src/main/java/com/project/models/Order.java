@@ -4,28 +4,28 @@ import java.util.Date;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Data;
+//import lombok.Getter;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
+//import lombok.Setter;
 
 @Entity
-@Getter
-@Setter
+@Data
+//@Getter
+//@Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name="order")
+@Table(name="order_table")
 public class Order {
 	@Id
 	@Column(name="order_id")
-	private Long orderId;
+	private long orderId;
 	@Column(name="order_date")
 	private Date orderDate;
 	@Column(name="total_amount")
 	private Double totalAmount;
 	@Column(name="status")
 	private String status;
-	
-//	@ManyToOne(fetch=FetchType.EAGER)
-//	private User user;
-	
+	@Column(name="user_id")
+	private long userId;
 }
