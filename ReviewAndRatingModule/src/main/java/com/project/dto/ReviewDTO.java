@@ -9,12 +9,11 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ReviewDTO {
 
-	private int reviewId;
+	private long reviewId;	
 	private float rating;
 	private String comment;
 	
-	private BookDTO book;
-	private UserDTO user;
+	private long userId;
+	private String bookId;
 
-	
 }

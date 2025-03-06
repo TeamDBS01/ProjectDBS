@@ -13,34 +13,52 @@ import com.project.repositories.ReviewRepository;
 @Service
 public class ReviewServiceImpl implements ReviewService {
 
+	@Autowired
+	private ReviewRepository reviewRepository;
+	
 //	@Autowired
-//	private ReviewRepository reviewRepository;
-//
-//	@Override
-//	public boolean addReview(UserDTO userDto, float rating, String comment, BookDTO bookDto) {
-//		boolean added = false;
-//		Review review = new Review();
-//		review.setRating(rating);
-//		review.setComment(comment);
-//		review.setBook(bookDto);
-//		try {
-//			reviewRepository.save(review);
-//			added = true;
-//		} catch (Exception e) {
-//		}
-//		return added;
-//	}
+//	private BookService bookService;
+
+	@Override
+	public boolean addReview(long userId, String bookId, float rating, String comment) {
+		boolean added = false;
+		Review review = new Review();
+		review.setRating(rating);
+		review.setComment(comment);
+
+//		BookDTO bookDTO = bookService.getBook();
+//		review.setBook(bookDTO.getBookID());
+		try {
+			reviewRepository.save(review);
+			added = true;
+		} catch (Exception e) {
+//			e.printStackTrace();
+		}
+		return added;
+	}
 //
 //	@Override
 //	public ReviewDTO updateReview(ReviewDTO reviewDTO) {
-//		Review review = new Review(reviewDTO.getRating(), reviewDTO.getComment(), reviewDTO.getUser(),
-//				reviewDTO.getBook());
-//		review = reviewRepository.save(review);
-//		reviewDTO = new ReviewDTO(review.getReviewId(), review.getRating(), review.getComment(), review.getBook(),
-//				review.getUser());
-//		return reviewDTO;
 //	}
 //
+
+
+	@Override
+	public ReviewDTO updateReview(ReviewDTO reviewDTO) {
+		// TODO Auto-generated method stub
+		Review review = new Review(reviewDTO.getRating(), reviewDTO.getComment(), reviewDTO.getUserId(),
+				reviewDTO.getBookId());
+		review = reviewRepository.save(review);
+		reviewDTO = new ReviewDTO(review.getReviewId(), review.getRating(), review.getComment(), review.getUserId(),
+				review.getBookId());
+		return reviewDTO;
+	}
+
+	@Override
+	public boolean deleteReview(long userId, int reviewId) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 //	@Override
 //	public boolean deleteReview(UserDTO userDto, int reviewId) {
 //		boolean deleted = false;
