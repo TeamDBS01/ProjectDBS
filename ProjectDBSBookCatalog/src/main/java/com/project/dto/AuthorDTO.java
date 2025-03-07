@@ -1,5 +1,8 @@
 package com.project.dto;
 
+import com.project.models.Author;
+
+import jakarta.persistence.Entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -7,13 +10,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class BookDTO {
-	private String BookID;
-	private String title;
-	private double price;
-	private int StockQuantity;
-	
+public class AuthorDTO {
 	private int authorID;
-	
-	private int categoryID;
+	private String authorName;
 }

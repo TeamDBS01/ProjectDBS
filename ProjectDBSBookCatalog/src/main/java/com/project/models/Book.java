@@ -3,6 +3,8 @@ package com.project.models;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -24,7 +26,8 @@ public class Book {
 	@Column(name="stock_quantity")
 	private int StockQuantity;
 	
-	//private Author author;
-	
-	//private Category category;
+	@Column(name="author_id")
+	private int authorID;
+	@Column(name="category_id")
+	private int categoryID;
 }
