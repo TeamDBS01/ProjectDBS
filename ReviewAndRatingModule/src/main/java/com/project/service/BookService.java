@@ -1,13 +1,14 @@
 package com.project.service;
 
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import com.project.dto.BookDTO;
+import org.springframework.web.bind.annotation.RequestMapping;
 
-//@FeignClient("PROJECTDBSBOOKCATALOG")
+//@FeignClient("BOOK-MODULE")
+@RequestMapping("dbs/book")
 public interface BookService {
 
-//	@GetMapping("/bok")
-//	public BookDTO getBook();
+	@GetMapping("/book")
+	BookDTO getBook();
 }

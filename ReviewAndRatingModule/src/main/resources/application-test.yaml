@@ -1,13 +1,20 @@
-spring.application.name=Review-Module
-server.port=8089
-
-spring.datasource.driver=com.mysql.cj.jdbc.Driver
-spring.datasource.url=jdbc:mysql://localhost:3306/ReviewDB
-spring.datasource.username=root
-spring.datasource.password=root
-spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
+spring:
+  datasource:
+    driver:
+      com.mysql.cj.jdbc.Driver
+    url:
+      jdbc:mysql://localhost:3306/ReviewDB
+    username:
+      root
+    password:
+      root
+  jpa:
+    database-platform:
+      org.hibernate.dialect.H2Dialect
+    hibernate.ddl-auto:
+      update
+    show-sql:
+      true
 #eureka.client.service-url
 
 #eureka.instance.hostname=${vcap.application.uris[0]:localhost}
@@ -18,4 +25,7 @@ spring.jpa.show-sql=true
 #eureka.client.registryFetchIntervalSeconds = 5
 #eureka.client.serviceUrl.defaultZone=http://localhost:8761/eureka/
 
-eureka.client.enabled=false
+eureka:
+  client:
+    enabled:
+      false

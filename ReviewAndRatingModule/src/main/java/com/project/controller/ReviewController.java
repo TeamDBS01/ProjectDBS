@@ -8,12 +8,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.project.dto.BookDTO;
 import com.project.dto.ReviewDTO;
 import com.project.exception.ReviewNotFoundException;
 import com.project.service.ReviewService;
@@ -30,10 +28,10 @@ public class ReviewController {
 	public ResponseEntity<?> get(@PathVariable long reviewId) {
 		ResponseEntity<?> response;
 		try {
-			ReviewDTO reviewDTO = reviewService.getReview(reviewId);
-			response = new ResponseEntity<ReviewDTO>(reviewDTO, HttpStatus.OK);
+			ReviewDTO reviewDTO = reviewService.getReviewById(reviewId);
+			response = new ResponseEntity<>(reviewDTO, HttpStatus.OK);
 		} catch (ReviewNotFoundException e) {
-			response = new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
+			response = new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
 		}
 		return response;
 	}
@@ -44,9 +42,9 @@ public class ReviewController {
 		ResponseEntity<?> response;
 		try {
 			List<ReviewDTO> reviewDTOList = reviewService.getAllReviews();
-			response = new ResponseEntity<List<ReviewDTO>>(reviewDTOList, HttpStatus.OK);
+			response = new ResponseEntity<>(reviewDTOList, HttpStatus.OK);
 		} catch (ReviewNotFoundException e) {
-			response = new ResponseEntity<String>(e.getMessage(), HttpStatus.NOT_FOUND);
+			response = new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
 		}
 		return response;
 	}
@@ -54,14 +52,18 @@ public class ReviewController {
 	@PostMapping("/add/{rating}/{comment}")
 	public ResponseEntity<Boolean> add(@PathVariable float rating, @PathVariable String comment) {
 //		ReviewDTO reviewDTO = new ReviewDTO(1, 4.5f, "Comment", 22l, "ISBN-0001");
-		reviewService.addReview(12, "BOOK_ISBN-AB" , rating, comment);
-		return new ResponseEntity<Boolean>(true, HttpStatus.OK);
+		reviewService.addReview(rating, comment, 12, "BOOK_ISBN-AB");
+		return new ResponseEntity<>(true, HttpStatus.OK);
 	}
 	@PostMapping("/update/{reviewId}/{rating}/{comment}")
 	public ResponseEntity<Boolean> add(@PathVariable long reviewId,@PathVariable float rating, @PathVariable String comment) {
-		ReviewDTO reviewDTO = new ReviewDTO(reviewId, rating, comment, 22l, "ISBN-0001");
-		reviewService.updateReview(12, reviewDTO);
-		return new ResponseEntity<Boolean>(true, HttpStatus.OK);
+		ReviewDTO reviewDTO = new ReviewDTO(reviewId, rating, comment, 22L, "ISBN-0001");
+        try {
+            reviewService.updateReview(12, reviewDTO);
+        } catch (Exception e) {
+//            TODO: Create a variable to store Response entity
+        }
+        return new ResponseEntity<>(true, HttpStatus.OK);
 	}
 //	@PostMapping("/add")
 //	public ResponseEntity<ReviewDTO> addReview(@RequestBody ReviewDTO reviewDTO) {

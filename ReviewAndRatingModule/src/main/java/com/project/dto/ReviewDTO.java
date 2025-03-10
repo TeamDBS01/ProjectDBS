@@ -12,8 +12,7 @@ public class ReviewDTO {
 	private long reviewId;	
 	private float rating;
 	private String comment;
-	
+
 	private long userId;
 	private String bookId;
-
 }

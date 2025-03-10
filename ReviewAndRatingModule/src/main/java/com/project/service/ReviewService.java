@@ -8,8 +8,8 @@ import com.project.exception.ReviewNotFoundException;
 public interface ReviewService {
 	
 	List<ReviewDTO> getAllReviews() throws ReviewNotFoundException;
-	ReviewDTO getReview(long reviewId) throws ReviewNotFoundException;
-	boolean addReview(long userId, String bookId, float rating, String comment);
-	ReviewDTO updateReview(long userId, ReviewDTO reviewDTO);
-	boolean deleteReview(long userId, long reviewId) throws ReviewNotFoundException;
+	ReviewDTO getReviewById(long reviewId) throws ReviewNotFoundException;
+	boolean addReview(float rating, String comment, long userId, String bookId);
+	ReviewDTO updateReview(long userId, ReviewDTO reviewDTO) throws Exception;
+	boolean deleteReview(long userId, long reviewId) throws ReviewNotFoundException, Exception;
 }

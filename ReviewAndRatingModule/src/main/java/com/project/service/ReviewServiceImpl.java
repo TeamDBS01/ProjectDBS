@@ -1,43 +1,35 @@
 package com.project.service;
 
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import com.project.dto.ReviewDTO;
 import com.project.dto.UserDTO;
 import com.project.enums.Role;
 import com.project.exception.ReviewNotFoundException;
-import com.project.mapper.ReviewMapper;
 import com.project.models.Review;
 import com.project.repositories.ReviewRepository;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Optional;
 
 @Service
 public class ReviewServiceImpl implements ReviewService {
 
 	@Autowired
 	private ReviewRepository reviewRepository;
-	
-//	@Autowired
-//	private BookService bookService;
 
 //	@Autowired
-//	private UserService userService;
+	private UserService userService;
 	
 	@Autowired
-	private ReviewMapper reviewMapper;
+	private ModelMapper mapper;
 
 	@Override
-	public boolean addReview(long userId, String bookId, float rating, String comment) {
+	public boolean addReview(float rating, String comment, long userId, String bookId) {
 		boolean added = false;
 		Review review = new Review(rating, comment, userId, bookId);
-		review.setUserId(userId);
-		review.setBookId(bookId);
-		review.setRating(rating);
-		review.setComment(comment);
 		try {
 			reviewRepository.save(review);
 			added = true;
@@ -47,39 +39,37 @@ public class ReviewServiceImpl implements ReviewService {
 		return added;
 	}
 
-
 	@Override
-	public ReviewDTO updateReview(long userId, ReviewDTO reviewDTO) {
-//		UserDTO userDto = userService.getUserById(userId);
-//		if (userDto.getRole() == Role.ADMIN || reviewDTO.getUserId() == userId) {
-			Review review = reviewMapper.mapReview(reviewDTO);
+	public ReviewDTO updateReview(long userId, ReviewDTO reviewDTO) throws Exception {
+		UserDTO userDto = userService.getUserById(userId).getBody();
+		if (userDto.getRole() == Role.ADMIN || reviewDTO.getUserId() == userId) {
+			Review review = mapper.map(reviewDTO, Review.class);
 			review = reviewRepository.save(review);
-			reviewDTO = reviewMapper.mapReview(review);
-//		} esle NOT AUTHORISED
+			reviewDTO = mapper.map(review, ReviewDTO.class);
+		} else {
+			throw new Exception("NOT AUTHORISED");
+		}
 		return reviewDTO;
 	}
 
 	@Override
-	public boolean deleteReview(long userId, long reviewId) throws ReviewNotFoundException {
+	public boolean deleteReview(long userId, long reviewId) throws ReviewNotFoundException, Exception {
 		Optional<Review> optionalReview = reviewRepository.findById(reviewId);
 		if (optionalReview.isEmpty()) {
 			throw new ReviewNotFoundException("Review with Id: " + reviewId + " Not found!");
 		}
-		ReviewDTO reviewDTO = reviewMapper.mapReview(optionalReview.get());
-//		UserDTO userDto = userService.getUserById(userId);
+		ReviewDTO reviewDTO = mapper.map(optionalReview.get(), ReviewDTO.class);
+		UserDTO userDTO = userService.getUserById(userId).getBody();
 		boolean deleted = false;
-//		if (userDto.getRole() == Role.ADMIN || reviewDTO.getUserId() == userId) {
-			try {
-				reviewRepository.deleteById(reviewId);
-				deleted = true;
-			} catch (Exception e) {
-			}
-//		} else {
-//			throw new Exception("NOT AUTHORISED");
-//		}
+		if (userDTO.getRole() == Role.ADMIN || reviewDTO.getUserId() == userId) {
+//			TODO: Chk if review Exists!
+            reviewRepository.deleteById(reviewId);
+            deleted = true;
+        } else {
+			throw new Exception("NOT AUTHORISED");
+		}
 		return deleted;
 	}
-
 
 	@Override
 	public List<ReviewDTO> getAllReviews() throws ReviewNotFoundException {
@@ -87,21 +77,17 @@ public class ReviewServiceImpl implements ReviewService {
 		if (reviewList.isEmpty()) {
 			throw new ReviewNotFoundException("No Reviews Found!");
 		}
-		List<ReviewDTO> list = reviewMapper.mapReviewList(reviewList);
-		List<Review> ls = reviewMapper.mapReviewDtoList(list);
-		list = reviewMapper.mapReviewList(ls);
-		return list;
+		return reviewList.stream()
+				.map(review -> mapper.map(review, ReviewDTO.class))
+				.toList(); // use collect?
 	}
 
-
 	@Override
-	public ReviewDTO getReview(long reviewId) throws ReviewNotFoundException {
+	public ReviewDTO getReviewById(long reviewId) throws ReviewNotFoundException {
 		Optional<Review> review = reviewRepository.findById(reviewId);
 		if (review.isEmpty()) {
 			throw new ReviewNotFoundException("Review with Id: " + reviewId + " Not Found");
 		}
-		ReviewDTO reviewDTO = reviewMapper.mapReview(review.get());
-		return reviewDTO;
+		return mapper.map(review.get(), ReviewDTO.class);
 	}
-
 }
