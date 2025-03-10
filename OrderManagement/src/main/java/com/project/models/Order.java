@@ -1,6 +1,7 @@
 package com.project.models;
 
 import java.util.Date;
+import java.util.List;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -19,7 +20,8 @@ import lombok.NoArgsConstructor;
 public class Order {
 	@Id
 	@Column(name="order_id")
-	private long orderId;
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long orderId;
 	@Column(name="order_date")
 	private Date orderDate;
 	@Column(name="total_amount")
@@ -27,5 +29,9 @@ public class Order {
 	@Column(name="status")
 	private String status;
 	@Column(name="user_id")
-	private long userId;
+	private Long userId;
+	
+	@ElementCollection
+	private List<String> bookIds;
+	
 }

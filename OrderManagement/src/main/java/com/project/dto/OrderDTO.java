@@ -1,6 +1,7 @@
 package com.project.dto;
 
 import java.util.Date;
+import java.util.List;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,4 +16,6 @@ public class OrderDTO {
 	private Double totalAmount;
 	private String status;
 //	private UserDTO user;
+	private Long userId;
+	private List<String> bookIds;
 }
