@@ -1,17 +1,18 @@
 package com.project.service;
 
 import com.project.dto.UserDTO;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 
-@FeignClient("USER-MODULE")
-@RequestMapping("dbs")
-public interface UserService {
+//@FeignClient(name = "USER-SERVICE", url = "http://localhost:8086/")
+@Component
+public class UserService {
+//public interface UserService {
 
-	@PostMapping("/admin/get-user/{userId}")
-	ResponseEntity<UserDTO> getUserById(@PathVariable long userId);
-	
+//	@GetMapping("dbs/admin/get-user/{userId}")
+//	ResponseEntity<UserDTO> getUserById(@PathVariable Long userId);
+	ResponseEntity<UserDTO> getUserById(@PathVariable Long userId) {
+		return null;
+	}
 }

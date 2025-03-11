@@ -1,39 +1,28 @@
 server:
-  port:
-    8089
-
+    port: 8089
 
 spring:
-  application:
-  name:
-    Review-Module
-  datasource:
-    driver:
-      com.mysql.cj.jdbc.Driver
-    url:
-      jdbc:mysql://localhost:3306/ReviewDB
-    username:
-      root
-    password:
-      root
-  jpa:
-    database-platform:
-      org.hibernate.dialect.MySQL8Dialect
-    hibernate.ddl-auto:
-      update
-    show-sql:
-      true
+    application:
+        name: review-module
+    datasource:
+        driver: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/ReviewDB?createDatabaseIfNotExist=true
+        username: root
+        password: root
+    jpa:
+        database-platform: org.hibernate.dialect.MySQL8Dialect
+        hibernate.ddl-auto: update
+        show-sql: true
 #eureka.client.service-url
 
-#eureka.instance.hostname=${vcap.application.uris[0]:localhost}
-##eureka.instance.nonSecurePort=90
-#eureka.instance.metadataMap.instanceId=${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
-#eureka.instance.leaseRenewalIntervalInSeconds = 5
-#eureka.client.region = default
-#eureka.client.registryFetchIntervalSeconds = 5
-#eureka.client.serviceUrl.defaultZone=http://localhost:8761/eureka/
-
+#eureka.instance.nonSecurePort=90
 eureka:
-  client:
-    enabled:
-     false
+    instance:
+        hostname: ${vcap.application.uris[0]:localhost}
+        metadataMap:
+            instanceId: ${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
+        leaseRenewalIntervalInSeconds: 5
+    client:
+        region: default
+        serviceUrl: defaultZone:http://localhost:8761/eureka/
+        enabled: false

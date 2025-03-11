@@ -16,8 +16,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
-@ContextConfiguration(classes = {ReviewAndRatingModuleApplication.class})
 @ActiveProfiles("test")
+@ContextConfiguration(classes = {ReviewAndRatingModuleApplication.class})
 class ReviewRepositoryTest {
 
 	@Autowired
@@ -104,7 +104,29 @@ class ReviewRepositoryTest {
 	@Test
 	@DisplayName("Delete-Negative")
 	void test_delete_negative() {
-		assertThrows(InvalidDataAccessApiUsageException.class, () -> reviewRepository.delete(null));
+		assertThrows(InvalidDataAccessApiUsageException.class,
+				() -> reviewRepository.delete(null),
+				"Erorr not thrown in delete");
 	}
 
+
+	@Test
+	@DisplayName("FindByUserId-Positive")
+	void test_findByUserId_positive() {
+		Review review1 = new Review(1f, "Bad Content", 10, "ISBN-0002");
+		Review review2 = new Review(5f, "Best Content", 10, "ISBN-0200");
+		reviewRepository.save(review1);
+		reviewRepository.save(review2);
+
+		List<Review> actual = reviewRepository.findByUserId(review1.getUserId());
+		List<Review> expected = List.of(review1, review2);
+		assertEquals(expected, actual);
+	}
+
+	@Test
+	@DisplayName("FindByUserId-Negative")
+	void test_findByUserId_negative() {
+		List<Review> reviewList = reviewRepository.findByUserId(-1L);
+		assertTrue(reviewList.isEmpty());
+	}
 }

@@ -1,7 +1,6 @@
 package com.project.dto;
 
 import com.project.enums.Role;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -10,7 +9,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Data
 public class UserDTO {
-    private long userID;
+    private long userId;
     private String name;
     private String email;
     private String password;
