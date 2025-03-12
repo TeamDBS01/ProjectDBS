@@ -33,5 +33,18 @@ public class Order {
 	
 	@ElementCollection
 	private List<String> bookIds;
+
+	public Order(Date orderDate, Double totalAmount, String status, Long userId, List<String> bookIds) {
+		super();
+		this.orderDate = orderDate;
+		this.totalAmount = totalAmount;
+		this.status = status;
+		this.userId = userId;
+		this.bookIds = bookIds;
+	}
+	
+	
+	
+//	public Order(Date orderDate,double totalAmount,String status,long userId,List<String> bookIds) {}
 	
 }

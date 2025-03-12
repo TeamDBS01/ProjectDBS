@@ -11,6 +11,8 @@ import com.project.models.Order;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order,Long>{
-	@Query("Select o from Order o where o.userId = :userId")
-	List<Order> findOrdersByUserId(@Param("userId")Long userId);
+//	@Query("Select o from Order o where o.userId = :userId")
+	List<Order> findByUserId(Long userId);
+	@Query("Select o from Order o")
+	Order findOne(Order order);
 }
