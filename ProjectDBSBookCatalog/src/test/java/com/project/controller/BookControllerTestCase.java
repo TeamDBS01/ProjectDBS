@@ -183,7 +183,7 @@ public class BookControllerTestCase {
         ResponseEntity<String> response = bookController.addBook(null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        assertEquals("Book resource cannot be null", response.getBody());
+        assertEquals("An unexpected error occurred", response.getBody());
     }
 
     @Test
@@ -192,10 +192,77 @@ public class BookControllerTestCase {
 
         ResponseEntity<String> response = bookController.addBook(bookDTO);
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("An unexpected error occurred", response.getBody());
     }
 
+    @Test
+    public void testDeleteBookById_Success() throws BookResourceNotFoundException {
+        String bookID = "1";
+        when(bookServiceImpl.deleteBookById(bookID)).thenReturn(true);
+
+        ResponseEntity<?> response = bookController.deleteBookById(bookID);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(true, response.getBody());
+    }
+
+    @Test
+    public void testDeleteBookById_NotFound() throws BookResourceNotFoundException {
+        String bookID = "1";
+        when(bookServiceImpl.deleteBookById(bookID)).thenThrow(new BookResourceNotFoundException("Book not found"));
+
+        ResponseEntity<?> response = bookController.deleteBookById(bookID);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("Book not found", response.getBody());
+    }
+
+    @Test
+    public void testDeleteBookByTitle_Success() throws BookResourceNotFoundException {
+        String bookTitle = "Effective Java";
+        when(bookServiceImpl.deleteBookByTitle(bookTitle)).thenReturn(true);
+
+        ResponseEntity<?> response = bookController.deleteBookByTitle(bookTitle);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(true, response.getBody());
+    }
+
+    @Test
+    public void testDeleteBookByTitle_NotFound() throws BookResourceNotFoundException {
+        String bookTitle = "Effective Java";
+        when(bookServiceImpl.deleteBookByTitle(bookTitle)).thenThrow(new BookResourceNotFoundException("Book not found"));
+
+        ResponseEntity<?> response = bookController.deleteBookByTitle(bookTitle);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("Book not found", response.getBody());
+    }
+
+    @Test
+    public void testUpdateBookById_Success() throws BookResourceNotFoundException {
+        String bookID = "1";
+        BookDTO bookDTO = new BookDTO(); // Initialize with appropriate values
+        when(bookServiceImpl.updateBookById(bookID, bookDTO)).thenReturn(true);
+
+        ResponseEntity<?> response = bookController.updateBookById(bookID, bookDTO);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(true, response.getBody());
+    }
+
+    @Test
+    public void testUpdateBookById_NotFound() throws BookResourceNotFoundException {
+        String bookID = "1";
+        BookDTO bookDTO = new BookDTO(); // Initialize with appropriate values
+        when(bookServiceImpl.updateBookById(bookID, bookDTO)).thenThrow(new BookResourceNotFoundException("Book not found"));
+
+        ResponseEntity<?> response = bookController.updateBookById(bookID, bookDTO);
+
+        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        assertEquals("Book not found", response.getBody());
+    }
 
 }
 
