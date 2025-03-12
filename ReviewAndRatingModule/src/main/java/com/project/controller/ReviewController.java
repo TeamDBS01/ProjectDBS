@@ -5,6 +5,8 @@ import com.project.exception.ReviewNotFoundException;
 import com.project.exception.UserNotAuthorizedException;
 import com.project.exception.UserNotFoundException;
 import com.project.service.ReviewService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-// DTO - ent - only prims, use YAML
 /**
  * global excep handler
  * SonarQube75 - NOT COVERING SERVICE
@@ -27,65 +28,109 @@ import java.util.List;
 @RequestMapping("dbs/review")
 public class ReviewController {
 
+	private final ReviewService reviewService;
+
 	@Autowired
-	private ReviewService reviewService;
+	public ReviewController(ReviewService reviewService) {
+		this.reviewService = reviewService;
+	}
+
+	private static final Logger logger = LoggerFactory.getLogger(ReviewController.class);
+
 
 	@GetMapping("{reviewId}")
 	@ResponseBody
-	public ResponseEntity<?> get(@PathVariable long reviewId) {
-		ResponseEntity<?> response;
+	public ResponseEntity<ReviewDTO> getReviewById(@PathVariable long reviewId) {
+		ResponseEntity<ReviewDTO> response;
 		try {
 			ReviewDTO reviewDTO = reviewService.retrieveReviewById(reviewId);
-			response = new ResponseEntity<>(reviewDTO, HttpStatus.OK);
+			response = new ResponseEntity<>(reviewDTO, HttpStatus.FOUND);
 		} catch (ReviewNotFoundException e) {
-			response = new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+			logger.error(e.getMessage());
+			response = new ResponseEntity<>(new ReviewDTO(), HttpStatus.NOT_FOUND);
 		}
 		return response;
 	}
 
-	@GetMapping("all")
+	@GetMapping("/all")
 	@ResponseBody
-	public ResponseEntity<?> getAll() {
-		ResponseEntity<?> response;
+	public ResponseEntity<List<ReviewDTO>> getAllReviews() {
+		ResponseEntity<List<ReviewDTO>> response;
 		try {
 			List<ReviewDTO> reviewDTOList = reviewService.retrieveAllReviews();
-			response = new ResponseEntity<>(reviewDTOList, HttpStatus.OK);
+			response = new ResponseEntity<>(reviewDTOList, HttpStatus.FOUND);
 		} catch (ReviewNotFoundException e) {
-			response = new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+			logger.error(e.getMessage());
+			response = new ResponseEntity<>(List.of(), HttpStatus.NOT_FOUND);
 		}
 		return response;
 	}
 
-	@PostMapping("/add/{rating}/{comment}/{userId}")
-	public ResponseEntity<Boolean> add(@PathVariable float rating, @PathVariable String comment, @PathVariable long userId) {
-//		ReviewDTO reviewDTO = new ReviewDTO(1, 4.5f, "Comment", 22l, "ISBN-0001");
-		reviewService.addReview(rating, comment, userId, "BOOK_ISBN-AB");
-		return new ResponseEntity<>(true, HttpStatus.OK);
+	@GetMapping("/all/{userId}")
+	@ResponseBody
+	public ResponseEntity<List<ReviewDTO>> getAllReviewsByUserId(@PathVariable long userId) {
+		ResponseEntity<List<ReviewDTO>> response;
+		try {
+			List<ReviewDTO> reviewDTOList = reviewService.retrieveAllReviewsByUserId(userId);
+			response = new ResponseEntity<>(reviewDTOList, HttpStatus.FOUND);
+		} catch (ReviewNotFoundException e) {
+			logger.error(e.getMessage());
+			response = new ResponseEntity<>(List.of(), HttpStatus.NOT_FOUND);
+		}
+		return response;
 	}
-	@PostMapping("/update/{reviewId}/{rating}/{comment}/{userId}")
-	public ResponseEntity<String> add(@PathVariable long reviewId,@PathVariable float rating, @PathVariable String comment, @PathVariable long userId) {
-		ReviewDTO reviewDTO = new ReviewDTO(reviewId, rating, comment, userId, "ISBN-0001");
-		ResponseEntity<String> response;
+
+	@PostMapping("/add/{rating}/{comment}/{userId}/{bookId}")
+	public ResponseEntity<ReviewDTO> addReview(@PathVariable float rating, @PathVariable String comment, @PathVariable long userId, @PathVariable String bookId) {
+		ResponseEntity<ReviewDTO> response;
+        ReviewDTO reviewDTO = null;
         try {
-            reviewService.updateReview(userId, reviewDTO);
-			response = new ResponseEntity<>("true", HttpStatus.OK);
-        } catch (UserNotAuthorizedException | UserNotFoundException e) {
-			response = new ResponseEntity<>(e.getMessage(), HttpStatus.FORBIDDEN);
+            reviewDTO = reviewService.addReview(rating, comment, userId, bookId);
+			response = new ResponseEntity<>(reviewDTO, HttpStatus.CREATED);
+        } catch (Exception e) {
+			logger.error(e.getMessage());
+			response = new ResponseEntity<>(reviewDTO, HttpStatus.BAD_GATEWAY);
         }
         return response;
 	}
-//	@PostMapping("/add")
-//	public ResponseEntity<ReviewDTO> addReview(@RequestBody ReviewDTO reviewDTO) {
-////		ReviewDTO reviewDTO = new ReviewDTO(1, 4.5f, "Comment", 22l, "ISBN-0001");
-//		reviewService.addReview();
-//		return new ResponseEntity<ReviewDTO>(reviewDTO, HttpStatus.OK);
-//	}
-	
-	
-//	@PostMapping("/rev")
-//	public String get(@RequestBody ReviewDTO review) {
-//		BookDTO book = new BookDTO("121", "@12", 12d,12);
-//		return reviewService.addReview(4, "Commewnt").toString();
-//	}
-	
+
+	@PostMapping("/add/")
+	public ResponseEntity<ReviewDTO> addReview(@RequestBody ReviewDTO reviewDTO) {
+		ResponseEntity<ReviewDTO> response;
+        try {
+            reviewDTO = reviewService.addReview(reviewDTO.getRating(), reviewDTO.getComment(), reviewDTO.getUserId(), reviewDTO.getBookId());
+			response = new ResponseEntity<>(reviewDTO, HttpStatus.CREATED);
+        } catch (Exception e) {
+			logger.error(e.getMessage());
+			response = new ResponseEntity<>(reviewDTO, HttpStatus.BAD_GATEWAY);
+        }
+        return response;
+	}
+
+	@PatchMapping("/update/{userId}")
+	public ResponseEntity<ReviewDTO> updateReview(@PathVariable long userId, @RequestBody ReviewDTO reviewDTO) {
+		ResponseEntity<ReviewDTO> response;
+		try {
+            reviewDTO = reviewService.updateReview(userId, reviewDTO);
+			response = new ResponseEntity<>(reviewDTO, HttpStatus.OK);
+        } catch (UserNotAuthorizedException | UserNotFoundException e) {
+			logger.error(e.getMessage());
+			response = new ResponseEntity<>(new ReviewDTO(), HttpStatus.NOT_MODIFIED);
+        }
+		return response;
+	}
+
+	@DeleteMapping("/delete/{userId}/{reviewId}")
+	public ResponseEntity<Boolean> deleteReview(@PathVariable long userId, @PathVariable long reviewId) {
+		ResponseEntity<Boolean> response = new ResponseEntity<>(true, HttpStatus.OK);
+		try {
+            if (!reviewService.deleteReview(userId, reviewId)) {
+				response = new ResponseEntity<>(false, HttpStatus.NOT_MODIFIED);
+			}
+        } catch (ReviewNotFoundException | UserNotAuthorizedException | UserNotFoundException e) {
+			logger.error(e.getMessage());
+			response = new ResponseEntity<>(false, HttpStatus.UNAUTHORIZED);
+        }
+        return response;
+	}
 }
