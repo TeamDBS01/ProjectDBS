@@ -79,16 +79,16 @@ public class BookServiceImpl{
 					.collect(Collectors.toList());
 	 }
 
-	 public void updateInventoryOnOrder(List<Long> inventoryIDs, List<Integer> quantities) {
-
-		    for (int i = 0; i < inventoryIDs.size(); i++) {
-		        Long inventoryID = inventoryIDs.get(i);
-		        int quantity = quantities.get(i);
-
-		        inventoryInterface.updateInventoryAfterOrder(inventoryID, quantity);
-
-		    }
-		}
+//	 public void updateInventoryOnOrder(List<String> inventoryIDs, List<Integer> quantities) {
+//
+//		    for (int i = 0; i < inventoryIDs.size(); i++) {
+//		        Long inventoryID = inventoryIDs.get(i);
+//		        int quantity = quantities.get(i);
+//
+//		        inventoryInterface.updateInventoryAfterOrder(inventoryID, quantity);
+//
+//		    }
+	//	}
 
 
 	 public List<BookDTO> filter(String... criteria) throws BookResourceNotFoundException {
@@ -182,12 +182,7 @@ public boolean addBook(BookDTO bookDTO) throws BookResourceNotFoundException {
 		Optional<Book> optionalOfBook = bookRepository.findById(bookID);
 		if (optionalOfBook.isPresent()) {
 			Book book = optionalOfBook.get();
-			book.setTitle(bookDTO.getTitle());
-			book.setPrice(bookDTO.getPrice());
-			book.setInventoryID(bookDTO.getInventoryID());
-			book.setAuthorID(bookDTO.getAuthorID());
-			book.setCategoryID(bookDTO.getCategoryID());
-			//modelMapper.map(bookDTO, book);
+			modelMapper.map(bookDTO, book);
 			bookRepository.save(book);
 			return true;
 		} else {

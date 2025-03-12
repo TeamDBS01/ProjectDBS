@@ -3,6 +3,7 @@ package com.project.controller;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.project.service.InventoryInterface;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -28,9 +29,17 @@ import com.project.service.BookServiceImpl;
 @RequestMapping("/DBS")
 @Validated
 public class BookController {
+    @Autowired
+    private InventoryInterface inventoryService;
 
     @Autowired
     private BookServiceImpl bookServiceImpl;
+
+    @PutMapping("/{bookId}/stock/{quantity}")
+    public ResponseEntity<String> updateBookStock(@PathVariable Long inventoryId, @PathVariable int quantity) {
+        inventoryService.updateInventoryAfterOrder(inventoryId, quantity);
+        return ResponseEntity.ok("Book stock updated successfully");
+    }
     /**
      * Retrieves a list of all books.
      *
@@ -161,7 +170,7 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
             if (isAdded) {
                 return new ResponseEntity<>("Book added successfully", HttpStatus.CREATED);
             } else {
-                return new ResponseEntity<>("Failed to add book", HttpStatus.BAD_GATEWAY);
+                return new ResponseEntity<>("Failed to add book", HttpStatus.BAD_REQUEST);
             }
         } catch (Exception e) {
             return new ResponseEntity<>("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
