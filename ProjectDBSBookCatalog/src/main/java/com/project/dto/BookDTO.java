@@ -1,5 +1,6 @@
 package com.project.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
@@ -14,12 +15,12 @@ import java.util.Objects;
 @AllArgsConstructor
 public class BookDTO {
 
-	@NotNull(message = "{com.project.BookDTO.BookID.notNull}")
+	//@NotNull(message = "{com.project.BookDTO.BookID.notNull}")
 	@Size(min = 3, max = 20, message = "{com.project.BookDTO.BookID.size}")
 	private String bookID;
 
 
-	@NotNull(message = "Title cannot be null")
+	@NotBlank(message = "Title cannot be null")
 	@Size(min = 3, max = 100, message = "{com.project.BookDTO.title.size}")
 	private String title;
 

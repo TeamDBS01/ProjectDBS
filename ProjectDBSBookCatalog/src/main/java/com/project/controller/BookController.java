@@ -29,17 +29,17 @@ import com.project.service.BookServiceImpl;
 @RequestMapping("/DBS")
 @Validated
 public class BookController {
-    @Autowired
-    private InventoryInterface inventoryService;
+//    @Autowired
+//    private InventoryInterface inventoryService;
 
     @Autowired
     private BookServiceImpl bookServiceImpl;
 
-    @PutMapping("/{bookId}/stock/{quantity}")
-    public ResponseEntity<String> updateBookStock(@PathVariable Long inventoryId, @PathVariable int quantity) {
-        inventoryService.updateInventoryAfterOrder(inventoryId, quantity);
-        return ResponseEntity.ok("Book stock updated successfully");
-    }
+//    @PutMapping("/{bookId}/stock/{quantity}")
+//    public ResponseEntity<String> updateBookStock(@PathVariable Long inventoryId, @PathVariable int quantity) {
+//        inventoryService.updateInventoryAfterOrder(inventoryId, quantity);
+//        return ResponseEntity.ok("Book stock updated successfully");
+//    }
     /**
      * Retrieves a list of all books.
      *
@@ -75,7 +75,7 @@ public class BookController {
             @ApiResponse(responseCode = "404", description = "Book not found")
     })
     @GetMapping("/books/{bookId}")
-    public ResponseEntity<?> getBookById(@PathVariable("bookId")  @Size(min = 1, max = 20, message = "Book ID must be between 1 and 20 characters") String bookId){
+    public ResponseEntity<?> getBookById(@PathVariable("bookId")  String bookId){
     	try {
     		BookDTO bookDTO=bookServiceImpl.getBookById(bookId);
     		return new ResponseEntity<>(bookDTO, HttpStatus.OK);
@@ -163,7 +163,7 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
 }
 
     @PostMapping("/add")
-    public ResponseEntity<String> addBook(@RequestBody BookDTO bookDTO) {
+    public ResponseEntity<String> addBook(@Valid @RequestBody BookDTO bookDTO) {
         try {
             System.out.println(bookDTO);
             boolean isAdded = bookServiceImpl.addBook(bookDTO);
@@ -173,7 +173,7 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
                 return new ResponseEntity<>("Failed to add book", HttpStatus.BAD_REQUEST);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("An unexpected error occurred", HttpStatus.BAD_REQUEST);
         }
     }
     @DeleteMapping("/deleteBookById/{bookID}")

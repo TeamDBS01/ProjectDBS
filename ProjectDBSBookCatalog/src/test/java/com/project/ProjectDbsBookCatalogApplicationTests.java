@@ -7,6 +7,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 class ProjectDbsBookCatalogApplicationTests {
 
 	@Test
+	void main() {
+		ProjectDbsBookCatalogApplication.main(new String[] {});
+	}
+	@Test
 	void contextLoads() {
 	}
 
