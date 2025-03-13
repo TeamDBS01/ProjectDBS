@@ -162,6 +162,19 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
     }
 }
 
+
+    /**
+     * @author Suryanarayanan
+     * @param bookDTO Details of the book to be added
+     * @return ResponseEntity<String> - Status message
+     */
+    @Operation(summary = "Add a new book", description = "Adds a new book to the database.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Book added successfully"),
+            @ApiResponse(responseCode = "502", description = "Failed to add book"),
+            @ApiResponse(responseCode = "500", description = "An unexpected error occurred")
+    })
+
     @PostMapping("/add")
     public ResponseEntity<String> addBook(@RequestBody BookDTO bookDTO) {
         try {
@@ -173,9 +186,21 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
                 return new ResponseEntity<>("Failed to add book", HttpStatus.BAD_REQUEST);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>("An unexpected error occurred", HttpStatus.INTERNAL_SERVER_ERROR);
+            return new ResponseEntity<>("An unexpected error occurred", HttpStatus.BAD_REQUEST);
         }
     }
+
+    /**
+     * @author Suryanarayanan
+     * @param bookID ID of the book to be deleted
+     * @return ResponseEntity<?> - Status message or error message
+     */
+    @Operation(summary = "Delete a book by ID", description = "Deletes a book from the database using its ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully deleted book"),
+            @ApiResponse(responseCode = "404", description = "Book not found")
+    })
+
     @DeleteMapping("/deleteBookById/{bookID}")
     public ResponseEntity<?> deleteBookById(@PathVariable String bookID){
         try{
@@ -186,6 +211,16 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
         }
     }
 
+    /**
+     * @author Suryanarayanan
+     * @param bookTitle Title of the book to be deleted
+     * @return ResponseEntity<?> - Status message or error message
+     */
+    @Operation(summary = "Delete a book by title", description = "Deletes a book from the database using its title.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully deleted book"),
+            @ApiResponse(responseCode = "404", description = "Book not found")
+    })
     @DeleteMapping("/deleteBookByTitle/{bookTitle}")
     public ResponseEntity<?> deleteBookByTitle(@PathVariable String bookTitle){
         try{
@@ -196,6 +231,17 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
         }
     }
 
+    /**
+     * @author Suryanarayanan
+     * @param bookID ID of the book to be updated
+     * @param bookDTO Updated details of the book
+     * @return ResponseEntity<?> - Status message or error message
+     */
+    @Operation(summary = "Update a book by ID", description = "Updates the details of a book using its ID.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully updated book"),
+            @ApiResponse(responseCode = "404", description = "Book not found")
+    })
     @PutMapping("/updateBookById/{bookID}")
     public ResponseEntity<?> updateBookById(@PathVariable String bookID, @RequestBody BookDTO bookDTO){
         try{
