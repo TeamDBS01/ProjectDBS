@@ -58,15 +58,17 @@ public class ReviewController {
 	@GetMapping("/{reviewId}")
 	public ResponseEntity<ReviewDTO> getReviewById(@Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId) {
 		ResponseEntity<ReviewDTO> response;
-		HttpHeaders headers = new HttpHeaders();
+//		HttpHeaders headers = new HttpHeaders();
 //		headers.add(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8");
-		headers.add("Location", "/dbs/review");
+//		headers.add("Location", "/dbs/review");
 		try {
 			ReviewDTO reviewDTO = reviewService.retrieveReviewById(reviewId);
-			response = new ResponseEntity<>(reviewDTO, headers, HttpStatus.FOUND);
+//			response = new ResponseEntity<>(reviewDTO, headers, HttpStatus.FOUND);
+			response = new ResponseEntity<>(reviewDTO, HttpStatus.FOUND);
 		} catch (ReviewNotFoundException e) {
 			logger.error(e.getMessage());
-			response = new ResponseEntity<>(new ReviewDTO(e.toString()), headers, HttpStatus.NOT_FOUND);
+//			response = new ResponseEntity<>(new ReviewDTO(e.toString()), headers, HttpStatus.NOT_FOUND);
+			response = new ResponseEntity<>(new ReviewDTO(e.toString()), HttpStatus.NOT_FOUND);
 		}
 		return response;
 	}
