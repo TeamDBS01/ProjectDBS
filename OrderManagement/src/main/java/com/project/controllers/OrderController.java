@@ -24,7 +24,7 @@ import com.project.dto.OrderDTO;
 import com.project.service.OrderServiceImpl;
 
 @RestController
-@RequestMapping("dbs/orders")
+@RequestMapping("dbs/order")
 public class OrderController {
 	@Autowired
 	private OrderServiceImpl orderService;
@@ -34,6 +34,10 @@ public class OrderController {
 	    return "Order service test";
 	}
 
+	@GetMapping("/quantity/{bookId}")
+	public int getQuant(@PathVariable String bookId) {
+		return orderService.getQuantity(bookId);
+	}
 
 	@Operation(summary="Add book to cart", description = "Adds a book to the user's cart.")
 	@ApiResponses(value={

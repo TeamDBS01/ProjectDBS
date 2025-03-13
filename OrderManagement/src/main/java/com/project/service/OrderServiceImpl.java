@@ -24,6 +24,8 @@ import com.project.models.Order;
 import com.project.repositories.OrderRepository;
 
 import jakarta.transaction.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
 @Service
 public class OrderServiceImpl { 
@@ -35,7 +37,12 @@ public class OrderServiceImpl {
 	
 	@Autowired
 	private BookClient bookClient;
-	
+
+	public int getQuantity(String bookId) {
+		return bookClient.getBookStockQuantity(bookId);
+	}
+
+
 //	@Autowired
 //	private InventoryClient inventoryClient;
 	

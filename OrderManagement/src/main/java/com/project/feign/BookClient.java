@@ -17,7 +17,7 @@ public interface BookClient {
 	@PutMapping("dbs/books/{bookId}/stock/{quantity}")
 	ResponseEntity<String> updateBookStock(@PathVariable String bookId, @PathVariable int quantity);
 
-	@GetMapping("dbs/books/{bookId}/stockQuantity")
+	@GetMapping("dbs/books/quantity/{bookId}")
 	int getBookStockQuantity(@PathVariable String bookId);
 
 }
