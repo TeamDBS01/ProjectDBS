@@ -1,0 +1,33 @@
+server:
+    port: 8089
+
+spring:
+    application:
+        name: review-service
+    datasource:
+        driver: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/ReviewDB?createDatabaseIfNotExist=true
+        username: root
+        password: root
+    jpa:
+        database-platform: org.hibernate.dialect.MySQL8Dialect
+        hibernate.ddl-auto: update
+        show-sql: true
+
+#eureka.instance.nonSecurePort=90
+eureka:
+    instance:
+        hostname: ${vcap.application.uris[0]:localhost}
+        metadataMap:
+            instanceId: ${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
+        leaseRenewalIntervalInSeconds: 5
+    client:
+        region: default
+springdoc:
+    api-docs:
+        enabled: true
+    swagger-ui:
+        enabled: true
+#        serviceUrl:
+#            defaultZone: http://localhost:8761/eureka/
+#        enabled: false
