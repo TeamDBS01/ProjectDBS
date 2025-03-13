@@ -25,15 +25,17 @@ public class BookServiceImpl{
 	//@Autowired
 	private ModelMapper modelMapper;
 	
-	//@Autowired
+	@Autowired
 	private InventoryInterface inventoryInterface;
 	@Autowired
-// public ReviewServiceImpl(ReviewRepository reviewRepository, ModelMapper modelMapper) {
 	public BookServiceImpl(BookRepository bookRepository, ModelMapper modelMapper) {
 		this.bookRepository = bookRepository;
 		this.modelMapper = modelMapper;
 	}
-	
+	public int getBookQuantity(String bookId) {
+		return (int) inventoryInterface.getNoOfBooks(bookId).getBody();
+	}
+
 //	public List<BookDTO> getAllBooks() throws BookResourceNotFoundException {
 //		List<Book> bookList=bookRepository.findAll();
 //		if (bookList.isEmpty()) {

@@ -29,8 +29,6 @@ import com.project.service.BookServiceImpl;
 @RequestMapping("/dbs/books")
 @Validated
 public class BookController {
-//    @Autowired
-//    private InventoryInterface inventoryService;
 
     @Autowired
     private BookServiceImpl bookServiceImpl;
@@ -40,6 +38,13 @@ public class BookController {
 //        inventoryService.updateInventoryAfterOrder(inventoryId, quantity);
 //        return ResponseEntity.ok("Book stock updated successfully");
 //    }
+    @ResponseBody
+    @GetMapping("/quantity/{bookId}")
+    public int getNoOfBooks(@PathVariable String bookId) {
+        return bookServiceImpl.getBookQuantity(bookId);
+    }
+
+
     /**
      * Retrieves a list of all books.
      *
