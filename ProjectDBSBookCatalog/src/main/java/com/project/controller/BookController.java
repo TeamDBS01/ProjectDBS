@@ -26,7 +26,7 @@ import com.project.service.BookServiceImpl;
  * @implNote This class handles all book-related operations.
  */
 @RestController
-@RequestMapping("/DBS")
+@RequestMapping("/dbs/books")
 @Validated
 public class BookController {
 //    @Autowired
@@ -53,7 +53,7 @@ public class BookController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list"),
             @ApiResponse(responseCode = "404", description = "Books not found")
     })
-    @GetMapping("/books")
+    @GetMapping
     public ResponseEntity<?> getAllBooks()  {
         try {
             List<BookDTO> books = bookServiceImpl.getAllBooks();
@@ -74,7 +74,7 @@ public class BookController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved book"),
             @ApiResponse(responseCode = "404", description = "Book not found")
     })
-    @GetMapping("/books/{bookId}")
+    @GetMapping("/{bookId}")
     public ResponseEntity<?> getBookById(@PathVariable("bookId")  String bookId){
     	try {
     		BookDTO bookDTO=bookServiceImpl.getBookById(bookId);
@@ -95,7 +95,7 @@ public class BookController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved books"),
             @ApiResponse(responseCode = "404", description = "Books not found")
     })
-    @GetMapping("/booksByCategory/{categoryName}")
+    @GetMapping("/category/{categoryName}")
     public ResponseEntity<?> getBooksByCategory(@PathVariable("categoryName") @Valid String categoryName){
         try {
             List<BookDTO> bookList=bookServiceImpl.getBooksByCategory(categoryName);
@@ -114,7 +114,7 @@ public class BookController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved books"),
             @ApiResponse(responseCode = "404", description = "Books not found")
     })
-    @GetMapping("/booksByAuthor/{authorName}")
+    @GetMapping("/author/{authorName}")
     public ResponseEntity<?> getBooksByAuthor(@PathVariable("authorName") @Valid String authorName){
         try {
             List<BookDTO> bookList=bookServiceImpl.getBooksByAuthor(authorName);
@@ -175,7 +175,7 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
             @ApiResponse(responseCode = "500", description = "An unexpected error occurred")
     })
 
-    @PostMapping("/add")
+    @PostMapping("/addBooks")
     public ResponseEntity<String> addBook(@Valid @RequestBody BookDTO bookDTO) {
         try {
             System.out.println(bookDTO);
@@ -201,7 +201,7 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
             @ApiResponse(responseCode = "404", description = "Book not found")
     })
 
-    @DeleteMapping("/deleteBookById/{bookID}")
+    @DeleteMapping("/delete/{bookID}")
     public ResponseEntity<?> deleteBookById(@PathVariable String bookID){
         try{
             boolean result= bookServiceImpl.deleteBookById(bookID);
@@ -221,7 +221,7 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
             @ApiResponse(responseCode = "200", description = "Successfully deleted book"),
             @ApiResponse(responseCode = "404", description = "Book not found")
     })
-    @DeleteMapping("/deleteBookByTitle/{bookTitle}")
+    @DeleteMapping("/deleteByTitle/{bookTitle}")
     public ResponseEntity<?> deleteBookByTitle(@PathVariable String bookTitle){
         try{
             boolean result= bookServiceImpl.deleteBookByTitle(bookTitle);
@@ -242,7 +242,7 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
             @ApiResponse(responseCode = "200", description = "Successfully updated book"),
             @ApiResponse(responseCode = "404", description = "Book not found")
     })
-    @PutMapping("/updateBookById/{bookID}")
+    @PutMapping("/update/{bookID}")
     public ResponseEntity<?> updateBookById(@PathVariable String bookID, @RequestBody BookDTO bookDTO){
         try{
             boolean result= bookServiceImpl.updateBookById(bookID, bookDTO);

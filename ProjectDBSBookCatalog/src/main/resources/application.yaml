@@ -1,8 +1,8 @@
 server:
-  port: 8084
+  port: 8085
 spring:
   application:
-    name: ProjectDBSBookCatalog
+    name: Book-Service
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     password: root
@@ -17,3 +17,12 @@ springdoc:
     enabled: true
   swagger-ui:
     enabled: true
+eureka:
+  instance:
+    hostname: ${vcap.application.uris[0]:localhost}
+    metadataMap:
+      instanceId: ${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
+    leaseRenewalIntervalInSeconds: 5
+  client:
+    region: default
+
