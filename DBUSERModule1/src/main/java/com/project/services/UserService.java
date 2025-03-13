@@ -33,8 +33,7 @@ public class UserService {
                 User user = new User();
                 user.setEmail(registrationRequest.getEmail());
                 user.setName(registrationRequest.getName());
-                user.setPassword(registrationRequest.getPassword()); // No encoding
-
+                user.setPassword(registrationRequest.getPassword());
                 // Set default role to CUSTOMER
                 user.setRole(Role.CUSTOMER);
 
@@ -141,7 +140,7 @@ public class UserService {
             userDTO.setMessage("User with id '" + id + "' found successfully");
             System.out.println(userDTO);
         } catch (Exception e) {
-            userDTO.setStatusCode(500);
+            userDTO.setStatusCode(404);
             userDTO.setMessage(e.getMessage());
         }
         return userDTO;
