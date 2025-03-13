@@ -1,0 +1,27 @@
+package com.project.dto;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Cart {
+	
+	private List<CartItem> items =  new ArrayList<>();
+
+	public List<CartItem> getItems() {
+		return items;
+	}
+
+	public void setItems(List<CartItem> items) {
+		this.items = items;
+	}
+	
+	public void addItem(CartItem item) {
+		items.add(item);
+	}
+	
+	public void clear() {
+		items.clear();
+	}
+	
+}
+ 
