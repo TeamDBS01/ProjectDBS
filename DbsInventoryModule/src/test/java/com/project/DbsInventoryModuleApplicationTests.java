@@ -1,10 +1,10 @@
-package com.project.demo;
+package com.project;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class DbsInventoryManagementApplicationTests {
+class DbsInventoryModuleApplicationTests {
 
 	@Test
 	void contextLoads() {

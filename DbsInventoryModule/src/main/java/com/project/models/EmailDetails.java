@@ -1,15 +1,15 @@
 package com.project.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-@Entity
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class Book {
-	
+public class EmailDetails {
+    private String recipient;
+    private String msgBody;
+    private String subject;
+    private String attachment;
 }
