@@ -64,9 +64,16 @@ class ReviewServiceImplTest {
     void test_addReview_positive() {
         when(reviewRepository.save(any())).thenReturn(review);
         when(mapper.map(any(), any())).thenReturn(reviewDTO);
-        ReviewDTO reviewDTOActual = reviewService.addReview(RATING, COMMENT, USER_ID, BOOK_ID);
+        when(userClient.getUserById(USER_ID)).thenReturn(ResponseEntity.ok(userDTO));
+        ReviewDTO reviewDTOActual = null;
+        try {
+            reviewDTOActual = reviewService.addReview(RATING, COMMENT, USER_ID, BOOK_ID);
+        } catch (UserNotFoundException e) {
+            fail(STR."Error thrown:  \{e.toString()}");
+        }
         verify(reviewRepository).save(any());
         verify(mapper).map(any(), any());
+        verify(userClient).getUserById(USER_ID);
         assertEquals(reviewDTO, reviewDTOActual);
     }
 
@@ -74,10 +81,22 @@ class ReviewServiceImplTest {
     @DisplayName("AddReview-Negative")
     void test_addReview_negative() {
         when(reviewRepository.save(any())).thenReturn(new IllegalArgumentException());
-        assertThrows(ClassCastException.class,
+        when(userClient.getUserById(USER_ID)).thenReturn(ResponseEntity.ok(userDTO));
+        assertThrows(Exception.class,
                 () -> reviewService.addReview(RATING, COMMENT, USER_ID, BOOK_ID),
                 "Error not thrown in addReview");
         verify(reviewRepository).save(any());
+        assertFalse(reviewRepository.findById(review.getReviewId()).isPresent());
+    }
+
+    @Test
+    @DisplayName("AddReview-Negative-UserNotFound")
+    void test_addReview_negative_userNotFound() {
+        when(userClient.getUserById(USER_ID)).thenReturn(ResponseEntity.ok(null));
+        assertThrows(UserNotFoundException.class,
+                () -> reviewService.addReview(RATING, COMMENT, USER_ID, BOOK_ID),
+                "Error not thrown in addReview");
+        verify(userClient).getUserById(USER_ID);
         assertFalse(reviewRepository.findById(review.getReviewId()).isPresent());
     }
 

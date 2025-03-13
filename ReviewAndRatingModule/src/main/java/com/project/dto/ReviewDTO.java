@@ -13,7 +13,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ReviewDTO {
 
-	@Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}")
 	private long reviewId;
 	@DecimalMin(value = "0.1", message = "{com.project.dto.ReviewDTO.rating.min}")
 	@Max(value = 5, message = "{com.project.dto.ReviewDTO.rating.max}")

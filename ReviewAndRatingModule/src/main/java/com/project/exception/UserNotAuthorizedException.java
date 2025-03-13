@@ -1,19 +1,21 @@
 package com.project.exception;
 
-public class UserNotAuthorizedException extends Throwable {
+import java.io.Serial;
+
+public class UserNotAuthorizedException extends Exception {
 
 	/**
 	 * User not Authorized exception
 	 * If user is Not Admin and Not review creator.
 	 */
+	@Serial
 	private static final long serialVersionUID = 6L;
-	private String message;
+	private final String message;
 	
 	public UserNotAuthorizedException(String message) {
 		super(message);
+		this.message = message;
 	}
-
-//	public void setMessage(String msg) { message = msg; }
 
 	@Override
 	public String getMessage() {

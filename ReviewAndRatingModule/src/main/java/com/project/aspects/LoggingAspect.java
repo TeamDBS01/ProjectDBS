@@ -30,7 +30,7 @@ public class LoggingAspect {
     }
 
     private void loggerInfoBefore(JoinPoint joinPoint) {
-        logger.info("Executing method: {}", joinPoint.getSignature().toShortString());
+        logger.info("Executing method: {}.{}", joinPoint.getSignature().getName(), joinPoint.getSignature().getDeclaringTypeName());
     }
 
     @AfterReturning(pointcut = "execution(* com.project.repositories.*.*(..))", returning = "result")
@@ -49,7 +49,7 @@ public class LoggingAspect {
     }
 
     private void loggerInfoAfterReturning(JoinPoint joinPoint, Object result) {
-        logger.info("Method executed successfully: {}", joinPoint.getSignature().toShortString());
+        logger.info("Method executed successfully: {}.{}", joinPoint.getSignature().getName(), joinPoint.getSignature().getDeclaringTypeName());
         if (result != null && result.toString().length() < 1000) {
             logger.info("Method result: {}", result);
         }
@@ -71,7 +71,7 @@ public class LoggingAspect {
     }
 
     private void loggerInfoAfterThrowing(JoinPoint joinPoint, Throwable error) {
-        logger.error("Method execution failed: {}", joinPoint.getSignature().toShortString());
+        logger.error("Method execution failed: {}.{}", joinPoint.getSignature().getName(), joinPoint.getSignature().getDeclaringTypeName());
         logger.error("Error: {}", error.getMessage());
     }
 }

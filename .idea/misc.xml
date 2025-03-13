@@ -4,10 +4,12 @@
   <component name="MavenProjectsManager">
     <option name="originalFiles">
       <list>
-        <option value="$PROJECT_DIR$/server-registry-dbs/pom.xml" />
         <option value="$PROJECT_DIR$/ReviewAndRatingModule/pom.xml" />
-        <option value="$PROJECT_DIR$/EurekaServer/pom.xml" />
         <option value="$PROJECT_DIR$/dbusermodule2/pom.xml" />
+        <option value="$PROJECT_DIR$/apiGateway/pom.xml" />
+        <option value="$PROJECT_DIR$/EurekaServer_EurekaServer/pom.xml" />
+        <option value="$PROJECT_DIR$/ProjectDBSBookCatalog/pom.xml" />
+        <option value="$PROJECT_DIR$/DBUSERModule1/pom.xml" />
       </list>
     </option>
   </component>

@@ -12,7 +12,7 @@ public interface ReviewService {
 	List<ReviewDTO> retrieveAllReviews() throws ReviewNotFoundException;
 	List<ReviewDTO> retrieveAllReviewsByUserId(long userId) throws ReviewNotFoundException;
 	ReviewDTO retrieveReviewById(long reviewId) throws ReviewNotFoundException;
-	ReviewDTO addReview(float rating, String comment, long userId, String bookId);
+	ReviewDTO addReview(float rating, String comment, long userId, String bookId) throws UserNotFoundException;
 	ReviewDTO updateReview(long userId, ReviewDTO reviewDTO) throws UserNotAuthorizedException, UserNotFoundException;
 	boolean deleteReview(long userId, long reviewId) throws ReviewNotFoundException, UserNotFoundException, UserNotAuthorizedException;
 }

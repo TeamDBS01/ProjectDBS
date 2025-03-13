@@ -7,28 +7,34 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="server-registry-dbs" />
+        <module name="apiGateway" />
         <module name="EurekaServer" />
       </profile>
-      <profile name="Annotation profile for ReviewAndRatingModule" enabled="true">
+      <profile name="Annotation profile for DBUSERModule1" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <processorPath useClasspath="false">
           <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.36/lombok-1.18.36.jar" />
         </processorPath>
+        <module name="DBUSERModule1" />
+        <module name="ProjectDBSBookCatalog" />
         <module name="ReviewAndRatingModule" />
-        <module name="dbusermodule2" />
       </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="dbusermodule2" target="21" />
+      <module name="server-registry-dbs" target="21" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="DBUSERModule1" options="-parameters" />
       <module name="EurekaServer" options="-parameters" />
+      <module name="ProjectDBSBookCatalog" options="-parameters" />
       <module name="ReviewAndRatingModule" options="-parameters --enable-preview" />
+      <module name="apiGateway" options="-parameters" />
       <module name="dbusermodule2" options="-parameters" />
-      <module name="server-registry-dbs" options="-parameters" />
     </option>
   </component>
 </project>

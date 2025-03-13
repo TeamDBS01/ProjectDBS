@@ -14,6 +14,7 @@ import jakarta.validation.constraints.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -57,12 +58,15 @@ public class ReviewController {
 	@GetMapping("/{reviewId}")
 	public ResponseEntity<ReviewDTO> getReviewById(@Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId) {
 		ResponseEntity<ReviewDTO> response;
+		HttpHeaders headers = new HttpHeaders();
+//		headers.add(HttpHeaders.CONTENT_TYPE, "application/json; charset=UTF-8");
+		headers.add("Location", "/dbs/review");
 		try {
 			ReviewDTO reviewDTO = reviewService.retrieveReviewById(reviewId);
-			response = new ResponseEntity<>(reviewDTO, HttpStatus.FOUND);
+			response = new ResponseEntity<>(reviewDTO, headers, HttpStatus.FOUND);
 		} catch (ReviewNotFoundException e) {
 			logger.error(e.getMessage());
-			response = new ResponseEntity<>(new ReviewDTO(e.toString()), HttpStatus.NOT_FOUND);
+			response = new ResponseEntity<>(new ReviewDTO(e.toString()), headers, HttpStatus.NOT_FOUND);
 		}
 		return response;
 	}
@@ -123,6 +127,7 @@ public class ReviewController {
 	@Operation(description = "Add Operation for a Review with rating, comment, userId, and bookId")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "Review created"),
+			@ApiResponse(responseCode = "404", description = "User Not Found - Unable to add Review"),
 			@ApiResponse(responseCode = "502", description = "Bad gateway - Unable to add Review")
 	})
 	@PostMapping("/add/{rating}/{comment}/{userId}/{bookId}")
@@ -135,11 +140,14 @@ public class ReviewController {
 		ResponseEntity<ReviewDTO> response;
         ReviewDTO reviewDTO = null;
         try {
-            reviewDTO = reviewService.addReview(rating, comment, userId, bookId);
+			reviewDTO = reviewService.addReview(rating, comment, userId, bookId);
 			response = new ResponseEntity<>(reviewDTO, HttpStatus.CREATED);
+		} catch (UserNotFoundException e) {
+			logger.error(e.toString());
+			response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-			logger.error(e.getMessage());
-			response = new ResponseEntity<>(reviewDTO, HttpStatus.BAD_GATEWAY);
+			logger.error(e.toString());
+			response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.BAD_GATEWAY);
         }
         return response;
 	}
@@ -152,17 +160,21 @@ public class ReviewController {
 	@Operation(description = "Add Operation for a Review with ReviewDTO")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "Review created"),
+			@ApiResponse(responseCode = "404", description = "User Not Found - Unable to add Review"),
 			@ApiResponse(responseCode = "502", description = "Bad gateway - Review not created")
 	})
 	@PostMapping("/add")
 	public ResponseEntity<ReviewDTO> addReview(@Valid @RequestBody ReviewDTO reviewDTO) {
 		ResponseEntity<ReviewDTO> response;
         try {
-            reviewDTO = reviewService.addReview(reviewDTO.getRating(), reviewDTO.getComment(), reviewDTO.getUserId(), reviewDTO.getBookId());
+			reviewDTO = reviewService.addReview(reviewDTO.getRating(), reviewDTO.getComment(), reviewDTO.getUserId(), reviewDTO.getBookId());
 			response = new ResponseEntity<>(reviewDTO, HttpStatus.CREATED);
+		} catch (UserNotFoundException e) {
+			logger.error(e.toString());
+			response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-			logger.error(e.getMessage());
-			response = new ResponseEntity<>(reviewDTO, HttpStatus.BAD_GATEWAY);
+			logger.error(e.toString());
+			response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.BAD_GATEWAY);
         }
         return response;
 	}

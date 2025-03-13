@@ -36,8 +36,11 @@ public class ReviewServiceImpl implements ReviewService {
 	}
 
 	@Override
-	public ReviewDTO addReview(float rating, String comment, long userId, String bookId) {
+	public ReviewDTO addReview(float rating, String comment, long userId, String bookId) throws UserNotFoundException {
 		Review review = new Review(rating, comment, userId, bookId);
+		if (userClient.getUserById(userId).getBody() == null) {
+			throw new UserNotFoundException(STR."User with ID: \{userId} Not Found");
+		}
 		review = reviewRepository.save(review);
 		return mapper.map(review, ReviewDTO.class);
 	}
