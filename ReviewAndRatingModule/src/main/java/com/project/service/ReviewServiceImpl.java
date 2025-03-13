@@ -7,6 +7,7 @@ import com.project.enums.Role;
 import com.project.exception.ReviewNotFoundException;
 import com.project.exception.UserNotAuthorizedException;
 import com.project.exception.UserNotFoundException;
+import com.project.feign.UserClient;
 import com.project.models.Review;
 import com.project.repositories.ReviewRepository;
 import org.modelmapper.ModelMapper;
@@ -17,25 +18,22 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
+import static java.lang.StringTemplate.STR;
+
 @SuppressWarnings("preview")
 @Service
 public class ReviewServiceImpl implements ReviewService {
 
-	@Autowired
-	private ReviewRepository reviewRepository;
-//	private UserService userService;
-	@Autowired
-	private UserService userService;
-	@Autowired
-	private ModelMapper mapper;
+	private final ReviewRepository reviewRepository;
+	private final UserClient userClient;
+	private final ModelMapper mapper;
 
-//	@Autowired
-//	public ReviewServiceImpl(ReviewRepository reviewRepository, ModelMapper modelMapper) {
-//	public ReviewServiceImpl(ReviewRepository reviewRepository, UserService userService, ModelMapper modelMapper) {
-//		this.reviewRepository = reviewRepository;
-//		this.userService = userService;
-//		this.mapper = modelMapper;
-//	}
+	@Autowired
+	public ReviewServiceImpl(ReviewRepository reviewRepository, UserClient userClient, ModelMapper modelMapper) {
+		this.reviewRepository = reviewRepository;
+		this.userClient = userClient;
+		this.mapper = modelMapper;
+	}
 
 	@Override
 	public ReviewDTO addReview(float rating, String comment, long userId, String bookId) {
@@ -46,8 +44,8 @@ public class ReviewServiceImpl implements ReviewService {
 
 	@Override
 	public ReviewDTO updateReview(long userId, ReviewDTO reviewDTO) throws UserNotAuthorizedException, UserNotFoundException {
-		ResponseEntity<UserDTO> responseUser = userService.getUserById(userId);
-		if (responseUser == null || !responseUser.hasBody() || responseUser.getBody() == null) {
+		ResponseEntity<UserDTO> responseUser = userClient.getUserById(userId);
+		if (responseUser.getBody() == null) {
 			throw new UserNotFoundException(STR."User with ID: \{userId} Not Found");
 		}
 		UserDTO userDto = responseUser.getBody();
@@ -56,7 +54,7 @@ public class ReviewServiceImpl implements ReviewService {
 			review = reviewRepository.save(review);
 			reviewDTO = mapper.map(review, ReviewDTO.class);
 		} else {
-			throw new UserNotAuthorizedException(STR."User with ID: \{userId} is nor an Admin neither the review creator");
+			throw new UserNotAuthorizedException(STR."User \{userDto.getName()} with ID: \{userId} is nor an Admin neither the review creator");
 		}
 		return reviewDTO;
 	}
@@ -67,8 +65,8 @@ public class ReviewServiceImpl implements ReviewService {
 		if (optionalReview.isEmpty()) {
 			throw new ReviewNotFoundException(STR."Review with Id: \{reviewId} Not found!");
 		}
-		ResponseEntity<UserDTO> responseUser = userService.getUserById(userId);
-		if (responseUser == null || !responseUser.hasBody() || responseUser.getBody() == null) {
+		ResponseEntity<UserDTO> responseUser = userClient.getUserById(userId);
+		if (responseUser.getBody() == null) {
 			throw new UserNotFoundException(STR."User with ID: \{userId} Not Found");
 		}
 		UserDTO userDTO = responseUser.getBody();
