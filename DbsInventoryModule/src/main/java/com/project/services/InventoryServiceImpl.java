@@ -1,5 +1,6 @@
 package com.project.services;
 
+import java.awt.print.Book;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -162,12 +163,9 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     public void deleteBookFromInventory(String bookID) throws BookNotFoundException {
-        Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
-        if (optionalInventory.isPresent()) {
-            long inventoryId = optionalInventory.get().getInventoryId();
-            inventoryRepository.deleteById(inventoryId);
-        } else {
-            throw new BookNotFoundException("Book not found");
-        }
+
+        Inventory existingInventory = inventoryRepository.findByBookId(bookID)
+                .orElseThrow(()-> new BookNotFoundException("There are no existing books with the given BookId"));
+        inventoryRepository.deleteById(existingInventory.getInventoryId());
     }
 }

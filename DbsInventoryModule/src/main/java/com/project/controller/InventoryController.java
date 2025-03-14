@@ -17,26 +17,26 @@ public interface InventoryController {
     ResponseEntity<?> displayInventory();
 
     @GetMapping("/{bookID}")
-    ResponseEntity<InventoryDTO> getInventoryByBookID(@PathVariable String bookID) throws BookNotFoundException;
+    ResponseEntity<?> getInventoryByBookID(@PathVariable String bookID) throws BookNotFoundException;
 
     @GetMapping("/quantity/{bookID}")
     ResponseEntity<?> getNoOfBooks(@PathVariable String bookID) throws BookNotFoundException;
 
     @PutMapping("/update/add")
-    ResponseEntity<String> updateAddInventory(@RequestParam String bookID, @RequestParam int quantity) throws BookNotFoundException;
+    ResponseEntity<?> updateAddInventory(@RequestParam String bookID, @RequestParam int quantity) throws BookNotFoundException;
 
     @PutMapping("/update/remove")
-    ResponseEntity<String> updateRemoveInventory(@RequestParam String bookID, @RequestParam int quantity) throws BookNotFoundException;
+    ResponseEntity<?> updateRemoveInventory(@RequestParam String bookID, @RequestParam int quantity) throws BookNotFoundException;
 
     @PostMapping("/order")
-    ResponseEntity<String> placeOrder(@RequestParam String bookID, @RequestParam int quantity) throws BookNotFoundException, OutOfStockException;
+    ResponseEntity<?> placeOrder(@RequestParam String bookID, @RequestParam int quantity) throws BookNotFoundException, OutOfStockException;
 
     @PutMapping("/updateAfterOrder")
-    ResponseEntity<String> updateInventoryAfterOrder(@RequestParam List<String> bookIDs, @RequestParam List<Integer> quantities);
+    ResponseEntity<?> updateInventoryAfterOrder(@RequestParam List<String> bookIDs, @RequestParam List<Integer> quantities);
 
     @PostMapping("/add")
-    ResponseEntity<String> addBookToInventory(@RequestParam String bookID, @RequestParam int quantity) throws BookAlreadyExistsException;
+    ResponseEntity<?> addBookToInventory(@RequestParam String bookID, @RequestParam int quantity) throws BookAlreadyExistsException;
 
-    @DeleteMapping("/delete")
-    ResponseEntity<String> deleteBookFromInventory(@RequestParam String bookID) throws BookNotFoundException;
+    @DeleteMapping("/{bookID}")
+    ResponseEntity<?> deleteBookFromInventory(@PathVariable String bookID) throws BookNotFoundException;
 }
