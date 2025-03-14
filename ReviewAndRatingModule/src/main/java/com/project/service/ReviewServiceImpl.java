@@ -18,8 +18,6 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.Optional;
 
-import static java.lang.StringTemplate.STR;
-
 @SuppressWarnings("preview")
 @Service
 public class ReviewServiceImpl implements ReviewService {

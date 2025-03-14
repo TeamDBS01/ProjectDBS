@@ -45,7 +45,7 @@ class InventoryControllerTestCase {
         List<InventoryDTO> inventoryDTOS = Arrays.asList(inventoryDTO);
         when(inventoryServiceimpl.displayInventory()).thenReturn(inventoryDTOS);
 
-        mockMvc.perform(get("/inventory"))
+        mockMvc.perform(get("/dbs/inventory"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$[0]").exists());
@@ -53,18 +53,18 @@ class InventoryControllerTestCase {
 
     @Test
     public void testDisplayService_Negative() throws Exception {
-        when(inventoryServiceimpl.displayInventory()).thenThrow(new BookNotFoundException("Inventory Empty"));
+        when(inventoryServiceimpl.displayInventory()).thenThrow(new BookNotFoundException("Inventory is Empty"));
 
-        mockMvc.perform(get("/inventory"))
+        mockMvc.perform(get("/dbs/inventory"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("No such book in inventory"));
+                .andExpect(content().string("Inventory is Empty"));
     }
 
     @Test
     public void testGetInventoryByBookID_Positive() throws Exception {
         when(inventoryServiceimpl.getInventoryByBookID(anyString())).thenReturn(inventoryDTO);
 
-        mockMvc.perform(get("/inventory/{bookID}", "B001"))
+        mockMvc.perform(get("/dbs/inventory/{bookID}", "B001"))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.book_Id").value("B001"))
@@ -75,15 +75,16 @@ class InventoryControllerTestCase {
     public void testGetInventoryByBookID_Negative() throws Exception {
         when(inventoryServiceimpl.getInventoryByBookID(anyString())).thenThrow(new BookNotFoundException("Book not found"));
 
-        mockMvc.perform(get("/inventory/{bookID}", "B001"))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(get("/dbs/inventory/{bookID}", "B001"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("No Such books found in the inventory"));
     }
 
     @Test
     public void testGetNoOfBooks_Positive() throws Exception {
         when(inventoryServiceimpl.getNoOfBooks(anyString())).thenReturn(10);
 
-        mockMvc.perform(get("/inventory/quantity/{bookID}", "B002"))
+        mockMvc.perform(get("/dbs/inventory/quantity/{bookID}", "B002"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("10"));
     }
@@ -92,13 +93,13 @@ class InventoryControllerTestCase {
     public void testGetNoOfBooks_Negative() throws Exception {
         when(inventoryServiceimpl.getNoOfBooks(anyString())).thenThrow(new BookNotFoundException("Book not found for ID: B002"));
 
-        mockMvc.perform(get("/inventory/books/{bookID}", "B002"))
+        mockMvc.perform(get("/dbs/inventory/quantity/{bookID}", "B002"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     public void testUpdateAddInventory_Positive() throws Exception {
-        mockMvc.perform(post("/inventory/add")
+        mockMvc.perform(put("/dbs/inventory/update/add")
                         .param("bookID", "B001")
                         .param("quantity", "10"))
                 .andExpect(status().isOk())
@@ -107,19 +108,18 @@ class InventoryControllerTestCase {
 
     @Test
     public void testUpdateAddInventory_Negative() throws Exception {
-        // Simulate the scenario where the book is not found
         doThrow(new BookNotFoundException("Book not found for ID: B001")).when(inventoryServiceimpl).updateAddInventory("B001", 10);
 
-        mockMvc.perform(post("/inventory/add")
+        mockMvc.perform(put("/dbs/inventory/update/add")
                         .param("bookID", "B001")
                         .param("quantity", "10"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Book not found"));
+                .andExpect(content().string("Updation failed - No book failed with given bookID"));
     }
 
     @Test
     public void testUpdateRemoveInventory_Positive() throws Exception {
-        mockMvc.perform(post("/inventory/remove")
+        mockMvc.perform(put("/dbs/inventory/update/remove")
                         .param("bookID", "B001")
                         .param("quantity", "5"))
                 .andExpect(status().isOk())
@@ -128,9 +128,9 @@ class InventoryControllerTestCase {
 
     @Test
     public void testUpdateRemoveInventory_Negative() throws Exception {
-        doThrow(new BookNotFoundException("Book not found for ID: B001")).when(inventoryServiceimpl).updateRemoveInventory("B001", 5);
+        doThrow(new BookNotFoundException("Book not found")).when(inventoryServiceimpl).updateRemoveInventory("B001", 5);
 
-        mockMvc.perform(post("/inventory/remove")
+        mockMvc.perform(put("/dbs/inventory/update/remove")
                         .param("bookID", "B001")
                         .param("quantity", "5"))
                 .andExpect(status().isNotFound())
@@ -139,7 +139,7 @@ class InventoryControllerTestCase {
 
     @Test
     public void testPlaceOrder_Positive() throws Exception {
-        mockMvc.perform(post("/inventory/order")
+        mockMvc.perform(post("/dbs/inventory/order")
                         .param("bookID", "B001")
                         .param("quantity", "5"))
                 .andExpect(status().isOk())
@@ -151,7 +151,7 @@ class InventoryControllerTestCase {
         doThrow(new OutOfStockException("Out of stock")).when(inventoryServiceimpl).placeOrder("B001", 5);
         when(inventoryServiceimpl.getNoOfBooks("B001")).thenReturn(2);
 
-        mockMvc.perform(post("/inventory/order")
+        mockMvc.perform(post("/dbs/inventory/order")
                         .param("bookID", "B001")
                         .param("quantity", "5"))
                 .andExpect(status().isConflict())
@@ -162,7 +162,7 @@ class InventoryControllerTestCase {
     public void testPlaceOrder_BookNotFound() throws Exception {
         doThrow(new BookNotFoundException("Book not found")).when(inventoryServiceimpl).placeOrder("B001", 5);
 
-        mockMvc.perform(post("/inventory/order")
+        mockMvc.perform(post("/dbs/inventory/order")
                         .param("bookID", "B001")
                         .param("quantity", "5"))
                 .andExpect(status().isNotFound())
@@ -174,7 +174,7 @@ class InventoryControllerTestCase {
         List<String> bookIDs = Arrays.asList("B001", "B002");
         List<Integer> quantities = Arrays.asList(5, 3);
 
-        mockMvc.perform(post("/inventory/updateAfterOrder")
+        mockMvc.perform(put("/dbs/inventory/updateAfterOrder")
                         .param("bookIDs", "B001,B002")
                         .param("quantities", "5,3"))
                 .andExpect(status().isOk())
@@ -192,27 +192,28 @@ class InventoryControllerTestCase {
 
     @Test
     public void testAddBookToInventory_Negative() throws Exception {
-        //when(inventoryServiceimpl.addBookToInventory(anyString(), anyInt())).thenThrow(new BookAlreadyExistsException("Book already exists in the inventory"));
+        doThrow(new BookAlreadyExistsException("Book already exists in the inventory")).when(inventoryServiceimpl).addBookToInventory("B003", 10);
+
         mockMvc.perform(post("/dbs/inventory/add")
                         .param("bookID", "B003")
                         .param("quantity", "10"))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Book with the given bookid Already exist"));
     }
 
     @Test
     public void testDeleteBookFromInventory_Positive() throws Exception {
-        mockMvc.perform(delete("/dbs/inventory/delete")
-                        .param("bookID", "B003"))
+        mockMvc.perform(delete("/dbs/inventory/{bookID}","B003"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Book deleted from inventory successfully"));
     }
 
     @Test
     public void testDeleteBookFromInventory_Negative() throws Exception {
-        doThrow(new BookNotFoundException("Book not found")).when(inventoryServiceimpl).deleteBookFromInventory("B003");
+        doThrow(new BookNotFoundException("There are no existing books with the given BookId")).when(inventoryServiceimpl).deleteBookFromInventory("B003");
 
-        mockMvc.perform(delete("/dbs/inventory/delete")
-                        .param("bookID", "B003"))
-                .andExpect(status().isNotFound());
+        mockMvc.perform(delete("/dbs/inventory/{bookID}","B003"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Book with the given bookid Doesnot exist"));
     }
 }

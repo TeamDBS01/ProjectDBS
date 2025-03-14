@@ -34,9 +34,13 @@ public class InventoryControllerImpl implements InventoryController {
     }
 
     @Override
-    public ResponseEntity<InventoryDTO> getInventoryByBookID(@PathVariable String bookID) {
-        InventoryDTO inventoryDTO = inventoryService.getInventoryByBookID(bookID);
-        return ResponseEntity.ok(inventoryDTO);
+    public ResponseEntity<?> getInventoryByBookID(@PathVariable String bookID) {
+      try {
+          InventoryDTO inventoryDTO = inventoryService.getInventoryByBookID(bookID);
+          return ResponseEntity.ok(inventoryDTO);
+      }catch(BookNotFoundException e){
+          return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No Such books found in the inventory");
+      }
     }
 
     @Override
@@ -50,12 +54,12 @@ public class InventoryControllerImpl implements InventoryController {
     }
 
     @Override
-    public ResponseEntity<String> updateAddInventory(@RequestParam String bookID, @RequestParam int quantity) {
+    public ResponseEntity<?> updateAddInventory(@RequestParam String bookID, @RequestParam int quantity) {
         try {
             inventoryService.updateAddInventory(bookID, quantity);
             return ResponseEntity.ok("Addition successful");
         } catch (BookNotFoundException e) {
-            return ResponseEntity.status(404).body("Book not found");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Updation failed - No book failed with given bookID");
         }
     }
 
@@ -94,13 +98,17 @@ public class InventoryControllerImpl implements InventoryController {
           inventoryService.addBookToInventory(bookID, quantity);
           return ResponseEntity.ok("Book added to inventory successfully");
       }catch(BookAlreadyExistsException e){
-          throw new BookAlreadyExistsException("Book Already existis");
+          return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Book with the given bookid Already exist");
       }
     }
 
     @Override
-    public ResponseEntity<String> deleteBookFromInventory(@RequestParam String bookID) throws BookNotFoundException {
-        inventoryService.deleteBookFromInventory(bookID);
-        return ResponseEntity.ok("Book deleted from inventory successfully");
+    public ResponseEntity<?> deleteBookFromInventory(@PathVariable  String bookID) throws BookNotFoundException {
+        try {
+            inventoryService.deleteBookFromInventory(bookID);
+            return ResponseEntity.ok("Book deleted from inventory successfully");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Book with the given bookid Doesnot exist");
+        }
     }
 }
