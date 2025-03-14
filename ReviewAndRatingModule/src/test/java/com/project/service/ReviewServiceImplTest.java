@@ -54,8 +54,8 @@ class ReviewServiceImplTest {
 
     @BeforeEach
     void setup() {
-        review = new Review(1, 4.5f, "Great Book", 2, "ISBN-GRT2BK");
-        reviewDTO = new ReviewDTO(1, 4.5f, "Great Book", 2, "ISBN-GRT2BK");
+        review = new Review(1L, 4.5f, "Great Book", 2L, "ISBN-GRT2BK");
+        reviewDTO = new ReviewDTO(1L, 4.5f, "Great Book", 2L, "ISBN-GRT2BK");
         userDTO = new UserDTO(12L, "name", "mail", "pass", Role.CUSTOMER);
     }
 
@@ -248,8 +248,8 @@ class ReviewServiceImplTest {
     @Test
     @DisplayName("RetrieveAllReviews-Positive-WithOneReview")
     void test_retrieveAllReviews_positive_withOneReview() {
-        when(reviewRepository.findAll()).thenAnswer((invocation -> List.of(review)));
-        when(mapper.map(any(), any())).thenAnswer((invocation -> reviewDTO));
+        when(reviewRepository.findAll()).thenAnswer((_ -> List.of(review)));
+        when(mapper.map(any(), any())).thenAnswer((_ -> reviewDTO));
         try {
             List<ReviewDTO> actual = reviewService.retrieveAllReviews();
             verify(reviewRepository).findAll();
@@ -264,10 +264,10 @@ class ReviewServiceImplTest {
     @DisplayName("RetrieveAllReviews-Positive-WithMultipleReviews")
     void test_retrieveAllReviews_positive_withMultipleReviews() {
         Review review1 = new Review(0.1f, "Worst Book", 4, "ISBN-NTGD");
-        ReviewDTO reviewDTO1 = new ReviewDTO(0, 0.1f, "Worst Book", 4, "ISBN-NTGD");
-        when(reviewRepository.findAll()).thenAnswer((invocation -> List.of(review, review1)));
-        when(mapper.map(review, ReviewDTO.class)).thenAnswer((invocation -> reviewDTO));
-        when(mapper.map(review1, ReviewDTO.class)).thenAnswer((invocation -> reviewDTO1));
+        ReviewDTO reviewDTO1 = new ReviewDTO(0L, 0.1f, "Worst Book", 4L, "ISBN-NTGD");
+        when(reviewRepository.findAll()).thenAnswer((_ -> List.of(review, review1)));
+        when(mapper.map(review, ReviewDTO.class)).thenAnswer((_ -> reviewDTO));
+        when(mapper.map(review1, ReviewDTO.class)).thenAnswer((_ -> reviewDTO1));
         List<ReviewDTO> actual = null, expected = List.of(reviewDTO, reviewDTO1);
         try {
             actual = reviewService.retrieveAllReviews();
