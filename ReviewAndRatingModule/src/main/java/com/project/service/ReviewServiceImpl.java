@@ -38,7 +38,8 @@ public class ReviewServiceImpl implements ReviewService {
 	@Override
 	public ReviewDTO addReview(float rating, String comment, long userId, String bookId) throws UserNotFoundException {
 		Review review = new Review(rating, comment, userId, bookId);
-		if (userClient.getUserById(userId).getBody() == null) {
+		ResponseEntity<UserDTO> responseUser = userClient.getUserById(userId);
+		if (responseUser.getBody() == null || responseUser.getBody().getUserId() == null) {
 			throw new UserNotFoundException(STR."User with ID: \{userId} Not Found");
 		}
 		review = reviewRepository.save(review);
@@ -48,7 +49,7 @@ public class ReviewServiceImpl implements ReviewService {
 	@Override
 	public ReviewDTO updateReview(long userId, ReviewDTO reviewDTO) throws UserNotAuthorizedException, UserNotFoundException {
 		ResponseEntity<UserDTO> responseUser = userClient.getUserById(userId);
-		if (responseUser.getBody() == null) {
+		if (responseUser.getBody() == null || responseUser.getBody().getUserId() == null) {
 			throw new UserNotFoundException(STR."User with ID: \{userId} Not Found");
 		}
 		UserDTO userDto = responseUser.getBody();
@@ -69,7 +70,7 @@ public class ReviewServiceImpl implements ReviewService {
 			throw new ReviewNotFoundException(STR."Review with Id: \{reviewId} Not found!");
 		}
 		ResponseEntity<UserDTO> responseUser = userClient.getUserById(userId);
-		if (responseUser.getBody() == null) {
+		if (responseUser.getBody() == null || responseUser.getBody().getUserId() == null) {
 			throw new UserNotFoundException(STR."User with ID: \{userId} Not Found");
 		}
 		UserDTO userDTO = responseUser.getBody();

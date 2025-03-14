@@ -19,7 +19,7 @@ import com.project.repositories.BookRepository;
 @Service
 public class BookServiceImpl{
 
-	//@Autowired
+//	@Autowired
 	private BookRepository bookRepository;
 	
 	//@Autowired
@@ -35,15 +35,6 @@ public class BookServiceImpl{
 	public int getBookQuantity(String bookId) {
 		return (int) inventoryInterface.getNoOfBooks(bookId).getBody();
 	}
-
-//	public List<BookDTO> getAllBooks() throws BookResourceNotFoundException {
-//		List<Book> bookList=bookRepository.findAll();
-//		if (bookList.isEmpty()) {
-//            throw new BookResourceNotFoundException("No books found");
-//        }
-//		System.out.println(bookList);
-//        return modelMapper.bookListToBookDTOList(bookList);
-//    }
 	public List<BookDTO> getAllBooks() throws BookResourceNotFoundException {
 		List<Book> bookList = bookRepository.findAll();
 		if (bookList.isEmpty()) {
