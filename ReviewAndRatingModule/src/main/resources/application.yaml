@@ -11,7 +11,8 @@ spring:
         password: root
     jpa:
         database-platform: org.hibernate.dialect.MySQL8Dialect
-        hibernate.ddl-auto: update
+        hibernate:
+            ddl-auto: update
         show-sql: true
 
 #eureka.instance.nonSecurePort=90
