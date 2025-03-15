@@ -1,17 +1,15 @@
 package com.project.services;
 
-import java.awt.print.Book;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.project.exception.BookAlreadyExistsException;
+import com.project.exception.InsufficientInventoryException;
 import org.modelmapper.ModelMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
@@ -25,11 +23,10 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class InventoryServiceImpl implements InventoryService {
-    private static final Logger logger = LoggerFactory.getLogger(InventoryServiceImpl.class);
 
     @Autowired
     private InventoryRepository inventoryRepository;
-    
+
     @Autowired
     private ModelMapper mapper;
     @Autowired
@@ -72,12 +69,17 @@ public class InventoryServiceImpl implements InventoryService {
 
     @Override
     @Transactional
-    public void updateRemoveInventory(String bookID, int quantity) throws BookNotFoundException {
+    public void updateRemoveInventory(String bookID, int quantity) throws BookNotFoundException, InsufficientInventoryException {
         Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
         if (optionalInventory.isPresent()) {
             Inventory inventory = optionalInventory.get();
-            inventory.setQuantity(inventory.getQuantity() - quantity);
-            inventoryRepository.save(inventory);
+            if (inventory.getQuantity() >= quantity) {
+                inventory.setQuantity(inventory.getQuantity() - quantity);
+                inventoryRepository.save(inventory);
+                checkAndNotifyLowStock(bookID);
+            } else {
+                throw new InsufficientInventoryException("Not enough books in inventory");
+            }
         } else {
             throw new BookNotFoundException("Book not found");
         }
@@ -99,18 +101,19 @@ public class InventoryServiceImpl implements InventoryService {
                 }
             }
         } catch (Exception e) {
-            logger.error("Error updating inventory after order", e);
+            throw e;
         }
     }
 
-    @EventListener(ApplicationReadyEvent.class)
     @Override
+    @EventListener(ApplicationContext.class)
     public void checkAndNotifyLowStock(String bookID) throws BookNotFoundException {
         Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
         if (optionalInventory.isPresent()) {
             Inventory inventory = optionalInventory.get();
-            if (inventory.getQuantity() < 10) {
-                emailService.sendLowStockAlert(bookID, inventory.getQuantity());
+            int quantity = inventory.getQuantity();
+            if (quantity< 10) {
+                emailService.sendLowStockAlert(bookID, quantity);
             }
         } else {
             throw new BookNotFoundException("Book not found");
@@ -134,10 +137,8 @@ public class InventoryServiceImpl implements InventoryService {
                 throw new BookNotFoundException("Book not found for ID: " + bookID);
             }
         } catch (OutOfStockException e) {
-            logger.warn("Out of stock for bookID: " + bookID, e);
             throw e;
         } catch (Exception e) {
-            logger.error("Error placing order for bookID: " + bookID, e);
             throw e;
         }
     }
@@ -171,4 +172,5 @@ public class InventoryServiceImpl implements InventoryService {
                 .orElseThrow(()-> new BookNotFoundException("There are no existing books with the given BookId"));
         inventoryRepository.deleteById(existingInventory.getInventoryId());
     }
+
 }

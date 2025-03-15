@@ -26,6 +26,6 @@ public class Inventory {
     @Column(name = "quantity")
     private int quantity;
 
-    @Column(name = "book_Id")
+    @Column(name = "book_Id", nullable = false)
     private String book_Id;
 }

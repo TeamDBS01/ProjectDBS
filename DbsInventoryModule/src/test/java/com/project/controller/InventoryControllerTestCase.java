@@ -3,6 +3,7 @@ package com.project.controller;
 import com.project.dto.InventoryDTO;
 import com.project.exception.BookAlreadyExistsException;
 import com.project.exception.BookNotFoundException;
+import com.project.exception.InsufficientInventoryException;
 import com.project.exception.OutOfStockException;
 import com.project.services.InventoryServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -114,7 +115,7 @@ class InventoryControllerTestCase {
                         .param("bookID", "B001")
                         .param("quantity", "10"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Updation failed - No book failed with given bookID"));
+                .andExpect(content().string("Updation failed - No book found with given bookID"));
     }
 
     @Test
@@ -127,7 +128,7 @@ class InventoryControllerTestCase {
     }
 
     @Test
-    public void testUpdateRemoveInventory_Negative() throws Exception {
+    public void testUpdateRemoveInventory_BookNotFound() throws Exception {
         doThrow(new BookNotFoundException("Book not found")).when(inventoryServiceimpl).updateRemoveInventory("B001", 5);
 
         mockMvc.perform(put("/dbs/inventory/update/remove")
@@ -135,6 +136,17 @@ class InventoryControllerTestCase {
                         .param("quantity", "5"))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Book not found"));
+    }
+
+    @Test
+    public void testRemoveInventoryInsufficientInventory() throws Exception {
+        doThrow(new InsufficientInventoryException("Not enough books in inventory")).when(inventoryServiceimpl).updateRemoveInventory("B001", 50);
+
+        mockMvc.perform(put("/dbs/inventory/update/remove")
+                        .param("bookID", "B001")
+                        .param("quantity", "50"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Not enough books in Inventory"));
     }
 
     @Test
@@ -198,7 +210,7 @@ class InventoryControllerTestCase {
                         .param("bookID", "B003")
                         .param("quantity", "10"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Book with the given bookid Already exist"));
+                .andExpect(content().string("Book with the given bookID already exists"));
     }
 
     @Test
@@ -214,6 +226,6 @@ class InventoryControllerTestCase {
 
         mockMvc.perform(delete("/dbs/inventory/{bookID}","B003"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Book with the given bookid Doesnot exist"));
+                .andExpect(content().string("Book with the given book ID does not exist"));
     }
 }

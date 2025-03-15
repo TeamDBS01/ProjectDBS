@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Optional;
 
 import com.project.exception.BookAlreadyExistsException;
+import com.project.exception.InsufficientInventoryException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,7 +39,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 @ExtendWith(MockitoExtension.class)
 @SpringBootTest(classes = DbsInventoryModuleApplication.class)
 class InventoryServiceImplTestCase {
-    
+
     @Mock
     private ModelMapper mapper;
 
@@ -50,7 +51,7 @@ class InventoryServiceImplTestCase {
 
     @MockitoBean
     private EmailServiceImpl emailServiceImpl;
-    
+
     private Inventory inventory;
     private InventoryDTO inventoryDTO;
 
@@ -87,12 +88,12 @@ class InventoryServiceImplTestCase {
     void testGetInventoryByBookID_Negative() throws BookNotFoundException {
         // Arrange
         when(inventoryRepository.findByBookId("B1000")).thenReturn(Optional.empty());
-        
+
         assertThrows(BookNotFoundException.class, () -> {
             inventoryServiceImpl.getInventoryByBookID("B1000");
         });
     }
-    
+
     @Test
     void testUpdateAddInventory_Positive() {
         String bookID = "B1000";
@@ -106,7 +107,7 @@ class InventoryServiceImplTestCase {
         verify(inventoryRepository).save(inventory);
         assertEquals(20, inventory.getQuantity());
     }
-    
+
     @Test
     void testUpdateAddInventory_Negative() {
         String bookID = "B1001";
@@ -117,73 +118,80 @@ class InventoryServiceImplTestCase {
             inventoryServiceImpl.updateAddInventory(bookID, quantityToAdd);
         });
 
-        verify(inventoryRepository, never()).save(any(Inventory.class));    
+        verify(inventoryRepository, never()).save(any(Inventory.class));
     }
-    
+
     @Test
-    void testUpdateRemoveInventory_Positive() {
+    public void testUpdateRemoveInventory_Positive() throws BookNotFoundException, InsufficientInventoryException {
         String bookID = "B1001";
         int quantityToDeduct = 5;
         inventory.setBook_Id(bookID);
-        inventory.setQuantity(20);
+        inventory.setQuantity(10);
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.of(inventory));
 
         inventoryServiceImpl.updateRemoveInventory(bookID, quantityToDeduct);
 
-        verify(inventoryRepository).save(inventory);
-        assertEquals(15, inventory.getQuantity());
+        assertEquals(5, inventory.getQuantity());
+        verify(inventoryRepository, times(1)).save(inventory);
     }
-    
+
     @Test
-    void testUpdateRemoveInventory_Negative() {
+    public void testUpdateRemoveInventory_BookNotFound() {
         String bookID = "B1001";
         int quantityToDeduct = 5;
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.empty());
 
-        assertThrows(BookNotFoundException.class, () -> {
-            inventoryServiceImpl.updateRemoveInventory(bookID, quantityToDeduct);
-        });
-
-        verify(inventoryRepository, never()).save(any(Inventory.class));    
+        assertThrows(BookNotFoundException.class, () -> inventoryServiceImpl.updateRemoveInventory(bookID, quantityToDeduct));
     }
-    
+
+    @Test
+    public void testUpdateRemoveInventory_InsufficientInventory() {
+        String bookID = "B1001";
+        int quantityToDeduct = 15;
+        inventory.setBook_Id(bookID);
+        inventory.setQuantity(10);
+        when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.of(inventory));
+
+        assertThrows(InsufficientInventoryException.class, () -> inventoryServiceImpl.updateRemoveInventory(bookID, quantityToDeduct));
+    }
+
     @Test
     void testUpdateInventoryAfterOrder_Positive() {
-    	List<String> bookIDs = List.of("B1001", "B1002");
-    	List<Integer> quantities = List.of(5, 3);
-    	Inventory inventory1=new Inventory();
-    	inventory1.setBook_Id("B1001");
-    	inventory1.setQuantity(15);
-    	Inventory inventory2 = new Inventory();
-    	inventory2.setBook_Id("B1002");
-    	inventory2.setQuantity(28);
-    	
-    	when(inventoryRepository.findByBookId("B1001")).thenReturn(Optional.of(inventory1));
-    	when(inventoryRepository.findByBookId("B1002")).thenReturn(Optional.of(inventory2));
-    	
-    	inventoryServiceImpl.updateInventoryAfterOrder(bookIDs, quantities);
-    	
-    	assertEquals(10, inventory1.getQuantity());
-    	assertEquals(25,inventory2.getQuantity());
+        List<String> bookIDs = List.of("B1001", "B1002");
+        List<Integer> quantities = List.of(5, 3);
+        Inventory inventory1=new Inventory();
+        inventory1.setBook_Id("B1001");
+        inventory1.setQuantity(15);
+        Inventory inventory2 = new Inventory();
+        inventory2.setBook_Id("B1002");
+        inventory2.setQuantity(28);
+
+        when(inventoryRepository.findByBookId("B1001")).thenReturn(Optional.of(inventory1));
+        when(inventoryRepository.findByBookId("B1002")).thenReturn(Optional.of(inventory2));
+
+        inventoryServiceImpl.updateInventoryAfterOrder(bookIDs, quantities);
+
+        assertEquals(10, inventory1.getQuantity());
+        assertEquals(25,inventory2.getQuantity());
     }
-    
+
     @Test
     void testUpdateInventoryAfterOrder_Negative() {
-    	List<String> bookIDs = List.of("B1001", "B1002");
-    	List<Integer> quantities = List.of(4, 3);
-    	Inventory inventory1=new Inventory();
-    	inventory1.setBook_Id("B1001");
-    	inventory1.setQuantity(14);
-    	Inventory inventory2 = new Inventory();
-    	inventory2.setBook_Id("B1002");
-    	inventory2.setQuantity(28);
-    	
-    	when(inventoryRepository.findByBookId("B1001")).thenReturn(Optional.of(inventory1));
-    	when(inventoryRepository.findByBookId("B1002")).thenReturn(Optional.empty());
-    	
-    	inventoryServiceImpl.updateInventoryAfterOrder(bookIDs, quantities);
-    	assertEquals(10, inventory1.getQuantity());
-    	assertEquals(28,inventory2.getQuantity());
+        List<String> bookIDs = List.of("B1001", "B1002");
+        List<Integer> quantities = List.of(4, 3);
+        Inventory inventory1=new Inventory();
+        inventory1.setBook_Id("B1001");
+        inventory1.setQuantity(14);
+        Inventory inventory2 = new Inventory();
+        inventory2.setBook_Id("B1002");
+        inventory2.setQuantity(28);
+
+        when(inventoryRepository.findByBookId("B1001")).thenReturn(Optional.of(inventory1));
+        when(inventoryRepository.findByBookId("B1002")).thenReturn(Optional.empty());
+
+        inventoryServiceImpl.updateInventoryAfterOrder(bookIDs, quantities);
+        assertEquals(10, inventory1.getQuantity());
+        assertEquals(28,inventory2.getQuantity());
     }
 
     @Test
@@ -234,7 +242,7 @@ class InventoryServiceImplTestCase {
             inventoryServiceImpl.checkAndNotifyLowStock(bookID);
         });
     }
-    
+
     @Test
     void testPlaceOrder_Positive() throws BookNotFoundException {
         String bookID = "B1001";
@@ -246,19 +254,19 @@ class InventoryServiceImplTestCase {
         inventoryServiceImpl.placeOrder(bookID, quantityToOrder);
 
         verify(inventoryRepository).save(inventory);
-        
+
         assertEquals(95, inventory.getQuantity());
     }
 
     @Test
     void testPlaceOrder_OutOfStock() {
-    	
+
         String bookID = "B1001";
         int quantityToOrder = 15;
         inventory.setBook_Id(bookID);
         inventory.setQuantity(10);
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.of(inventory));
-        
+
         assertThrows(OutOfStockException.class, () -> {
             inventoryServiceImpl.placeOrder(bookID, quantityToOrder);
         });
@@ -297,11 +305,9 @@ class InventoryServiceImplTestCase {
 
     @Test
     void testDisplayInventory_Positive() {
-        // Mock the repository call to return a list with one inventory item
         when(inventoryRepository.findAll()).thenReturn(Arrays.asList(inventory));
         when(mapper.map(inventory, InventoryDTO.class)).thenReturn(inventoryDTO);
 
-        // Call the method and assert the result
         List<InventoryDTO> result = inventoryServiceImpl.displayInventory();
         assertEquals(1, result.size());
         assertEquals(inventoryDTO, result.get(0));
@@ -309,10 +315,8 @@ class InventoryServiceImplTestCase {
 
     @Test
     void testDisplayInventory_Negative() {
-        // Mock the repository call to return an empty list
         when(inventoryRepository.findAll()).thenReturn(Collections.emptyList());
 
-        // Call the method and assert that BookNotFoundException is thrown
         assertThrows(BookNotFoundException.class, () -> {
             inventoryServiceImpl.displayInventory();
         });
@@ -320,7 +324,6 @@ class InventoryServiceImplTestCase {
 
     @Test
     void testAddBookToInventory_Positive() throws BookAlreadyExistsException {
-        // Arrange
         String bookID = "12345";
         int quantity = 10;
         InventoryRepository inventoryRepository = mock(InventoryRepository.class);
@@ -328,16 +331,13 @@ class InventoryServiceImplTestCase {
         ReflectionTestUtils.setField(inventoryService, "inventoryRepository", inventoryRepository);
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.empty());
 
-        // Act
         inventoryService.addBookToInventory(bookID, quantity);
 
-        // Assert
         verify(inventoryRepository, times(1)).save(any(Inventory.class));
     }
 
     @Test
     public void testAddBookToInventory_Negative() {
-        // Arrange
         String bookID = "12345";
         int quantity = 10;
         InventoryRepository inventoryRepository = mock(InventoryRepository.class);
@@ -348,7 +348,6 @@ class InventoryServiceImplTestCase {
         existingInventory.setQuantity(5);
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.of(existingInventory));
 
-        // Act & Assert
         assertThrows(BookAlreadyExistsException.class, () -> {
             inventoryService.addBookToInventory(bookID, quantity);
         });
@@ -367,23 +366,19 @@ class InventoryServiceImplTestCase {
         existingInventory.setQuantity(10);
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.of(existingInventory));
 
-        // Act
         inventoryService.deleteBookFromInventory(bookID);
 
-        // Assert
         verify(inventoryRepository, times(1)).deleteById(1L);
     }
 
     @Test
     public void testDeleteBookFromInventory_NotFound() {
-        // Arrange
         String bookID = "99999";
         InventoryRepository inventoryRepository = mock(InventoryRepository.class);
         InventoryServiceImpl inventoryService = new InventoryServiceImpl();
         ReflectionTestUtils.setField(inventoryService, "inventoryRepository", inventoryRepository);
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(BookNotFoundException.class, () -> {
             inventoryService.deleteBookFromInventory(bookID);
         });

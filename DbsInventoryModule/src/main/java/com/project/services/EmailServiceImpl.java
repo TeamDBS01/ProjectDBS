@@ -16,6 +16,7 @@ public class EmailServiceImpl implements EmailService {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("sathishvarunt@gmail.com");
         message.setTo("sathishvarunt@gmail.com");
+        message.setSubject("Low Stock Alert");
         message.setText("The stock for book ID " + bookID + " is low. Current quantity: " + quantity);
         mailSender.send(message);
 
