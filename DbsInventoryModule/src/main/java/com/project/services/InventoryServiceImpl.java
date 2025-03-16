@@ -95,7 +95,7 @@ public class InventoryServiceImpl implements InventoryService {
                 Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
                 if (optionalInventory.isPresent()) {
                     Inventory inventory = optionalInventory.get();
-                    inventory.setQuantity(inventory.getQuantity() - quantity);
+                    inventory.setQuantity(Math.max((inventory.getQuantity() - quantity),0));
                     inventoryRepository.save(inventory);
                     checkAndNotifyLowStock(bookID);
                 }

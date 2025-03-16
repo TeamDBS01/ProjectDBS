@@ -23,6 +23,8 @@ spring:
                     starttls:
                         enable: true
                         required: true
+    banner:
+        location: classpath:banner.txt
 
 server:
     port: 8088
