@@ -26,10 +26,15 @@ spring:
                     starttls:
                         enable: true
                         required: true
-                    connectiontimeout: 5000
-                    timeout: 5000
-                    writetimeout: 5000
-                debug: true
+    banner:
+        location: classpath:banner.txt
+    boot:
+        admin:
+            client:
+                url: http://localhost:8761/admin
+                enabled: true
+                instance:
+                    service-url: http://localhost:8088
 eureka:
     instance:
         hostname: ${vcap.application.uris[0]:localhost}
@@ -38,3 +43,20 @@ eureka:
         leaseRenewalIntervalInSeconds: 5
     client:
         region: default
+        service-url:
+            defaultZone: http://localhost:8761/eureka/
+
+management:
+    info:
+        env:
+            enabled: true
+    endpoints:
+        web:
+            exposure:
+                include: "*"
+
+info:
+    app:
+        name: Inventory Management Rest API
+        version: 1.0.0
+        description: Inventory Management Rest API

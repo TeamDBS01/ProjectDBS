@@ -1,6 +1,11 @@
 spring:
   application:
     name: EurekaServer
+  boot:
+    admin:
+      context-path: /admin
+      ui:
+        title: "Eureka Server and Admin"
 
 server:
   port: 8761
@@ -9,3 +14,9 @@ eureka:
   client:
     register-with-eureka: false
     fetch-registry: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
