@@ -1,0 +1,25 @@
+spring:
+    datasource:
+        driver: com.h2.Driver
+        url: jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+        username: sa
+        password: password
+    jpa:
+        database-platform: org.hibernate.dialect.H2Dialect
+        hibernate:
+            ddl-auto: update
+        show-sql: true
+#eureka.client.service-url
+
+#eureka.instance.hostname=${vcap.application.uris[0]:localhost}
+##eureka.instance.nonSecurePort=90
+#eureka.instance.metadataMap.instanceId=${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
+#eureka.instance.leaseRenewalIntervalInSeconds = 5
+#eureka.client.region = default
+#eureka.client.registryFetchIntervalSeconds = 5
+#eureka.client.serviceUrl.defaultZone=http://localhost:8761/eureka/
+
+eureka:
+    client:
+        enabled:
+            false
