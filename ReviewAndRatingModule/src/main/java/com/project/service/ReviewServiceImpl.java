@@ -1,17 +1,21 @@
 package com.project.service;
 
 
+import com.project.dto.BookDTO;
 import com.project.dto.ReviewDTO;
 import com.project.dto.UserDTO;
 import com.project.enums.Role;
-import com.project.exception.ReviewNotFoundException;
-import com.project.exception.UserNotAuthorizedException;
-import com.project.exception.UserNotFoundException;
+import com.project.exception.*;
+import com.project.feign.BookClient;
 import com.project.feign.UserClient;
 import com.project.models.Review;
 import com.project.repositories.ReviewRepository;
+import feign.FeignException;
 import org.modelmapper.ModelMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -24,33 +28,49 @@ public class ReviewServiceImpl implements ReviewService {
 
 	private final ReviewRepository reviewRepository;
 	private final UserClient userClient;
+	private final BookClient bookClient;
 	private final ModelMapper mapper;
 
 	@Autowired
-	public ReviewServiceImpl(ReviewRepository reviewRepository, UserClient userClient, ModelMapper modelMapper) {
+	public ReviewServiceImpl(ReviewRepository reviewRepository, UserClient userClient, BookClient bookClient, ModelMapper modelMapper) {
 		this.reviewRepository = reviewRepository;
 		this.userClient = userClient;
-		this.mapper = modelMapper;
+        this.bookClient = bookClient;
+        this.mapper = modelMapper;
 	}
 
 	@Override
-	public ReviewDTO addReview(float rating, String comment, long userId, String bookId) throws UserNotFoundException {
+	public ReviewDTO addReview(float rating, String comment, long userId, String bookId) throws UserNotFoundException, BookNotFoundException {
 		Review review = new Review(rating, comment, userId, bookId);
 		ResponseEntity<UserDTO> responseUser = userClient.getUserById(userId);
 		if (responseUser.getBody() == null || responseUser.getBody().getUserId() == null) {
 			throw new UserNotFoundException(STR."User with ID: \{userId} Not Found");
+		}
+		try {
+			bookClient.getBookById(bookId);
+		} catch (FeignException e) {
+			throw new BookNotFoundException(STR."Book with ID: \{bookId} Not Found");
 		}
 		review = reviewRepository.save(review);
 		return mapper.map(review, ReviewDTO.class);
 	}
 
 	@Override
-	public ReviewDTO updateReview(long userId, ReviewDTO reviewDTO) throws UserNotAuthorizedException, UserNotFoundException {
+	public ReviewDTO updateReview(long userId, ReviewDTO reviewDTO) throws UserNotAuthorizedException, UserNotFoundException, IDMismatchException, BookNotFoundException {
 		ResponseEntity<UserDTO> responseUser = userClient.getUserById(userId);
 		if (responseUser.getBody() == null || responseUser.getBody().getUserId() == null) {
 			throw new UserNotFoundException(STR."User with ID: \{userId} Not Found");
 		}
+		try {
+			bookClient.getBookById(reviewDTO.getBookId());
+		} catch (FeignException e) {
+			throw new BookNotFoundException(STR."Book with ID: \{reviewDTO.getBookId()} Not Found");
+		}
+		Optional<Review> optionalReview = reviewRepository.findById(reviewDTO.getReviewId());
 		UserDTO userDto = responseUser.getBody();
+		if (optionalReview.isEmpty() || !optionalReview.get().getBookId().equals(reviewDTO.getBookId()) || optionalReview.get().getUserId() != reviewDTO.getUserId()) {
+			throw new IDMismatchException("ReviewID / UserID / BookID should not be changed");
+		}
 		if (userDto.getRole() == Role.ADMIN || reviewDTO.getUserId() == userId) {
 			Review review = mapper.map(reviewDTO, Review.class);
 			review = reviewRepository.save(review);
@@ -97,6 +117,17 @@ public class ReviewServiceImpl implements ReviewService {
 		List<Review> reviewList = reviewRepository.findByUserId(userId);
 		if (reviewList.isEmpty()) {
 			throw new ReviewNotFoundException(STR."No Reviews with User ID: \{userId} Found!");
+		}
+		return reviewList.stream()
+				.map((review) ->mapper.map(review, ReviewDTO.class))
+				.toList();
+	}
+
+	@Override
+	public List<ReviewDTO> retrieveAllReviewsByBookId(String bookId) throws ReviewNotFoundException {
+		List<Review> reviewList = reviewRepository.findByBookId(bookId);
+		if (reviewList.isEmpty()) {
+			throw new ReviewNotFoundException(STR."No Reviews with Book ID: \{bookId} Found!");
 		}
 		return reviewList.stream()
 				.map((review) ->mapper.map(review, ReviewDTO.class))

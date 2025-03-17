@@ -2,15 +2,16 @@ package com.project.service;
 
 
 import com.project.ReviewAndRatingModuleApplication;
+import com.project.dto.BookDTO;
 import com.project.dto.ReviewDTO;
 import com.project.dto.UserDTO;
 import com.project.enums.Role;
-import com.project.exception.ReviewNotFoundException;
-import com.project.exception.UserNotAuthorizedException;
-import com.project.exception.UserNotFoundException;
+import com.project.exception.*;
+import com.project.feign.BookClient;
 import com.project.feign.UserClient;
 import com.project.models.Review;
 import com.project.repositories.ReviewRepository;
+import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,12 +42,15 @@ class ReviewServiceImplTest {
     private ModelMapper mapper;
     @Mock
     private UserClient userClient;
+    @Mock
+    private BookClient bookClient;
     @InjectMocks
     private ReviewServiceImpl reviewService;
 
     private Review review;
     private ReviewDTO reviewDTO;
     private UserDTO userDTO;
+    private BookDTO bookDTO;
     private static final float RATING = 4.5f;
     private static final String COMMENT = "Great Book";
     private static final long USER_ID = 2;
@@ -54,9 +58,10 @@ class ReviewServiceImplTest {
 
     @BeforeEach
     void setup() {
-        review = new Review(1L, 4.5f, "Great Book", 2L, "ISBN-GRT2BK");
-        reviewDTO = new ReviewDTO(1L, 4.5f, "Great Book", 2L, "ISBN-GRT2BK");
+        review = new Review(1L, RATING, COMMENT, USER_ID, BOOK_ID);
+        reviewDTO = new ReviewDTO(1L, RATING, COMMENT, USER_ID, BOOK_ID);
         userDTO = new UserDTO(12L, "name", "mail", "pass", Role.CUSTOMER);
+        bookDTO = new BookDTO("ISBN-1212", "title", 2000, 9L, 8, 7);
     }
 
     @Test
@@ -65,15 +70,17 @@ class ReviewServiceImplTest {
         when(reviewRepository.save(any())).thenReturn(review);
         when(mapper.map(any(), any())).thenReturn(reviewDTO);
         when(userClient.getUserById(USER_ID)).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(BOOK_ID)).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
         ReviewDTO reviewDTOActual = null;
         try {
             reviewDTOActual = reviewService.addReview(RATING, COMMENT, USER_ID, BOOK_ID);
-        } catch (UserNotFoundException e) {
+        } catch (UserNotFoundException | BookNotFoundException e) {
             fail(STR."Error thrown:  \{e.toString()}");
         }
         verify(reviewRepository).save(any());
         verify(mapper).map(any(), any());
         verify(userClient).getUserById(USER_ID);
+        verify(bookClient).getBookById(BOOK_ID);
         assertEquals(reviewDTO, reviewDTOActual);
     }
 
@@ -82,10 +89,13 @@ class ReviewServiceImplTest {
     void test_addReview_negative() {
         when(reviewRepository.save(any())).thenReturn(new IllegalArgumentException());
         when(userClient.getUserById(USER_ID)).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(BOOK_ID)).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
         assertThrows(Exception.class,
                 () -> reviewService.addReview(RATING, COMMENT, USER_ID, BOOK_ID),
                 "Error not thrown in addReview");
         verify(reviewRepository).save(any());
+        verify(userClient).getUserById(USER_ID);
+        verify(bookClient).getBookById(BOOK_ID);
         assertFalse(reviewRepository.findById(review.getReviewId()).isPresent());
     }
 
@@ -100,21 +110,49 @@ class ReviewServiceImplTest {
         assertFalse(reviewRepository.findById(review.getReviewId()).isPresent());
     }
 
+    @Test
+    @DisplayName("AddReview-Negative-UserNotFound-EmptyObject")
+    void test_addReview_negative_userNotFound_emptyObject() {
+        when(userClient.getUserById(USER_ID)).thenReturn(ResponseEntity.ok(new UserDTO()));
+        assertThrows(UserNotFoundException.class,
+                () -> reviewService.addReview(RATING, COMMENT, USER_ID, BOOK_ID),
+                "Error not thrown in addReview");
+        verify(userClient).getUserById(USER_ID);
+        assertFalse(reviewRepository.findById(review.getReviewId()).isPresent());
+    }
+
+    @Test
+    @DisplayName("AddReview-Negative-BookNotFound")
+    void test_addReview_negative_bookNotFound() {
+        when(userClient.getUserById(USER_ID)).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(BOOK_ID)).thenThrow(FeignException.class);
+        assertThrows(BookNotFoundException.class,
+                () -> reviewService.addReview(RATING, COMMENT, USER_ID, BOOK_ID),
+                "Error not thrown in addReview");
+        verify(userClient).getUserById(USER_ID);
+        verify(bookClient).getBookById(BOOK_ID);
+        assertFalse(reviewRepository.findById(review.getReviewId()).isPresent());
+    }
+
 
     @Test
     @DisplayName("UpdateReview-Positive-SameUser")
     void test_updateReview_positive_sameUser() {
         when(userClient.getUserById(USER_ID)).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(any())).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
+        when(reviewRepository.findById(any())).thenReturn(Optional.of(review));
         when(mapper.map(review, ReviewDTO.class)).thenReturn(reviewDTO);
         when(reviewRepository.save(any())).thenReturn(review);
         when(mapper.map(reviewDTO, Review.class)).thenReturn(review);
         ReviewDTO actual = null;
         try {
             actual = reviewService.updateReview(USER_ID, reviewDTO);
-        } catch (UserNotFoundException | UserNotAuthorizedException e) {
+        } catch (UserNotFoundException | UserNotAuthorizedException | IDMismatchException | BookNotFoundException e) {
              fail(STR."Error thrown in updateReview: \{e}");
         }
         verify(userClient).getUserById(USER_ID);
+        verify(bookClient).getBookById(any());
+        verify(reviewRepository).findById(any());
         verify(mapper).map(reviewDTO, Review.class);
         verify(reviewRepository).save(any());
         verify(mapper).map(review, ReviewDTO.class);
@@ -127,16 +165,20 @@ class ReviewServiceImplTest {
     void test_updateReview_positive_admin() {
         userDTO.setRole(Role.ADMIN);
         when(userClient.getUserById(4L)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
+        when(bookClient.getBookById(any())).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
+        when(reviewRepository.findById(any())).thenReturn(Optional.of(review));
         when(mapper.map(review, ReviewDTO.class)).thenReturn(reviewDTO);
         when(reviewRepository.save(any())).thenReturn(review);
         when(mapper.map(reviewDTO, Review.class)).thenReturn(review);
         ReviewDTO actual = null;
         try {
             actual = reviewService.updateReview(4L, reviewDTO);
-        } catch (UserNotFoundException | UserNotAuthorizedException e) {
+        } catch (UserNotFoundException | UserNotAuthorizedException | IDMismatchException | BookNotFoundException e) {
             fail(STR."Error thrown in updateReview: \{e}");
         }
         verify(userClient).getUserById(4L);
+        verify(bookClient).getBookById(any());
+        verify(reviewRepository).findById(any());
         verify(mapper).map(reviewDTO, Review.class);
         verify(reviewRepository).save(any());
         verify(mapper).map(review, ReviewDTO.class);
@@ -147,17 +189,93 @@ class ReviewServiceImplTest {
     @DisplayName("UpdateReview-Negative-Unauthorized")
     void test_updateReview_negative_unauthorized() {
         when(userClient.getUserById(4L)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
+        when(bookClient.getBookById(any())).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
+        when(reviewRepository.findById(any())).thenReturn(Optional.of(review));
         assertThrows(
                 UserNotAuthorizedException.class,
                 () -> reviewService.updateReview(4L, reviewDTO),
                 "Error not thrown in UpdateReview for User Unauthorized");
+        verify(reviewRepository).findById(any());
         verify(userClient).getUserById(4L);
+        verify(bookClient).getBookById(any());
+    }
+
+    @Test
+    @DisplayName("UpdateReview-Negative-ReviewIDMismatch")
+    void test_updateReview_negative_reviewIDMismatch() {
+        when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
+        when(bookClient.getBookById(any())).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
+        when(reviewRepository.findById(any())).thenReturn(Optional.empty());
+        assertThrows(
+                IDMismatchException.class,
+                () -> reviewService.updateReview(USER_ID, reviewDTO),
+                "Error not thrown in UpdateReview for Review ID Mismatch");
+        verify(userClient).getUserById(USER_ID);
+        verify(bookClient).getBookById(any());
+        verify(reviewRepository).findById(any());
+    }
+
+    @Test
+    @DisplayName("UpdateReview-Negative-UserIDMismatch")
+    void test_updateReview_negative_userIDMismatch() {
+        when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
+        when(bookClient.getBookById(any())).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
+        review.setUserId(4L);
+        when(reviewRepository.findById(any())).thenReturn(Optional.of(review));
+        assertThrows(
+                IDMismatchException.class,
+                () -> reviewService.updateReview(USER_ID, reviewDTO),
+                "Error not thrown in UpdateReview for User ID Mismatch");
+        verify(userClient).getUserById(USER_ID);
+        verify(bookClient).getBookById(any());
+        verify(reviewRepository).findById(any());
+    }
+
+    @Test
+    @DisplayName("UpdateReview-Negative-BookIDMismatch")
+    void test_updateReview_negative_bookIDMismatch() {
+        when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
+        when(bookClient.getBookById(any())).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
+        review.setBookId("ISBN-NTFND");
+        when(reviewRepository.findById(any())).thenReturn(Optional.of(review));
+        assertThrows(
+                IDMismatchException.class,
+                () -> reviewService.updateReview(USER_ID, reviewDTO),
+                "Error not thrown in UpdateReview for Book ID Mismatch");
+        verify(userClient).getUserById(USER_ID);
+        verify(bookClient).getBookById(any());
+        verify(reviewRepository).findById(any());
+    }
+
+
+    @Test
+    @DisplayName("UpdateReview-Negative-BookNotFound")
+    void test_updateReview_negative_bookNotFound() {
+        when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
+        when(bookClient.getBookById(any())).thenThrow(FeignException.class);
+        assertThrows(
+                BookNotFoundException.class,
+                () -> reviewService.updateReview(USER_ID, reviewDTO),
+                "Error not thrown in UpdateReview for Book Not Found");
+        verify(userClient).getUserById(USER_ID);
+        verify(bookClient).getBookById(any());
     }
 
     @Test
     @DisplayName("UpdateReview-Negative-UserNotFound")
     void test_updateReview_negative_userNotFound() {
         when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(null, HttpStatus.OK));
+        assertThrows(
+                UserNotFoundException.class,
+                () -> reviewService.updateReview(USER_ID, reviewDTO),
+                "Error not thrown in UpdateReview for User Not Found");
+        verify(userClient).getUserById(USER_ID);
+    }
+
+    @Test
+    @DisplayName("UpdateReview-Negative-UserNotFound-EmptyObject")
+    void test_updateReview_negative_userNotFound_emptyObject() {
+        when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(new UserDTO(), HttpStatus.OK));
         assertThrows(
                 UserNotFoundException.class,
                 () -> reviewService.updateReview(USER_ID, reviewDTO),
@@ -226,6 +344,19 @@ class ReviewServiceImplTest {
     void test_deleteReview_negative_userNotFound() {
         when(reviewRepository.findById(review.getReviewId())).thenReturn(Optional.of(review));
         when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(null, HttpStatus.OK));
+        assertThrows(
+                UserNotFoundException.class,
+                () -> reviewService.deleteReview(USER_ID, review.getReviewId()),
+                "Error not thrown in DeleteReview");
+        verify(reviewRepository).findById(review.getReviewId());
+        verify(userClient).getUserById(USER_ID);
+    }
+
+    @Test
+    @DisplayName("DeleteReview-Negative-UserNotFound-EmptyObject")
+    void test_deleteReview_negative_userNotFound_emptyObject() {
+        when(reviewRepository.findById(review.getReviewId())).thenReturn(Optional.of(review));
+        when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(new UserDTO(), HttpStatus.OK));
         assertThrows(
                 UserNotFoundException.class,
                 () -> reviewService.deleteReview(USER_ID, review.getReviewId()),
@@ -345,5 +476,35 @@ class ReviewServiceImplTest {
                 () -> reviewService.retrieveAllReviewsByUserId(USER_ID),
                 "Error not thrown in RetrieveAllReviewsByUserId");
         verify(reviewRepository).findByUserId(USER_ID);
+    }
+
+    @Test
+    @DisplayName("RetrieveAllReviewsByBookId-Positive")
+    void test_retrieveAllReviewsByBookId_positive() {
+        Review review2 = new Review(3f, "Good Content", 2L, "ISBN-3080");
+        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", 2L, "ISBN-3080");
+        when(reviewRepository.findByBookId(BOOK_ID)).thenReturn(List.of(review, review2));
+        when(mapper.map(review, ReviewDTO.class)).thenReturn(reviewDTO);
+        when(mapper.map(review2, ReviewDTO.class)).thenReturn(reviewDTO2);
+        List<ReviewDTO> actual = null;
+        List<ReviewDTO> expected = List.of(reviewDTO, reviewDTO2);
+        try {
+            actual = reviewService.retrieveAllReviewsByBookId(review.getBookId());
+        } catch (ReviewNotFoundException e) {
+            fail(STR."Error thrown in RetrieveById \{e.getMessage()}");
+        }
+        verify(reviewRepository).findByBookId(BOOK_ID);
+        verify(mapper, times(2)).map(any(), any());
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    @DisplayName("RetrieveAllReviewsByBookId-Negative-ReviewNotFound")
+    void test_retrieveAllReviewsByBookId_negative_reviewNotFound() {
+        when(reviewRepository.findByBookId(BOOK_ID)).thenReturn(List.of());
+        assertThrows(ReviewNotFoundException.class,
+                () -> reviewService.retrieveAllReviewsByBookId(BOOK_ID),
+                "Error not thrown in RetrieveAllReviewsByBookId");
+        verify(reviewRepository).findByBookId(BOOK_ID);
     }
 }

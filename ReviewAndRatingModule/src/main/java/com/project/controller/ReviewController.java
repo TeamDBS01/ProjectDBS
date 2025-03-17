@@ -1,20 +1,20 @@
 package com.project.controller;
 
 import com.project.dto.ReviewDTO;
-import com.project.exception.ReviewNotFoundException;
-import com.project.exception.UserNotAuthorizedException;
-import com.project.exception.UserNotFoundException;
+import com.project.exception.*;
 import com.project.service.ReviewService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -90,7 +90,10 @@ public class ReviewController {
 			response = new ResponseEntity<>(reviewDTOList, HttpStatus.FOUND);
 		} catch (ReviewNotFoundException e) {
 			logger.error(e.getMessage());
-			response = new ResponseEntity<>(List.of(), HttpStatus.NOT_FOUND);
+			response = new ResponseEntity<>(List.of(new ReviewDTO("No Reviews Found!")), HttpStatus.NOT_FOUND);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			response = new ResponseEntity<>(List.of(new ReviewDTO("No Reviews Found!")), HttpStatus.BAD_REQUEST);
 		}
 		return response;
 	}
@@ -105,7 +108,7 @@ public class ReviewController {
 			@ApiResponse(responseCode = "302", description = "All reviews found by User Id"),
 			@ApiResponse(responseCode = "404", description = "No Reviews found for given User Id")
 	})
-	@GetMapping("/all/{userId}")
+	@GetMapping("/user/{userId}")
 	public ResponseEntity<List<ReviewDTO>> getAllReviewsByUserId(@Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId) {
 		ResponseEntity<List<ReviewDTO>> response;
 		try {
@@ -113,7 +116,36 @@ public class ReviewController {
 			response = new ResponseEntity<>(reviewDTOList, HttpStatus.FOUND);
 		} catch (ReviewNotFoundException e) {
 			logger.error(e.getMessage());
-			response = new ResponseEntity<>(List.of(), HttpStatus.NOT_FOUND);
+			response = new ResponseEntity<>(List.of(new ReviewDTO(STR."No Reviews with User ID: \{userId} Found!")), HttpStatus.NOT_FOUND);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			response = new ResponseEntity<>(List.of(new ReviewDTO("No Reviews Found!")), HttpStatus.BAD_REQUEST);
+		}
+		return response;
+	}
+
+	/**
+	 * Retrieves all reviews by a specific book ID.
+	 * @param bookId The ID of the user whose reviews to retrieve.
+	 * @return ResponseEntity containing a list of reviews or an error message.
+	 */
+	@Operation(description = "Get Operation for all Reviews by Book Id")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "302", description = "All reviews found by Book Id"),
+			@ApiResponse(responseCode = "404", description = "No Reviews found for given Book Id")
+	})
+	@GetMapping("/book/{bookId}")
+	public ResponseEntity<List<ReviewDTO>> getAllReviewsByBookId(@Size(min = 3, max = 20, message = "{com.project.dto.ReviewDTO.bookid.size}") @PathVariable String bookId) {
+		ResponseEntity<List<ReviewDTO>> response;
+		try {
+			List<ReviewDTO> reviewDTOList = reviewService.retrieveAllReviewsByBookId(bookId);
+			response = new ResponseEntity<>(reviewDTOList, HttpStatus.FOUND);
+		} catch (ReviewNotFoundException e) {
+			logger.error(e.getMessage());
+			response = new ResponseEntity<>(List.of(new ReviewDTO(STR."No Reviews with Book ID: \{bookId} Found!")), HttpStatus.NOT_FOUND);
+		} catch (Exception e) {
+			logger.error(e.getMessage());
+			response = new ResponseEntity<>(List.of(new ReviewDTO("No Reviews Found!")), HttpStatus.BAD_REQUEST);
 		}
 		return response;
 	}
@@ -129,22 +161,22 @@ public class ReviewController {
 	@Operation(description = "Add Operation for a Review with rating, comment, userId, and bookId")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "Review created"),
-			@ApiResponse(responseCode = "404", description = "User Not Found - Unable to add Review"),
+			@ApiResponse(responseCode = "404", description = "User/Book Not Found - Unable to add Review"),
 			@ApiResponse(responseCode = "502", description = "Bad gateway - Unable to add Review")
 	})
-	@PostMapping("/add/{rating}/{comment}/{userId}/{bookId}")
+	@PostMapping("/add/values")
 	public ResponseEntity<ReviewDTO> addReview(
 			@DecimalMin(value = "0.1", message = "{com.project.dto.ReviewDTO.rating.min}")
-			@Max(value = 5, message = "{com.project.dto.ReviewDTO.rating.max}") @PathVariable float rating,
-			@Size(min = 3, max = 200, message = "{com.project.dto.ReviewDTO.comment.size}") @PathVariable String comment,
-			@Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId,
-			@NotBlank(message = "{com.project.dto.ReviewDTO.bookid.min}") @PathVariable String bookId) {
+			@Max(value = 5, message = "{com.project.dto.ReviewDTO.rating.max}") @RequestParam float rating,
+			@Size(min = 3, max = 200, message = "{com.project.dto.ReviewDTO.comment.size}") @RequestParam String comment,
+			@Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @RequestParam long userId,
+			@Size(min = 3, max = 200, message = "{com.project.dto.ReviewDTO.bookid.min}") @RequestParam String bookId) {
 		ResponseEntity<ReviewDTO> response;
         ReviewDTO reviewDTO = null;
         try {
 			reviewDTO = reviewService.addReview(rating, comment, userId, bookId);
 			response = new ResponseEntity<>(reviewDTO, HttpStatus.CREATED);
-		} catch (UserNotFoundException e) {
+		} catch (UserNotFoundException | BookNotFoundException e) {
 			logger.error(e.toString());
 			response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
@@ -162,7 +194,7 @@ public class ReviewController {
 	@Operation(description = "Add Operation for a Review with ReviewDTO")
 	@ApiResponses(value = {
 			@ApiResponse(responseCode = "201", description = "Review created"),
-			@ApiResponse(responseCode = "404", description = "User Not Found - Unable to add Review"),
+			@ApiResponse(responseCode = "404", description = "User/Book Not Found - Unable to add Review"),
 			@ApiResponse(responseCode = "502", description = "Bad gateway - Review not created")
 	})
 	@PostMapping("/add")
@@ -171,10 +203,10 @@ public class ReviewController {
         try {
 			reviewDTO = reviewService.addReview(reviewDTO.getRating(), reviewDTO.getComment(), reviewDTO.getUserId(), reviewDTO.getBookId());
 			response = new ResponseEntity<>(reviewDTO, HttpStatus.CREATED);
-		} catch (UserNotFoundException e) {
+		} catch (UserNotFoundException | BookNotFoundException e) {
 			logger.error(e.toString());
 			response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.NOT_FOUND);
-        } catch (Exception e) {
+		} catch (Exception e) {
 			logger.error(e.toString());
 			response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.BAD_GATEWAY);
         }
@@ -202,13 +234,18 @@ public class ReviewController {
 		try {
             reviewDTO = reviewService.updateReview(userId, reviewDTO);
 			response = new ResponseEntity<>(reviewDTO, HttpStatus.OK);
-        } catch (UserNotAuthorizedException | UserNotFoundException e) {
+        } catch (UserNotAuthorizedException | UserNotFoundException | IDMismatchException | BookNotFoundException | IllegalArgumentException e) {
 			logger.error(e.toString());
 			response = switch (e) {
 				case UserNotAuthorizedException ex -> new ResponseEntity<>(new ReviewDTO(STR."Exception: \{ex.getClass().getSimpleName()}, Message: \{ex.getMessage()}"), HttpStatus.UNAUTHORIZED);
 				case UserNotFoundException ex -> new ResponseEntity<>(new ReviewDTO(STR."Exception: \{ex.getClass().getSimpleName()}, Message: \{ex.getMessage()}"), HttpStatus.NOT_FOUND);
+				case BookNotFoundException ex -> new ResponseEntity<>(new ReviewDTO(STR."Exception: \{ex.getClass().getSimpleName()}, Message: \{ex.getMessage()}"), HttpStatus.NOT_FOUND);
+				case IDMismatchException ex -> new ResponseEntity<>(new ReviewDTO(STR."Exception: \{ex.getClass().getSimpleName()}, Message: \{ex.getMessage()}"), HttpStatus.NOT_ACCEPTABLE);
 				default -> new ResponseEntity<>(new ReviewDTO(STR."Exception: \{e.getClass().getSimpleName()}, Message: \{e.getMessage()}"), HttpStatus.BAD_REQUEST);
 			};
+        } catch (Exception ex) {
+			logger.error(ex.getMessage());
+			response = new ResponseEntity<>(new ReviewDTO(STR."Exception: \{ex.getClass().getSimpleName()}, Message: \{ex.getMessage()}"), HttpStatus.NOT_MODIFIED);
         }
 		return response;
 	}
@@ -235,14 +272,17 @@ public class ReviewController {
             if (!reviewService.deleteReview(userId, reviewId)) {
 				response = new ResponseEntity<>(false, HttpStatus.NOT_MODIFIED);
 			}
-        } catch (ReviewNotFoundException | UserNotAuthorizedException | UserNotFoundException e) {
+        } catch (ReviewNotFoundException | UserNotAuthorizedException | UserNotFoundException | IllegalArgumentException e) {
 			logger.error(e.getMessage());
 			response = switch (e) {
 				case ReviewNotFoundException ex -> new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
-				case UserNotAuthorizedException ex -> new ResponseEntity<>(false, HttpStatus.UNAUTHORIZED);
 				case UserNotFoundException ex -> new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
+				case UserNotAuthorizedException ex -> new ResponseEntity<>(false, HttpStatus.UNAUTHORIZED);
 				default -> new ResponseEntity<>(false, HttpStatus.BAD_REQUEST);
 			};
+        } catch (Exception e) {
+			logger.error(e.getMessage());
+			response = new ResponseEntity<>(false, HttpStatus.NOT_MODIFIED);
         }
         return response;
 	}
