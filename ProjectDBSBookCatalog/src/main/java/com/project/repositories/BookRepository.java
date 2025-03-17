@@ -28,11 +28,10 @@ public interface BookRepository extends JpaRepository<Book, String> {
 	void deleteByTitle(String title);
 	Optional<Book> findByTitle(String title);
 	@Modifying
-	@Query(value="UPDATE Book b SET b.title = :title, b.price = :price, b.inventoryID = :inventoryID, b.authorID = :authorID, b.categoryID = :categoryID WHERE b.bookID = :bookID")
-	int updateBookById(@Param("bookID") String bookID,
+	@Query(value="UPDATE Book b SET b.title = :title, b.price = :price, b.authorID = :authorID, b.categoryID = :categoryID WHERE b.bookID = :bookID")
+	void updateBookById(@Param("bookID") String bookID,
 					   @Param("title") String title,
 					   @Param("price") double price,
-					   @Param("inventoryID") long inventoryID,
 					   @Param("authorID") int authorID,
 					   @Param("categoryID") int categoryID);
 }

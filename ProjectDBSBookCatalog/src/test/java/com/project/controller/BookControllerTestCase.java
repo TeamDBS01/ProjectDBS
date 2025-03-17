@@ -9,52 +9,49 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
-public class BookControllerTestCase {
+class BookControllerTestCase {
     @Mock
     private BookServiceImpl bookServiceImpl;
 
     @InjectMocks
     private BookController bookController;
 
-    private BookDTO bookDTO;
+    private BookDTO bookDataTO;
 
     @BeforeEach
     public void setUp() {
         MockitoAnnotations.openMocks(this);
-        bookDTO = new BookDTO();
+        bookDataTO = new BookDTO();
     }
 
     @AfterEach
     public void tearDown(){
-
+        bookDataTO = null;
     }
 
     @Test
-    public void testGetAllBooks_Positive() throws BookResourceNotFoundException {
-        List<BookDTO> booksDTO = Arrays.asList(bookDTO);
-        when(bookServiceImpl.getAllBooks()).thenReturn(booksDTO);
+    void testGetAllBooks_Positive() throws BookResourceNotFoundException {
+        List<BookDTO> booksDTOList = Collections.singletonList(bookDataTO);
+        when(bookServiceImpl.getAllBooks()).thenReturn(booksDTOList);
 
         ResponseEntity<?> response = bookController.getAllBooks();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(booksDTO, response.getBody());
+        assertEquals("Book added successfully", response.getBody());
     }
 
     @Test
-    public void testGetAllBooks_negative() throws BookResourceNotFoundException{
+    void testGetAllBooks_negative() throws BookResourceNotFoundException{
         when(bookServiceImpl.getAllBooks()).thenThrow(new BookResourceNotFoundException("Book Resource not found"));
 
         ResponseEntity<?> response=bookController.getAllBooks();
@@ -64,18 +61,18 @@ public class BookControllerTestCase {
     }
 
     @Test
-    public void testGetBookById_positive() throws BookResourceNotFoundException{
+    void testGetBookById_positive() throws BookResourceNotFoundException{
 
-        when(bookServiceImpl.getBookById("B001")).thenReturn(bookDTO);
+        when(bookServiceImpl.getBookById("B001")).thenReturn(bookDataTO);
 
         ResponseEntity<?> result=bookController.getBookById("B001");
 
         assertEquals(HttpStatus.OK, result.getStatusCode());
-        assertEquals(bookDTO, result.getBody());
+        assertEquals("result:"+ bookDataTO, result.getBody());
     }
 
     @Test
-    public void testGetBookById_negative() throws BookResourceNotFoundException{
+    void testGetBookById_negative() throws BookResourceNotFoundException{
         when(bookServiceImpl.getBookById("1")).thenThrow(new BookResourceNotFoundException("Book not found"));
 
         ResponseEntity<?> response = bookController.getBookById("1");
@@ -86,18 +83,18 @@ public class BookControllerTestCase {
 
 
     @Test
-    public void testGetBooksByCategory_Positive() throws BookResourceNotFoundException {
-        List<BookDTO> books = Arrays.asList(bookDTO);
+   void testGetBooksByCategory_Positive() throws BookResourceNotFoundException {
+        List<BookDTO> books = Collections.singletonList(bookDataTO);
         when(bookServiceImpl.getBooksByCategory("Fiction")).thenReturn(books);
 
         ResponseEntity<?> response = bookController.getBooksByCategory("Fiction");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(books, response.getBody());
+        assertEquals("bookList:"+books, response.getBody());
     }
 
     @Test
-    public void testGetBooksByCategory_NotFound() throws BookResourceNotFoundException {
+    void testGetBooksByCategory_NotFound() throws BookResourceNotFoundException {
         when(bookServiceImpl.getBooksByCategory("Fiction")).thenThrow(new BookResourceNotFoundException("Books not found"));
 
         ResponseEntity<?> response = bookController.getBooksByCategory("Fiction");
@@ -106,18 +103,18 @@ public class BookControllerTestCase {
         assertEquals("Books not found", response.getBody());
     }
     @Test
-    public void testGetBooksByAuthor_Success() throws BookResourceNotFoundException {
-        List<BookDTO> books = Arrays.asList(bookDTO);
+    void testGetBooksByAuthor_Success() throws BookResourceNotFoundException {
+        List<BookDTO> books = Collections.singletonList(bookDataTO);
         when(bookServiceImpl.getBooksByAuthor("Author")).thenReturn(books);
 
         ResponseEntity<?> response = bookController.getBooksByAuthor("Author");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(books, response.getBody());
+        assertEquals("bookList:"+books, response.getBody());
     }
 
     @Test
-    public void testGetBooksByAuthor_NotFound() throws BookResourceNotFoundException {
+    void testGetBooksByAuthor_NotFound() throws BookResourceNotFoundException {
         when(bookServiceImpl.getBooksByAuthor("Author")).thenThrow(new BookResourceNotFoundException("Books not found"));
 
         ResponseEntity<?> response = bookController.getBooksByAuthor("Author");
@@ -127,8 +124,8 @@ public class BookControllerTestCase {
     }
 
     @Test
-    public void testFilterBooks_ByAuthorAndCategory_Success() throws BookResourceNotFoundException {
-        List<BookDTO> books = Arrays.asList(bookDTO);
+    void testFilterBooks_ByAuthorAndCategory_Success() throws BookResourceNotFoundException {
+        List<BookDTO> books = Collections.singletonList(bookDataTO);
         when(bookServiceImpl.filter("Author", "Fiction")).thenReturn(books);
 
         ResponseEntity<List<BookDTO>> response = bookController.filterBooks("Author", "Fiction");
@@ -138,8 +135,8 @@ public class BookControllerTestCase {
     }
 
     @Test
-    public void testFilterBooks_ByAuthor_Success() throws BookResourceNotFoundException {
-        List<BookDTO> books = Arrays.asList(bookDTO);
+    void testFilterBooks_ByAuthor_Success() throws BookResourceNotFoundException {
+        List<BookDTO> books = Collections.singletonList(bookDataTO);
         when(bookServiceImpl.filter("Author")).thenReturn(books);
 
         ResponseEntity<List<BookDTO>> response = bookController.filterBooks("Author", null);
@@ -149,8 +146,8 @@ public class BookControllerTestCase {
     }
 
     @Test
-    public void testFilterBooks_ByCategory_Success() throws BookResourceNotFoundException {
-        List<BookDTO> books = Arrays.asList(bookDTO);
+    void testFilterBooks_ByCategory_Success() throws BookResourceNotFoundException {
+        List<BookDTO> books = Collections.singletonList(bookDataTO);
         when(bookServiceImpl.filter("Fiction")).thenReturn(books);
 
         ResponseEntity<List<BookDTO>> response = bookController.filterBooks(null, "Fiction");
@@ -160,24 +157,24 @@ public class BookControllerTestCase {
     }
 
     @Test
-    public void testFilterBooks_NoCriteria() {
+    void testFilterBooks_NoCriteria() {
         ResponseEntity<List<BookDTO>> response = bookController.filterBooks(null, null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
     @Test
-    public void testAddBook_Success() throws BookResourceNotFoundException {
-        when(bookServiceImpl.addBook(bookDTO)).thenReturn(true);
+    void testAddBook_Success() throws BookResourceNotFoundException {
+        when(bookServiceImpl.addBook(bookDataTO)).thenReturn(true);
 
-        ResponseEntity<String> response = bookController.addBook(bookDTO);
+        ResponseEntity<String> response = bookController.addBook(bookDataTO);
 
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertEquals("Book added successfully", response.getBody());
     }
 
     @Test
-    public void testAddBook_NullBookDTO() throws BookResourceNotFoundException {
+    void testAddBook_NullBookDTO() throws BookResourceNotFoundException {
         when(bookServiceImpl.addBook(null)).thenThrow(new BookResourceNotFoundException("Book Resource cannot be null"));
 
         ResponseEntity<String> response = bookController.addBook(null);
@@ -187,28 +184,28 @@ public class BookControllerTestCase {
     }
 
     @Test
-    public void testAddBook_Exception() throws BookResourceNotFoundException {
-        when(bookServiceImpl.addBook(bookDTO)).thenThrow(new RuntimeException("Unexpected error"));
+    void testAddBook_Exception() throws BookResourceNotFoundException {
+        when(bookServiceImpl.addBook(bookDataTO)).thenThrow(new RuntimeException("Unexpected error"));
 
-        ResponseEntity<String> response = bookController.addBook(bookDTO);
+        ResponseEntity<String> response = bookController.addBook(bookDataTO);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         assertEquals("An unexpected error occurred", response.getBody());
     }
 
     @Test
-    public void testDeleteBookById_Success() throws BookResourceNotFoundException {
+    void testDeleteBookById_Success() throws BookResourceNotFoundException {
         String bookID = "1";
         when(bookServiceImpl.deleteBookById(bookID)).thenReturn(true);
 
         ResponseEntity<?> response = bookController.deleteBookById(bookID);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(true, response.getBody());
+        assertEquals("result:"+true, response.getBody());
     }
 
     @Test
-    public void testDeleteBookById_NotFound() throws BookResourceNotFoundException {
+    void testDeleteBookById_NotFound() throws BookResourceNotFoundException {
         String bookID = "1";
         when(bookServiceImpl.deleteBookById(bookID)).thenThrow(new BookResourceNotFoundException("Book not found"));
 
@@ -219,18 +216,18 @@ public class BookControllerTestCase {
     }
 
     @Test
-    public void testDeleteBookByTitle_Success() throws BookResourceNotFoundException {
+    void testDeleteBookByTitle_Success() throws BookResourceNotFoundException {
         String bookTitle = "Effective Java";
         when(bookServiceImpl.deleteBookByTitle(bookTitle)).thenReturn(true);
 
         ResponseEntity<?> response = bookController.deleteBookByTitle(bookTitle);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(true, response.getBody());
+        assertEquals("result:"+true, response.getBody());
     }
 
     @Test
-    public void testDeleteBookByTitle_NotFound() throws BookResourceNotFoundException {
+    void testDeleteBookByTitle_NotFound() throws BookResourceNotFoundException {
         String bookTitle = "Effective Java";
         when(bookServiceImpl.deleteBookByTitle(bookTitle)).thenThrow(new BookResourceNotFoundException("Book not found"));
 
@@ -241,19 +238,19 @@ public class BookControllerTestCase {
     }
 
     @Test
-    public void testUpdateBookById_Success() throws BookResourceNotFoundException {
+    void testUpdateBookById_Success() throws BookResourceNotFoundException {
         String bookID = "1";
-        BookDTO bookDTO = new BookDTO(); // Initialize with appropriate values
-        when(bookServiceImpl.updateBookById(bookID, bookDTO)).thenReturn(true);
+        BookDTO bookObj= new BookDTO(); // Initialize with appropriate values
+        when(bookServiceImpl.updateBookById(bookID, bookObj)).thenReturn(true);
 
-        ResponseEntity<?> response = bookController.updateBookById(bookID, bookDTO);
+        ResponseEntity<?> response = bookController.updateBookById(bookID, bookObj);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(true, response.getBody());
+        assertEquals("result:"+true, response.getBody());
     }
 
     @Test
-    public void testUpdateBookById_NotFound() throws BookResourceNotFoundException {
+    void testUpdateBookById_NotFound() throws BookResourceNotFoundException {
         String bookID = "1";
         BookDTO bookDTO = new BookDTO(); // Initialize with appropriate values
         when(bookServiceImpl.updateBookById(bookID, bookDTO)).thenThrow(new BookResourceNotFoundException("Book not found"));

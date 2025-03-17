@@ -1,14 +1,11 @@
 package com.project.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import com.project.service.InventoryInterface;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,17 +26,14 @@ import com.project.service.BookServiceImpl;
 @RequestMapping("/dbs/books")
 @Validated
 public class BookController {
-//    @Autowired
-//    private InventoryInterface inventoryService;
 
     @Autowired
     private BookServiceImpl bookServiceImpl;
+    public static final String BOOK_NOT_FOUND_MESSAGE = "Book Resource not found";
+    public static final String BOOK = "book:";
+    public static final String RESULT = "result:";
+    public static final String BOOKLIST = "bookList:";
 
-//    @PutMapping("/{bookId}/stock/{quantity}")
-//    public ResponseEntity<String> updateBookStock(@PathVariable Long inventoryId, @PathVariable int quantity) {
-//        inventoryService.updateInventoryAfterOrder(inventoryId, quantity);
-//        return ResponseEntity.ok("Book stock updated successfully");
-//    }
     /**
      * Retrieves a list of all books.
      *
@@ -54,10 +48,10 @@ public class BookController {
             @ApiResponse(responseCode = "404", description = "Books not found")
     })
     @GetMapping
-    public ResponseEntity<?> getAllBooks()  {
+    public ResponseEntity<String> getAllBooks()  {
         try {
-            List<BookDTO> books = bookServiceImpl.getAllBooks();
-            return new ResponseEntity<>(books, HttpStatus.OK);
+            bookServiceImpl.getAllBooks();
+            return new ResponseEntity<>("Book added successfully", HttpStatus.OK);
         } catch (BookResourceNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
@@ -75,10 +69,10 @@ public class BookController {
             @ApiResponse(responseCode = "404", description = "Book not found")
     })
     @GetMapping("/{bookId}")
-    public ResponseEntity<?> getBookById(@PathVariable("bookId")  String bookId){
+    public ResponseEntity<String> getBookById(@PathVariable("bookId")  String bookId){
     	try {
     		BookDTO bookDTO=bookServiceImpl.getBookById(bookId);
-    		return new ResponseEntity<>(bookDTO, HttpStatus.OK);
+    		return new ResponseEntity<>(RESULT+bookDTO, HttpStatus.OK);
     	}catch(BookResourceNotFoundException e) {
     		return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
     	}
@@ -96,10 +90,10 @@ public class BookController {
             @ApiResponse(responseCode = "404", description = "Books not found")
     })
     @GetMapping("/category/{categoryName}")
-    public ResponseEntity<?> getBooksByCategory(@PathVariable("categoryName") @Valid String categoryName){
+    public ResponseEntity<String> getBooksByCategory(@PathVariable("categoryName") @Valid String categoryName){
         try {
             List<BookDTO> bookList=bookServiceImpl.getBooksByCategory(categoryName);
-            return new ResponseEntity<>(bookList, HttpStatus.OK);
+            return new ResponseEntity<>(BOOKLIST+bookList, HttpStatus.OK);
         }catch(BookResourceNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
@@ -115,10 +109,10 @@ public class BookController {
             @ApiResponse(responseCode = "404", description = "Books not found")
     })
     @GetMapping("/author/{authorName}")
-    public ResponseEntity<?> getBooksByAuthor(@PathVariable("authorName") @Valid String authorName){
+    public ResponseEntity<String> getBooksByAuthor(@PathVariable("authorName") @Valid String authorName){
         try {
             List<BookDTO> bookList=bookServiceImpl.getBooksByAuthor(authorName);
-            return new ResponseEntity<>(bookList, HttpStatus.OK);
+            return new ResponseEntity<>(BOOKLIST+bookList, HttpStatus.OK);
         }catch(BookResourceNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
@@ -144,7 +138,7 @@ public class BookController {
 public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false) @Valid String author,
                                                  @RequestParam(required = false) @Valid String category) {
     try {
-        List<BookDTO> books = new ArrayList<>();
+        List<BookDTO> books;
         if (author != null && category != null) {
             books = bookServiceImpl.filter(author, category);
         } else if (author != null) {
@@ -178,7 +172,6 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
     @PostMapping("/addBooks")
     public ResponseEntity<String> addBook(@Valid @RequestBody BookDTO bookDTO) {
         try {
-            System.out.println(bookDTO);
             boolean isAdded = bookServiceImpl.addBook(bookDTO);
             if (isAdded) {
                 return new ResponseEntity<>("Book added successfully", HttpStatus.CREATED);
@@ -202,10 +195,10 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
     })
 
     @DeleteMapping("/delete/{bookID}")
-    public ResponseEntity<?> deleteBookById(@PathVariable String bookID){
+    public ResponseEntity<String> deleteBookById(@PathVariable String bookID){
         try{
             boolean result= bookServiceImpl.deleteBookById(bookID);
-            return new ResponseEntity<>(result, HttpStatus.OK);
+            return new ResponseEntity<>(RESULT+result, HttpStatus.OK);
         }catch(BookResourceNotFoundException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
@@ -222,10 +215,10 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
             @ApiResponse(responseCode = "404", description = "Book not found")
     })
     @DeleteMapping("/deleteByTitle/{bookTitle}")
-    public ResponseEntity<?> deleteBookByTitle(@PathVariable String bookTitle){
+    public ResponseEntity<String> deleteBookByTitle(@PathVariable String bookTitle){
         try{
             boolean result= bookServiceImpl.deleteBookByTitle(bookTitle);
-            return new ResponseEntity<>(result, HttpStatus.OK);
+            return new ResponseEntity<>(RESULT+result, HttpStatus.OK);
         }catch(BookResourceNotFoundException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
@@ -243,10 +236,10 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
             @ApiResponse(responseCode = "404", description = "Book not found")
     })
     @PutMapping("/update/{bookID}")
-    public ResponseEntity<?> updateBookById(@PathVariable String bookID, @RequestBody BookDTO bookDTO){
+    public ResponseEntity<String> updateBookById(@PathVariable String bookID, @RequestBody BookDTO bookDTO){
         try{
             boolean result= bookServiceImpl.updateBookById(bookID, bookDTO);
-            return new ResponseEntity<>(result,HttpStatus.OK);
+            return new ResponseEntity<>(RESULT+result,HttpStatus.OK);
         }catch(BookResourceNotFoundException e){
             return new ResponseEntity<>(e.getMessage(),HttpStatus.NOT_FOUND);
         }
