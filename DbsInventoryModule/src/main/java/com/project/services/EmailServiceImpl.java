@@ -8,9 +8,13 @@ import org.springframework.stereotype.Service;
 @Service
 public class EmailServiceImpl implements EmailService {
 
-    @Autowired
+
     private JavaMailSender mailSender;
 
+    @Autowired
+    public EmailServiceImpl(JavaMailSender mailSender){
+        this.mailSender = mailSender;
+    }
     @Override
     public void sendLowStockAlert(String bookID, int quantity) {
         SimpleMailMessage message = new SimpleMailMessage();

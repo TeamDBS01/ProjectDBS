@@ -2,17 +2,14 @@ package com.project.controller;
 
 import java.util.List;
 
-import com.project.dto.InventoryDTO;
 import com.project.exception.BookAlreadyExistsException;
 import com.project.exception.BookNotFoundException;
 import com.project.exception.OutOfStockException;
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

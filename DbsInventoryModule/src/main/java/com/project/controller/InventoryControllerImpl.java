@@ -24,9 +24,13 @@ import com.project.services.InventoryService;
 @Validated
 public class InventoryControllerImpl implements InventoryController {
 
-    @Autowired
+
     private InventoryService inventoryService;
 
+    @Autowired
+    public InventoryControllerImpl(InventoryService inventoryService){
+        this.inventoryService = inventoryService;
+    }
     @Override
     @Operation(summary = "Display Inventory", description = "Retrieves a list of all books and their quantities from the inventory")
     @ApiResponses(value = {

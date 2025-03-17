@@ -1,6 +1,5 @@
 package com.project.services;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -24,13 +23,21 @@ import jakarta.transaction.Transactional;
 @Service
 public class InventoryServiceImpl implements InventoryService {
 
-    @Autowired
+
     private InventoryRepository inventoryRepository;
 
-    @Autowired
     private ModelMapper mapper;
-    @Autowired
+
     private EmailService emailService;
+
+    @Autowired
+    public InventoryServiceImpl(InventoryRepository inventoryRepository,ModelMapper mapper, EmailService emailService){
+        this.inventoryRepository = inventoryRepository;
+        this.mapper = mapper;
+        this.emailService = emailService;
+    }
+    public InventoryServiceImpl(){
+    }
 
     @Override
     public List<InventoryDTO> displayInventory() {
