@@ -127,13 +127,14 @@ class OrderServiceImplTestCase {
 		when(bookClient.getBookStockQuantity("E113")).thenReturn(5);
 		orderService.addToCart(1L, "E112", 2);
 		orderService.addToCart(1L, "E113", 1);
-		when(bookClient.updateBookStock("E112", 2)).thenReturn(ResponseEntity.ok("Book stock updated successfully"));
-		when(bookClient.updateBookStock("E113", 1)).thenReturn(ResponseEntity.ok("Book stock updated successfully"));
+
+		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1)))
+				.thenReturn(ResponseEntity.ok("Book stock updated successfully"));
+
 		OrderDTO orderDTO = orderService.placeOrder(1L);
 		assertNotNull(orderDTO);
 		assertEquals(70.0,orderDTO.getTotalAmount());
-		verify(bookClient,times(1)).updateBookStock("E112",2);
-		verify(bookClient,times(1)).updateBookStock("E113",1);
+		verify(bookClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1));
 		verify(orderRepository,times(1)).save(any(Order.class));
 	}
 
@@ -285,26 +286,24 @@ class OrderServiceImplTestCase {
 		order.setPaymentStatus(PaymentStatus.PAID);
 		when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 		when(userClient.addCredits(1L,50.0)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
-		when(bookClient.updateBookStock("E112",2)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
-		when(bookClient.updateBookStock("E113",1)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
+		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1)))
+				.thenReturn(ResponseEntity.ok("Book stock updated successfully"));
 		OrderDTO cancelledOrder= orderService.cancelOrder(1L,1L);
 		assertEquals("Cancelled",cancelledOrder.getStatus());
 		verify(userClient,times(1)).addCredits(1L,50.0);
-		verify(bookClient,times(1)).updateBookStock("E112",2);
-		verify(bookClient,times(1)).updateBookStock("E113",1);
+		verify(bookClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1));
 	}
 
 	@Test
 	void cancelOrder_unpaidOrder_success(){
 		order.setPaymentStatus(PaymentStatus.PENDING);
 		when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-		when(bookClient.updateBookStock("E112",2)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
-		when(bookClient.updateBookStock("E113",1)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
+		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1)))
+				.thenReturn(ResponseEntity.ok("Book stock updated successfully"));
 		OrderDTO cancelledOrder= orderService.cancelOrder(1L,1L);
 		assertEquals("Cancelled",cancelledOrder.getStatus());
 		verify(userClient,times(0)).addCredits(anyLong(),anyDouble());
-		verify(bookClient,times(1)).updateBookStock("E112",2);
-		verify(bookClient,times(1)).updateBookStock("E113",1);
+		verify(bookClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1));
 	}
 
 	@Test
@@ -312,7 +311,7 @@ class OrderServiceImplTestCase {
 		when(orderRepository.findById(1L)).thenReturn(Optional.empty());
 		assertThrows(ResourceNotFoundException.class,()->orderService.cancelOrder(1L,1L));
 		verify(userClient,times(0)).addCredits(anyLong(),anyDouble());
-		verify(bookClient,times(0)).updateBookStock(anyString(),anyInt());
+		verify(bookClient, times(0)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1));
 	}
 
 	@Test

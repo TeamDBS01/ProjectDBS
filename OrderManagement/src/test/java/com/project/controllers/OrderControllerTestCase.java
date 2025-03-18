@@ -8,9 +8,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import java.util.ArrayList;
 import java.util.List;
 
-import com.project.dto.PaymentDetailsDTO;
+import com.project.dto.*;
 import com.project.exception.CartEmptyException;
 import com.project.exception.InsufficientCreditsException;
+import com.project.feign.UserClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,9 +24,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.dto.BookDTO;
-import com.project.dto.CartItem;
-import com.project.dto.OrderDTO;
 import com.project.exception.InsufficientStockException;
 import com.project.exception.ResourceNotFoundException;
 import com.project.service.OrderServiceImpl;
@@ -35,6 +33,9 @@ class OrderControllerTestCase {
 
 	@Mock
 	private OrderServiceImpl orderService;
+
+	@Mock
+	private UserClient userClient;
 	
 	@InjectMocks
 	private OrderController orderController;
@@ -116,7 +117,7 @@ class OrderControllerTestCase {
 	}
 	
 	@Test
-	void placeOrder_userNotFound() throws Exception{
+	void placeOrder_userNotFound(){
 		when(orderService.placeOrder(1L)).thenThrow(new ResourceNotFoundException("User not found"));
 		ResponseEntity<Object> actual = orderController.placeOrder(1L);
 		assertEquals(HttpStatus.BAD_REQUEST,actual.getStatusCode());
@@ -133,11 +134,16 @@ class OrderControllerTestCase {
 
 	@Test
 	void clearCartItem_success(){
-		doNothing().when(orderService).clearCartItem(1L,"E112");
-		ResponseEntity<Object> actual = orderController.clearCartItem(1L,"E112");
-		assertEquals(HttpStatus.OK,actual.getStatusCode());
-		assertEquals("Cart Item cleared successfully",actual.getBody());
-		verify(orderService).clearCartItem(1L,"E112");
+		Long userId = 1L;
+		String bookId = "E112";
+		UserDTO userDTO = new UserDTO();
+		ResponseEntity<UserDTO> userResponse = new ResponseEntity<>(userDTO, HttpStatus.OK);
+		when(userClient.getUserById(userId)).thenReturn(userResponse);
+		doNothing().when(orderService).clearCartItem(userId, bookId);
+		ResponseEntity<Object> actual = orderController.clearCartItem(userId, bookId);
+		assertEquals(HttpStatus.OK, actual.getStatusCode());
+		assertEquals("Cart Item cleared successfully", actual.getBody());
+		verify(orderService).clearCartItem(userId, bookId);
 	}
 
 
@@ -203,7 +209,7 @@ class OrderControllerTestCase {
 		assertEquals(objectMapper.writeValueAsString(bookDTOs),objectMapper.writeValueAsString(actual.getBody()));
 	}
 	
-	void getBooksByOrderId_orderNotFound() throws Exception{
+	void getBooksByOrderId_orderNotFound(){
 		when(orderService.getBooksByOrderId(1L)).thenThrow(new ResourceNotFoundException("Order not found"));
 		ResponseEntity<Object> actual = orderController.getBooksByOrderId(1L);
 		assertEquals(HttpStatus.NOT_FOUND,actual.getStatusCode());
@@ -238,8 +244,13 @@ class OrderControllerTestCase {
 
 	@Test
 	void clearCartItem_uri_positive() throws Exception {
+		Long userId = 1L;
+		String bookId = "E112";
+		UserDTO userDTO = new UserDTO();
+		ResponseEntity<UserDTO> userResponse = new ResponseEntity<>(userDTO, HttpStatus.OK);
+		when(userClient.getUserById(userId)).thenReturn(userResponse);
 		mockMvc.perform(delete("/dbs/order/1/cart/clear")
-						.param("bookId", "E112"))
+						.param("bookId", bookId))
 				.andExpect(status().isOk());
 	}
 	
@@ -266,7 +277,6 @@ class OrderControllerTestCase {
 	    
 	    @Test
 	    void updateOrderStatus_uri_positive() throws Exception{
-	    	OrderDTO orderDTO = new OrderDTO();
 	    	when(orderService.updateOrderStatus(1L, "Shipped",2L)).thenReturn(new OrderDTO());
 	    	mockMvc.perform(put("/dbs/order/1/Shipped/2")).andExpect(status().isOk());
 	    }
@@ -320,22 +330,31 @@ class OrderControllerTestCase {
 		mockMvc.perform(put("/dbs/order/1/cancel/1")).andExpect(status().isForbidden());
 	}
 
+	@Test
+	 void clearCartItem_ValidUser_ValidBookId() {
+		Long userId = 1L;
+		String bookId = "BOOK123";
+		UserDTO userDTO = new UserDTO();
+		ResponseEntity<UserDTO> userResponse = new ResponseEntity<>(userDTO, HttpStatus.OK);
+		when(userClient.getUserById(userId)).thenReturn(userResponse);
+		ResponseEntity<Object> response = orderController.clearCartItem(userId, bookId);
+		assertEquals(HttpStatus.OK, response.getStatusCode());
+		assertEquals("Cart Item cleared successfully", response.getBody());
+		verify(orderService, times(1)).clearCartItem(userId, bookId);
+	}
 
 
-//	@Test
-//	void clearCartItem_userNotFound() {
-//		when(orderService.clearCartItem(1L,"E112")).thenThrow(new ResourceNotFoundException("User not found"));
-//		ResponseEntity<Object> response = orderController.clearCartItem(1L,"E112");
-//		assertEquals(HttpStatus.NOT_FOUND,response.getStatusCode());
-//		assertEquals("User not found",response.getBody());
-//	}
-//
-//
-//	void clearCartItem_uri_userNotFound() throws Exception {
-//		when(orderService.clearCartItem(1L, "E112")).thenThrow(new ResourceNotFoundException("User not found"));
-//		mockMvc.perform(delete("/dbs/order/1/cart/clear")
-//						.param("bookId", "E112"))
-//				.andExpect(status().isNotFound());
-//	}
+	@Test
+	 void clearCartItem_InvalidUser() {
+		Long userId = 1L;
+		String bookId = "BOOK123";
+		ResponseEntity<UserDTO> userResponse = new ResponseEntity<>(null, HttpStatus.NOT_FOUND);
+		when(userClient.getUserById(userId)).thenReturn(userResponse);
+		ResponseEntity<Object> response = orderController.clearCartItem(userId, bookId);
+		assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+		assertEquals("User not found.", response.getBody());
+	}
+
+
 }
 

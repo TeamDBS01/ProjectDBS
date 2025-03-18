@@ -22,6 +22,10 @@ import com.project.repositories.OrderRepository;
 
 import jakarta.transaction.Transactional;
 
+/**
+ * Implementation of the {@link OrderService} interface.
+ * Provides services for managing orders, cart operations, and payment processing.
+ */
 @Service
 public class OrderServiceImpl implements  OrderService{
 
@@ -29,13 +33,29 @@ public class OrderServiceImpl implements  OrderService{
 	private final UserClient userClient;
 	private final BookClient bookClient;
 	private final Map<Long,Cart> cartStorage = new HashMap<>();
-
+	/**
+	 * Constructs a new OrderServiceImpl with the specified dependencies.
+	 *
+	 * @param orderRepository The repository for order data.
+	 * @param userClient      The Feign client for user-related operations.
+	 * @param bookClient      The Feign client for book-related operations.
+	 */
 	@Autowired
 	public OrderServiceImpl(OrderRepository orderRepository,UserClient userClient, BookClient bookClient){
 		this.orderRepository = orderRepository;
 		this.userClient = userClient;
 		this.bookClient = bookClient;
 	}
+	/**
+	 * Adds a book to the user's cart.
+	 *
+	 * @param userId   The ID of the user.
+	 * @param bookId   The ID of the book to add.
+	 * @param quantity The quantity of the book to add.
+	 * @return The updated list of cart items.
+	 * @throws ResourceNotFoundException If the user or book is not found.
+	 * @throws InsufficientStockException If the requested quantity exceeds available stock.
+	 */
 	public List<CartItem> addToCart(Long userId,String bookId, int quantity) {
 		ResponseEntity<UserDTO> response = userClient.getUserById(userId);
 		if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
@@ -53,22 +73,38 @@ public class OrderServiceImpl implements  OrderService{
 			userCart.addItem(cartItem);
 			return userCart.getItems();
 		} else {
+
 			throw new ResourceNotFoundException("User not found for ID: " + userId);
 		}
 	}
-	
+	/**
+	 * Retrieves the items in the user's cart.
+	 *
+	 * @param userId The ID of the user.
+	 * @return The list of cart items.
+	 */
 	public List<CartItem> getCartItems(Long userId){
 		Cart userCart = cartStorage.getOrDefault(userId, new Cart());
 		return userCart.getItems();
 	}
-	
+	/**
+	 * Clears the user's cart.
+	 *
+	 * @param userId The ID of the user.
+	 */
 	public void clearCart(Long userId) {
 		Cart userCart = cartStorage.get(userId);
 		if(userCart != null) {
 			userCart.clear();
 		}
 	}
-
+	/**
+	 * Clears a specific item from the user's cart.
+	 *
+	 * @param userId The ID of the user.
+	 * @param bookId The ID of the book to clear.
+	 * @throws ResourceNotFoundException If the user is not found.
+	 */
 	public void clearCartItem(Long userId,String bookId){
 		ResponseEntity<UserDTO> response = userClient.getUserById(userId);
 		if(response.getStatusCode() == HttpStatus.OK && response.getBody() != null){
@@ -80,7 +116,15 @@ public class OrderServiceImpl implements  OrderService{
 			throw new ResourceNotFoundException("User not found for ID: " + userId);
 		}
 	}
-
+	/**
+	 * Places an order for the items in the user's cart.
+	 *
+	 * @param userId The ID of the user.
+	 * @return The placed order details.
+	 * @throws ResourceNotFoundException If the user is not found.
+	 * @throws CartEmptyException If the user's cart is empty.
+	 * @throws InsufficientStockException If there is insufficient stock for any item.
+	 */
 	@Transactional
 	public OrderDTO placeOrder(Long userId) {
 		ResponseEntity<UserDTO> response = userClient.getUserById(userId);
@@ -98,6 +142,8 @@ public class OrderServiceImpl implements  OrderService{
 			order.setPaymentStatus(PaymentStatus.PENDING);
 			List<String> bookIds = new ArrayList<>();
 			double totalAmount = 0.0;
+			List<String> bookIDsUpdate = new ArrayList<>();
+			List<Integer> quantitiesToUpdate = new ArrayList<>();
 
 			for (CartItem item : cartItems) {
 				String bookId = item.getBookId();
@@ -112,15 +158,15 @@ public class OrderServiceImpl implements  OrderService{
 					throw new InsufficientStockException("Insufficient stock for book ID: " + bookId);
 				}
 				totalAmount += bookDTO.getPrice() * quantity;
-			    bookClient.updateBookStock(bookId, quantity);
 				bookIds.add(bookId + ":" + quantity);
-
+				bookIDsUpdate.add(bookId);
+				quantitiesToUpdate.add(-quantity);
 			}
+
+			bookClient.updateInventoryAfterOrder(bookIDsUpdate,quantitiesToUpdate);
 			order.setBookIds(bookIds);
 			order.setTotalAmount(totalAmount);
-			System.out.println("Before saving the order : " + order);
             orderRepository.save(order);
-			System.out.println("After saving the order: " + order);
             clearCart(userId);
 			return convertToOrderDTO(order);
 		}else{
@@ -129,7 +175,17 @@ public class OrderServiceImpl implements  OrderService{
 	}
 
 
-
+	/**
+	 * Processes payment for a specific order.
+	 *
+	 * @param orderId The ID of the order.
+	 * @param userId  The ID of the user making the payment.
+	 * @return The payment details.
+	 * @throws ResourceNotFoundException If the order or user is not found.
+	 * @throws OrderAlreadyPaidException If the order is already paid.
+	 * @throws InsufficientCreditsException If the user has insufficient credits.
+	 * @throws SecurityException If the user making the payment does not match the order's user.
+	 */
     @Transactional
     public PaymentDetailsDTO processPayment(Long orderId,Long userId){
 		Order order = orderRepository.findById(orderId)
@@ -167,7 +223,15 @@ public class OrderServiceImpl implements  OrderService{
 		paymentDetails.setRemainingCredits(debitResponse.getBody().getCredits());
 		return paymentDetails;
     }
-
+	/**
+	 * Cancels a specific order.
+	 *
+	 * @param orderId The ID of the order.
+	 * @param userId  The ID of the user requesting the cancellation.
+	 * @return The cancelled order details.
+	 * @throws ResourceNotFoundException If the order is not found.
+	 * @throws SecurityException If the user is not authorized to cancel the order.
+	 */
 	@Transactional
 	public OrderDTO cancelOrder(Long orderId,Long userId){
 		Order order = orderRepository.findById(orderId).orElseThrow(()->new ResourceNotFoundException("Order not found"));
@@ -180,26 +244,33 @@ public class OrderServiceImpl implements  OrderService{
 			userClient.addCredits(userId, refundAmount);
 			order.setTotalAmount(0.0);
 			if (bookIds != null) {
+				List<String> bookIDsToUpdate = new ArrayList<>();
+				List<Integer> quantitiesToUpdate =  new ArrayList<>();
 				for (String bookIdQuantity : bookIds) {
 					String[] parts = bookIdQuantity.split(":");
 					if (parts.length == 2) {
 						String bookId = parts[0];
 						int quantity = Integer.parseInt(parts[1]);
-						System.out.println("Processing bookId: " + bookId + ", quantity: " + quantity);
-						bookClient.updateBookStock(bookId, quantity);
+						bookIDsToUpdate.add(bookId);
+						quantitiesToUpdate.add(quantity);
 					}
 				}
+				bookClient.updateInventoryAfterOrder(bookIDsToUpdate,quantitiesToUpdate);
 			}
 		}else{
 				if (bookIds != null) {
+					List<String> bookIDsToUpdate = new ArrayList<>();
+					List<Integer> quantitiesToUpdate =  new ArrayList<>();
 					for (String bookIdQuantity : bookIds) {
 							String[] parts = bookIdQuantity.split(":");
 							if (parts.length == 2) {
 								String bookId = parts[0];
 								int quantity = Integer.parseInt(parts[1]);
-								bookClient.updateBookStock(bookId, quantity);
+								bookIDsToUpdate.add(bookId);
+								quantitiesToUpdate.add(quantity);
 							}
 					}
+					bookClient.updateInventoryAfterOrder(bookIDsToUpdate,quantitiesToUpdate);
 				}
 			}
 		order.setPaymentStatus(PaymentStatus.CANCELLED);
@@ -207,7 +278,13 @@ public class OrderServiceImpl implements  OrderService{
 		orderRepository.save(order);
 		return convertToOrderDTO(order);
 	}
-		
+	/**
+	 * Converts an Order entity to an OrderDTO.
+	 *
+	 * @param order The Order entity to convert.
+	 * @return The corresponding OrderDTO.
+	 */
+
 	private OrderDTO convertToOrderDTO(Order order) {
 		OrderDTO orderDTO = new OrderDTO();
 		orderDTO.setOrderId(order.getOrderId());
@@ -219,7 +296,16 @@ public class OrderServiceImpl implements  OrderService{
 		orderDTO.setPaymentStatus(order.getPaymentStatus());
 		return orderDTO;
 	}
-
+	/**
+	 * Updates the status of an order.
+	 *
+	 * @param orderId     The ID of the order.
+	 * @param status      The new status of the order.
+	 * @param adminUserId The ID of the admin user performing the update.
+	 * @return The updated order details.
+	 * @throws ResourceNotFoundException If the order or admin user is not found.
+	 * @throws SecurityException If the admin user does not have permission to update the order status.
+	 */
 	@Transactional
 	public OrderDTO updateOrderStatus(Long orderId,String status,Long adminUserId) {
 		
@@ -239,7 +325,12 @@ public class OrderServiceImpl implements  OrderService{
 		orderRepository.save(order);
 		return convertToOrderDTO(order);
 	}
-	
+	/**
+	 * Retrieves all orders for a user.
+	 *
+	 * @param userId The ID of the user.
+	 * @return The list of user orders.
+	 */
 	public List<OrderDTO> getUserOrders(Long userId){
 		List<Order> orders = orderRepository.findByUserId(userId);
 		List<OrderDTO> orderDTOs = new ArrayList<>();
@@ -249,13 +340,25 @@ public class OrderServiceImpl implements  OrderService{
 		}
 		return orderDTOs;
 	}
-
+	/**
+	 * Retrieves details of a specific order.
+	 *
+	 * @param orderId The ID of the order.
+	 * @return The order details.
+	 * @throws ResourceNotFoundException If the order is not found.
+	 */
 	public OrderDTO getOrderDetails(Long orderId) {
 		Order order = orderRepository.findById(orderId)
 				.orElseThrow(()->new ResourceNotFoundException("Order not found: " + orderId));
 		return convertToOrderDTO(order);
 	}
-	
+	/**
+	 * Retrieves all books associated with an order.
+	 *
+	 * @param orderId The ID of the order.
+	 * @return The list of books.
+	 * @throws ResourceNotFoundException If the order is not found.
+	 */
 	public List<BookDTO> getBooksByOrderId(Long orderId) {
 		Order order = orderRepository.findById(orderId)
 				.orElseThrow(() -> new ResourceNotFoundException("Order not found: " + orderId));
@@ -275,7 +378,6 @@ public class OrderServiceImpl implements  OrderService{
 		}
 		return bookDTOs;
 	}
-	
 }
 
 
