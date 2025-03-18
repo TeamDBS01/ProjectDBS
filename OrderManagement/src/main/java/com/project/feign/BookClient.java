@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 
 import com.project.dto.BookDTO;
 
+
 @FeignClient(name="BOOK-SERVICE")
 public interface BookClient {
 
@@ -19,24 +20,7 @@ public interface BookClient {
 
 	@GetMapping("dbs/books/quantity/{bookId}")
 	int getBookStockQuantity(@PathVariable String bookId);
-
 }
 
-//@Component
-//public class BookClient {
-//
-////	@GetMapping("/api/books/{bookId}")
-//	public BookDTO getBookById( String bookId){
-//		return null;
-//	}
-//
-////	@PutMapping("api/books/{bookId}/stock/{quantity}")
-//
-//	public void updateBookStock( String bookId, int quantity){
-//		return;
-//	}
-//
-//
-//}
 
 

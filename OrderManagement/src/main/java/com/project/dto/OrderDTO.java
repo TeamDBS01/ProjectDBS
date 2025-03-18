@@ -2,7 +2,9 @@ package com.project.dto;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
+import com.project.enums.PaymentStatus;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -22,9 +24,9 @@ public class OrderDTO {
 	private Double totalAmount;
 	@NotBlank(message="Status cannot be blank")
 	private String status;
-//	private UserDTO user;
 	@NotNull(message="User Id cannot be null")
 	private Long userId;
 	@NotEmpty(message="Book IDs cannot be empty")
 	private List<String> bookIds;
+	private PaymentStatus paymentStatus;
 }

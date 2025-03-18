@@ -10,10 +10,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserDTO {
-	private Integer statusCode;
-	private String error;
-	private String message;
-	private String token;
 	private Long userId;
 	private String name;
 	private String email;

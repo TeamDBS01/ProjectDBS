@@ -10,8 +10,6 @@ import org.springframework.test.context.ContextConfiguration;
 @ContextConfiguration(classes= {OrderManagementApplication.class})
 class OrderManagementApplicationTests {
 
-	
-	
 	@Test
 	void contextLoads() {
 		
