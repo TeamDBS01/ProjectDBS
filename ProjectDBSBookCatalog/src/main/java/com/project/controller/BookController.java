@@ -29,10 +29,8 @@ public class BookController {
 
     @Autowired
     private BookServiceImpl bookServiceImpl;
-    public static final String BOOK_NOT_FOUND_MESSAGE = "Book Resource not found";
-    public static final String BOOK = "book:";
     public static final String RESULT = "result:";
-    public static final String BOOKLIST = "bookList:";
+    public static final String BOOK_LIST = "bookList:";
 
     /**
      * Retrieves a list of all books.
@@ -93,7 +91,7 @@ public class BookController {
     public ResponseEntity<String> getBooksByCategory(@PathVariable("categoryName") @Valid String categoryName){
         try {
             List<BookDTO> bookList=bookServiceImpl.getBooksByCategory(categoryName);
-            return new ResponseEntity<>(BOOKLIST+bookList, HttpStatus.OK);
+            return new ResponseEntity<>(BOOK_LIST +bookList, HttpStatus.OK);
         }catch(BookResourceNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
@@ -112,7 +110,7 @@ public class BookController {
     public ResponseEntity<String> getBooksByAuthor(@PathVariable("authorName") @Valid String authorName){
         try {
             List<BookDTO> bookList=bookServiceImpl.getBooksByAuthor(authorName);
-            return new ResponseEntity<>(BOOKLIST+bookList, HttpStatus.OK);
+            return new ResponseEntity<>(BOOK_LIST +bookList, HttpStatus.OK);
         }catch(BookResourceNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
@@ -244,4 +242,4 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
             return new ResponseEntity<>(e.getMessage(),HttpStatus.NOT_FOUND);
         }
     }
-    }
+}
