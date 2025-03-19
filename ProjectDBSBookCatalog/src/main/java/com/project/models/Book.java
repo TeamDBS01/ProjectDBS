@@ -1,9 +1,6 @@
 package com.project.models;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -22,7 +19,6 @@ public class Book {
 	@Column(name="price")
 	private double price;
 
-	
 	@Column(name="author_id")
 	private int authorID;
 	@Column(name="category_id")

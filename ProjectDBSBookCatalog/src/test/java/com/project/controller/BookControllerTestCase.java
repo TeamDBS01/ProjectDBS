@@ -36,7 +36,7 @@ class BookControllerTestCase {
     }
 
     @AfterEach
-    public void tearDown(){
+    public void tearDown() {
         bookDataTO = null;
     }
 
@@ -47,7 +47,8 @@ class BookControllerTestCase {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Book added successfully"))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].bookID").value(bookDataTO.getBookID()))
                 .andReturn();
     }
 
@@ -57,7 +58,7 @@ class BookControllerTestCase {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Book Resource not found"))
+                .andExpect(content().string("ERROR: Book Resource not found"))
                 .andReturn();
     }
 
@@ -67,7 +68,7 @@ class BookControllerTestCase {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/{bookId}", "B001"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("result:" + bookDataTO))
+                .andExpect(jsonPath("$.bookID").value(bookDataTO.getBookID()))
                 .andReturn();
     }
 
@@ -77,7 +78,7 @@ class BookControllerTestCase {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/{bookId}", "1"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("Book not found"))
+                .andExpect(content().string("ERROR: Book not found"))
                 .andReturn();
     }
 
@@ -88,7 +89,8 @@ class BookControllerTestCase {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/category/{categoryName}", "Fiction"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("bookList:" + books))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].bookID").value(bookDataTO.getBookID()))
                 .andReturn();
     }
 
@@ -109,7 +111,8 @@ class BookControllerTestCase {
 
         mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/author/{authorName}", "Author"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("bookList:" + books))
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].bookID").value(bookDataTO.getBookID()))
                 .andReturn();
     }
 
@@ -122,7 +125,6 @@ class BookControllerTestCase {
                 .andExpect(content().string("Books not found"))
                 .andReturn();
     }
-
 
     @Test
     void testFilterBooks_ByAuthor_Success() throws Exception {
@@ -213,9 +215,10 @@ class BookControllerTestCase {
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/dbs/books/delete/{bookId}", bookID))
                 .andExpect(status().isOk())
-                .andExpect(content().string("result:true"))
+                .andExpect(content().string("Book deleted successfully"))
                 .andReturn();
     }
+
     @Test
     void testDeleteBookById_NotFound() throws Exception {
         String bookID = "B001";
@@ -234,7 +237,7 @@ class BookControllerTestCase {
 
         mockMvc.perform(MockMvcRequestBuilders.delete("/dbs/books/deleteByTitle/{bookTitle}", bookTitle))
                 .andExpect(status().isOk())
-                .andExpect(content().string("result:true"))
+                .andExpect(content().string("Book deleted successfully"))
                 .andReturn();
     }
 
@@ -248,6 +251,7 @@ class BookControllerTestCase {
                 .andExpect(content().string("Book not found"))
                 .andReturn();
     }
+
     @Test
     void testUpdateBookById_Success() throws Exception {
         BookDTO validBookDTO = new BookDTO();
@@ -263,7 +267,7 @@ class BookControllerTestCase {
                         .contentType("application/json")
                         .content("{\"bookID\":\"B001\",\"title\":\"Updated Title\",\"price\":20.0,\"authorID\":1,\"categoryID\":1}"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("result:true"))
+                .andExpect(content().string("Book updated successfully"))
                 .andReturn();
     }
 

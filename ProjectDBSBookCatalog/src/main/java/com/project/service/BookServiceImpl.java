@@ -11,7 +11,6 @@ import org.springframework.stereotype.Service;
 
 import com.project.dto.BookDTO;
 import com.project.exception.BookResourceNotFoundException;
-//import com.project.mapper.BookMapper;
 import com.project.models.Book;
 import com.project.repositories.BookRepository;
 
@@ -53,6 +52,7 @@ public class BookServiceImpl implements BookService{
 
 	 public List<BookDTO> getBooksByCategory(String categoryName) throws BookResourceNotFoundException{
 		 List<Book> bookList=bookRepository.getByCategory(categoryName);
+
 		 if (bookList.isEmpty()) {
 	            throw new BookResourceNotFoundException("No books found");
 	        }
