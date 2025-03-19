@@ -20,16 +20,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
-import com.project.DbsInventoryModuleApplication;
 import com.project.dto.InventoryDTO;
 import com.project.exception.BookNotFoundException;
 import com.project.exception.OutOfStockException;
 import com.project.models.Inventory;
 import com.project.repositories.InventoryRepository;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mail.MailException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -37,7 +33,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(SpringExtension.class)
 @ExtendWith(MockitoExtension.class)
-@SpringBootTest(classes = DbsInventoryModuleApplication.class)
 class InventoryServiceImplTestCase {
 
     @Mock
@@ -67,7 +62,6 @@ class InventoryServiceImplTestCase {
         inventoryRepository = null;
         inventoryServiceImpl = null;
         inventory = null;
-        MockitoAnnotations.openMocks(this);
     }
 
     @Test

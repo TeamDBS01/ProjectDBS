@@ -20,6 +20,8 @@ import com.project.exception.BookNotFoundException;
 import com.project.exception.OutOfStockException;
 import com.project.services.InventoryService;
 
+/** Implementation of InventoryController for managing inventory operations.
+ */
 @RestController
 @Validated
 public class InventoryControllerImpl implements InventoryController {
@@ -31,6 +33,10 @@ public class InventoryControllerImpl implements InventoryController {
     public InventoryControllerImpl(InventoryService inventoryService){
         this.inventoryService = inventoryService;
     }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Operation(summary = "Display Inventory", description = "Retrieves a list of all books and their quantities from the inventory")
     @ApiResponses(value = {
@@ -46,6 +52,9 @@ public class InventoryControllerImpl implements InventoryController {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Operation(summary="Get Inventory by Book ID", description = "Retrieves inventory details for a specific book ID")
     @ApiResponses(value = {
@@ -61,6 +70,9 @@ public class InventoryControllerImpl implements InventoryController {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Operation(summary = "Get Number of Books", description = "Retrieves the number of books available for a specific book ID")
     @ApiResponses(value = {
@@ -76,6 +88,9 @@ public class InventoryControllerImpl implements InventoryController {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Operation(summary = "Update Add Inventory", description = "Adds a specified quantity of the book with given book ID to the inventory")
     @ApiResponses(value = {
@@ -91,6 +106,9 @@ public class InventoryControllerImpl implements InventoryController {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Operation(summary = "Update Remove Inventory", description = "Removes a specified quantity of the book with given book ID to the inventory")
     @ApiResponses(value = {
@@ -109,6 +127,9 @@ public class InventoryControllerImpl implements InventoryController {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Operation(summary = "Place Order", description = "Verifies if an order can be placed by checking if there is enough stock of given book/books")
     @ApiResponses(value = {
@@ -128,6 +149,9 @@ public class InventoryControllerImpl implements InventoryController {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Operation(summary = "Update Inventory After Order", description = "Updates the inventory after an order is placed")
     @ApiResponses(value = {
@@ -142,6 +166,9 @@ public class InventoryControllerImpl implements InventoryController {
         return ResponseEntity.ok("Inventory updated after order");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Operation(summary = "Add Book to Inventory", description = "Adds a new book to the inventory")
     @ApiResponses(value = {
@@ -157,6 +184,9 @@ public class InventoryControllerImpl implements InventoryController {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Operation(summary = "Delete Book from Inventory", description = "Deletes a book from the inventory by its ID")
     @ApiResponses(value = {

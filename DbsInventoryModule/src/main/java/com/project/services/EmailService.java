@@ -1,10 +1,15 @@
 package com.project.services;
 
-import com.project.models.EmailDetails;
-
+/**
+ * Service interface for sending emails.
+ */
 public interface EmailService {
 
-    // Method to send a simple email
+    /**
+     * Sends a low stock alert email for a specific book.
+     * @param bookID the ID of the book.
+     * @param quantity the current quantity of the book.
+     */
     void sendLowStockAlert(String bookID, int quantity);
 }
 

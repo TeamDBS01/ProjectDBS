@@ -8,8 +8,6 @@ import com.project.exception.BookAlreadyExistsException;
 import com.project.exception.InsufficientInventoryException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 
 import com.project.dto.InventoryDTO;
@@ -19,7 +17,9 @@ import com.project.models.Inventory;
 import com.project.repositories.InventoryRepository;
 
 import jakarta.transaction.Transactional;
-
+/**
+ * Implementation of InventoryService for managing inventory operations.
+ */
 @Service
 public class InventoryServiceImpl implements InventoryService {
 
@@ -30,6 +30,12 @@ public class InventoryServiceImpl implements InventoryService {
 
     private EmailService emailService;
 
+    /**
+     * Constructs an InventoryServiceImpl with the specified dependencies.
+     * @param inventoryRepository the InventoryRepository to use.
+     * @param mapper the ModelMapper to use.
+     * @param emailService the EmailService to use.
+     */
     @Autowired
     public InventoryServiceImpl(InventoryRepository inventoryRepository,ModelMapper mapper, EmailService emailService){
         this.inventoryRepository = inventoryRepository;
@@ -39,6 +45,9 @@ public class InventoryServiceImpl implements InventoryService {
     public InventoryServiceImpl(){
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public List<InventoryDTO> displayInventory() {
         List<Inventory> inventoryList = inventoryRepository.findAll();
@@ -51,6 +60,9 @@ public class InventoryServiceImpl implements InventoryService {
         return inventoryDTOList;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public InventoryDTO getInventoryByBookID(String bookID) throws BookNotFoundException {
         Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
@@ -61,6 +73,9 @@ public class InventoryServiceImpl implements InventoryService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Transactional
     public void updateAddInventory(String bookID, int quantity) throws BookNotFoundException {
@@ -74,6 +89,9 @@ public class InventoryServiceImpl implements InventoryService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Transactional
     public void updateRemoveInventory(String bookID, int quantity) throws BookNotFoundException, InsufficientInventoryException {
@@ -92,6 +110,9 @@ public class InventoryServiceImpl implements InventoryService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Transactional
     public void updateInventoryAfterOrder(List<String> bookIDs, List<Integer> quantities) {
@@ -112,8 +133,11 @@ public class InventoryServiceImpl implements InventoryService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    @EventListener(ApplicationContext.class)
+    //@EventListener(ApplicationContext.class)
     public void checkAndNotifyLowStock(String bookID) throws BookNotFoundException {
         Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
         if (optionalInventory.isPresent()) {
@@ -127,6 +151,9 @@ public class InventoryServiceImpl implements InventoryService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Transactional
     public void placeOrder(String bookID, int quantity) throws BookNotFoundException {
@@ -149,6 +176,10 @@ public class InventoryServiceImpl implements InventoryService {
             throw e;
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getNoOfBooks(String bookID) throws BookNotFoundException {
         Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
@@ -160,6 +191,9 @@ public class InventoryServiceImpl implements InventoryService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Transactional
     public void addBookToInventory(String bookID, int quantity) throws BookAlreadyExistsException {
@@ -172,6 +206,9 @@ public class InventoryServiceImpl implements InventoryService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void deleteBookFromInventory(String bookID) throws BookNotFoundException {
 
