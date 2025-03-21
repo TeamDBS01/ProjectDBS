@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.*;
 /**
  * Interface for managing inventory operations.
  */
-@RestController
 @RequestMapping("/dbs/inventory")
 public interface InventoryController {
 

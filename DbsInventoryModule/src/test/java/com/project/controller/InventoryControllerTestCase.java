@@ -1,6 +1,5 @@
 package com.project.controller;
 
-import com.project.controller.InventoryControllerImpl;
 import com.project.dto.InventoryDTO;
 import com.project.exception.BookAlreadyExistsException;
 import com.project.exception.BookNotFoundException;
@@ -16,9 +15,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;

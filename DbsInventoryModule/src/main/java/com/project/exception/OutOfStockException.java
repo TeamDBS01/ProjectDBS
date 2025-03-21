@@ -5,8 +5,6 @@ package com.project.exception;
  */
 public class OutOfStockException extends RuntimeException {
 
-	private static final long serialVersionUID = 1L;
-
     /**
      * Constructs a new OutOfStockException with the specified detail message.
      * @param message the detail message.

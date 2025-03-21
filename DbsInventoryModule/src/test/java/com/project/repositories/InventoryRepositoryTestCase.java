@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.test.context.ActiveProfiles;
 
 
@@ -24,6 +25,9 @@ class InventoryRepositoryTestCase {
     @Autowired
     private InventoryRepository inventoryRepository;
 
+    @Autowired
+    private TestEntityManager testEntityManager;
+
     @BeforeEach
     void setUp() throws Exception {
         inventory = Inventory.builder().quantity(500).book_Id("B1001").build();
@@ -36,7 +40,7 @@ class InventoryRepositoryTestCase {
 
     @Test
     void testDisplayInventory_Positive() {
-        Inventory savedInventory = inventoryRepository.save(inventory);
+        Inventory savedInventory = testEntityManager.persist(inventory);
         Iterable<Inventory> listOfInventory = inventoryRepository.findAll();
         assertTrue(listOfInventory.iterator().hasNext());
     }
@@ -50,9 +54,7 @@ class InventoryRepositoryTestCase {
     @Test
     void testAddInventory_Positive() {
         Inventory expected = inventoryRepository.save(inventory);
-        
-        //assertEquals(savedInventory.getInventoryId(), 1L);
-        Inventory actual = inventoryRepository.findById(expected.getInventoryId()).orElseThrow();
+        Inventory actual = testEntityManager.find(Inventory.class,expected.getInventoryId());
         assertEquals(expected,actual);
     }
 
@@ -68,10 +70,10 @@ class InventoryRepositoryTestCase {
 
     @Test
     void testDeleteInventoryById_Positive() {
-        Inventory savedInventory = inventoryRepository.save(inventory);
+        Inventory savedInventory = testEntityManager.persist(inventory);
         inventoryRepository.deleteById(savedInventory.getInventoryId());
-        Optional<Inventory> optionalInventory = inventoryRepository.findById(savedInventory.getInventoryId());
-        assertFalse(optionalInventory.isPresent());
+        Inventory foundInventory = testEntityManager.find(Inventory.class,inventory.getInventoryId());
+        assertNull(foundInventory);
     }
 
     @Test
@@ -86,7 +88,7 @@ class InventoryRepositoryTestCase {
 
     @Test
     void testFindAll_Positive() {
-        inventoryRepository.save(inventory);
+        testEntityManager.persist(inventory);
         Iterable<Inventory> inventoryList = inventoryRepository.findAll();
         assertTrue(inventoryList.iterator().hasNext());
     }
@@ -99,7 +101,7 @@ class InventoryRepositoryTestCase {
 
     @Test
     void testFindById_Positive() {
-        Inventory savedInventory = inventoryRepository.save(inventory);
+        Inventory savedInventory = testEntityManager.persist(inventory);
         Optional<Inventory> optionalOfInventory = inventoryRepository.findById(savedInventory.getInventoryId());
         assertEquals(optionalOfInventory.get(), savedInventory);
     }
@@ -112,17 +114,17 @@ class InventoryRepositoryTestCase {
 
     @Test
     void testUpdateInventory_Positive() {
-        Inventory savedInventory = inventoryRepository.save(inventory);
-        Optional<Inventory> optionalOfInventory = inventoryRepository.findById(1L);
-        assertTrue(optionalOfInventory.isPresent());
+        Inventory savedInventory = testEntityManager.persist(inventory);
+        Inventory foundInventory= testEntityManager.find(Inventory.class, savedInventory.getInventoryId());
+        assertNotNull(foundInventory);
         savedInventory.setQuantity(100);
-        inventoryRepository.save(savedInventory);
+        testEntityManager.persist(savedInventory);
         assertEquals(100, savedInventory.getQuantity());
     }
 
     @Test
     void testFindByBookId_Positive() {
-        Inventory savedInventory = inventoryRepository.save(inventory);
+        Inventory savedInventory = testEntityManager.persist(inventory);
         Optional<Inventory> optionalOfInventory = inventoryRepository.findByBookId("B1001");
         assertEquals(optionalOfInventory.get(), savedInventory);
     }
