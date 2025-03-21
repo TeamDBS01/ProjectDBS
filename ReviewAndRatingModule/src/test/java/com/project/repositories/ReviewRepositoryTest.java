@@ -1,6 +1,5 @@
 package com.project.repositories;
 
-import com.project.ReviewAndRatingModuleApplication;
 import com.project.models.Review;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,7 +8,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +16,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @DataJpaTest
 @ActiveProfiles("test")
-@ContextConfiguration(classes = {ReviewAndRatingModuleApplication.class})
 class ReviewRepositoryTest {
 
     @Autowired

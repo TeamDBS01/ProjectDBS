@@ -1,6 +1,5 @@
 package com.project.service;
 
-import com.project.ReviewAndRatingModuleApplication;
 import com.project.dto.BookDTO;
 import com.project.dto.ReviewDTO;
 import com.project.dto.UserDTO;
@@ -21,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ContextConfiguration;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +30,6 @@ import static org.mockito.Mockito.*;
 
 @SuppressWarnings("preview")
 @ExtendWith(MockitoExtension.class)
-@ContextConfiguration(classes = {ReviewAndRatingModuleApplication.class})
 class ReviewServiceImplTest {
 
     @Mock

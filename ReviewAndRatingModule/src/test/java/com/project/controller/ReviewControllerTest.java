@@ -1,7 +1,6 @@
 package com.project.controller;
 
 import com.jayway.jsonpath.JsonPath;
-import com.project.ReviewAndRatingModuleApplication;
 import com.project.dto.ReviewDTO;
 import com.project.exception.*;
 import com.project.service.ReviewService;
@@ -14,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -29,7 +27,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SuppressWarnings("preview")
 @ExtendWith(MockitoExtension.class)
-@ContextConfiguration(classes = {ReviewAndRatingModuleApplication.class})
 class ReviewControllerTest {
     @Mock
     private ReviewService reviewService;
@@ -383,6 +380,14 @@ class ReviewControllerTest {
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         assertNotEquals(Boolean.TRUE, response.getBody());
         verify(reviewService).deleteReview(USER_ID, REVIEW_ID);
+    }
+
+    @Test
+    @DisplayName("GetOk")
+    void test_getOk() {
+        ResponseEntity<Boolean> response= reviewController.getOk();
+        assertEquals(Boolean.TRUE, response.getBody());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
