@@ -1,3 +1,5 @@
+# Main application configuration file for review-service.
+# Configures server, data source, JPA, Eureka, and SpringDoc settings.
 server:
     port: 8089
 
@@ -14,8 +16,13 @@ spring:
         hibernate:
             ddl-auto: update
         show-sql: true
-
-#eureka.instance.nonSecurePort=90
+    boot:
+        admin:
+            client:
+                url: http://localhost:8761/admin
+                enabled: true
+                instance:
+                    service-url: http://localhost:8089
 eureka:
     instance:
         hostname: ${vcap.application.uris[0]:localhost}
@@ -29,6 +36,18 @@ springdoc:
         enabled: true
     swagger-ui:
         enabled: true
-#        serviceUrl:
-#            defaultZone: http://localhost:8761/eureka/
-#        enabled: false
+
+management:
+    info:
+        env:
+            enabled: true
+    endpoints:
+        web:
+            exposure:
+                include: "*"
+
+info:
+    app:
+        name: Book Catalog Rest API
+        version: 1.0.0
+        description: Book Catalog Rest API

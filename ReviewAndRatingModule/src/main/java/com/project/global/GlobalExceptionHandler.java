@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
+@SuppressWarnings("preview")
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -44,7 +44,7 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({Exception.class})
-    protected ResponseEntity handleException(Exception e, Locale locale) {
+    protected ResponseEntity<String> handleException(Exception e) {
         return ResponseEntity
                 .badRequest()
                 .body(STR."Exception occurred inside API \{e}");

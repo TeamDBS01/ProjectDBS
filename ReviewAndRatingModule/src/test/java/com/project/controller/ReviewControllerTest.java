@@ -28,16 +28,13 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SuppressWarnings("preview")
-//@WebMvcTest
-//@AutoConfigureWebMvc
-//@AutoConfigureMockMvc
 @ExtendWith(MockitoExtension.class)
 @ContextConfiguration(classes = {ReviewAndRatingModuleApplication.class})
 class ReviewControllerTest {
     @Mock
     private ReviewService reviewService;
     @InjectMocks
-    private ReviewController reviewController;
+    private ReviewControllerImpl reviewController;
 
     private ReviewDTO reviewDTO;
     private static final long REVIEW_ID = 2L;
