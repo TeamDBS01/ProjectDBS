@@ -19,11 +19,14 @@ import org.springframework.web.bind.annotation.*;
 public interface InventoryController {
 
     /**
-     * Displays the entire inventory.
+     * Displays the entire inventory with pagination.
+     *
+     * @param page the page number to retrieve (starting from 0).
+     * @param size the number of items per page.
      * @return ResponseEntity containing the inventory details.
      */
     @GetMapping("")
-    ResponseEntity<?> displayInventory();
+    ResponseEntity<?> displayInventory(int page, int size);
 
     /**
      * Retrieves inventory details for a specific book by its ID.

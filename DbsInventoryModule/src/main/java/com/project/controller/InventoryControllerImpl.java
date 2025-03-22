@@ -43,10 +43,13 @@ public class InventoryControllerImpl implements InventoryController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list"),
             @ApiResponse(responseCode = "404", description = "Inventory Empty")
     })
-    public ResponseEntity<?> displayInventory() {
+    public ResponseEntity<?> displayInventory(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
         try {
-            List<InventoryDTO> inventoryDTOS = inventoryService.displayInventory();
-            return new ResponseEntity<>(inventoryDTOS, HttpStatus.OK);
+            List<InventoryDTO> inventoryList = inventoryService.displayInventory(page, size);
+            return ResponseEntity.ok(inventoryList);
         } catch (BookNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Inventory is Empty");
         }

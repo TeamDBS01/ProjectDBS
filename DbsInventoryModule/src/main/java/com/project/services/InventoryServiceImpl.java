@@ -8,6 +8,9 @@ import com.project.exception.BookAlreadyExistsException;
 import com.project.exception.InsufficientInventoryException;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.project.dto.InventoryDTO;
@@ -49,20 +52,21 @@ public class InventoryServiceImpl implements InventoryService {
      * {@inheritDoc}
      */
     @Override
-    public List<InventoryDTO> displayInventory() {
-        List<Inventory> inventoryList = inventoryRepository.findAll();
-        if (inventoryList.isEmpty()) {
+    public List<InventoryDTO> displayInventory(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Inventory> inventoryPage = inventoryRepository.findAll(pageable);
+        if (inventoryPage.isEmpty()) {
             throw new BookNotFoundException("Inventory Empty");
         }
-        List<InventoryDTO> inventoryDTOList = inventoryList.stream()
+        List<InventoryDTO> inventoryDTOList = inventoryPage.getContent().stream()
                 .map(inventory -> mapper.map(inventory, InventoryDTO.class))
                 .collect(Collectors.toList());
         return inventoryDTOList;
     }
 
     /**
-     * {@inheritDoc}
-     */
+         * {@inheritDoc}
+         */
     @Override
     public InventoryDTO getInventoryByBookID(String bookID) throws BookNotFoundException {
         Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);

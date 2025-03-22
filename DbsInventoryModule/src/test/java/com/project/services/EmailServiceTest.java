@@ -2,6 +2,7 @@ package com.project.services;
 
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -43,8 +44,8 @@ public class EmailServiceTest {
      * Verifies that the send method of JavaMailSender is called once.
      */
     @Test
-    void testSendMail_Positive(){
-
+    @DisplayName("Send Mail - Positive Case")
+    void testSendMail_Positive() {
         emailService.sendLowStockAlert("B1001", 5);
         verify(mailSender, times(1)).send(any(SimpleMailMessage.class));
     }
@@ -54,7 +55,8 @@ public class EmailServiceTest {
      * Simulates a MailSendException and verifies that the exception is thrown.
      */
     @Test
-    void testSendMail_Negative(){
+    @DisplayName("Send Mail - Negative Case")
+    void testSendMail_Negative() {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("sathishvarunt@gmail.com");
         message.setTo("sathishvarunt@gmail.com");

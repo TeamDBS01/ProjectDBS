@@ -23,6 +23,11 @@ spring:
                     starttls:
                         enable: true
                         required: true
+    data:
+        web:
+            pageable:
+                default-page-size: 10
+                max-page-size: 100
     banner:
         location: classpath:banner.txt
     boot:

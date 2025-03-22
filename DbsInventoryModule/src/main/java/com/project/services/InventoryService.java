@@ -3,15 +3,21 @@ package com.project.services;
 import java.util.List;
 
 import com.project.dto.InventoryDTO;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 /**
  * Service interface for managing inventory operations.
  */
 public interface InventoryService {
     /**
-     * Displays the entire inventory.
+     * Displays the entire inventory with pagination.
+     *
+     * @param page the page number to retrieve (starting from 0).
+     * @param size the number of items per page.
      * @return a list of InventoryDTO containing the inventory details.
      */
-    List<InventoryDTO> displayInventory();
+    List<InventoryDTO> displayInventory(int page, int size);
 
     /**
      * Retrieves inventory details for a specific book by its ID.

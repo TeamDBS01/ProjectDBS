@@ -13,6 +13,7 @@ import com.project.exception.BookAlreadyExistsException;
 import com.project.exception.InsufficientInventoryException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -26,6 +27,10 @@ import com.project.exception.BookNotFoundException;
 import com.project.exception.OutOfStockException;
 import com.project.models.Inventory;
 import com.project.repositories.InventoryRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mail.MailException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -65,6 +70,7 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Get Inventory by Book ID - Positive Case")
     void testGetInventoryByBookID_Positive() throws BookNotFoundException {
         // Arrange
         String bookID = "B1001";
@@ -79,6 +85,7 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Get Inventory by Book ID - Negative Case")
     void testGetInventoryByBookID_Negative() throws BookNotFoundException {
         // Arrange
         when(inventoryRepository.findByBookId("B1000")).thenReturn(Optional.empty());
@@ -89,6 +96,7 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Update Add Inventory - Positive Case")
     void testUpdateAddInventory_Positive() {
         String bookID = "B1000";
         int quantityToAdd = 10;
@@ -103,6 +111,7 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Update Add Inventory - Negative Case")
     void testUpdateAddInventory_Negative() {
         String bookID = "B1001";
         int quantityToAdd = 5;
@@ -116,6 +125,7 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Update Remove Inventory - Positive Case")
     public void testUpdateRemoveInventory_Positive() throws BookNotFoundException, InsufficientInventoryException {
         String bookID = "B1001";
         int quantityToDeduct = 5;
@@ -130,6 +140,7 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Update Remove Inventory - Book Not Found Case")
     public void testUpdateRemoveInventory_BookNotFound() {
         String bookID = "B1001";
         int quantityToDeduct = 5;
@@ -139,6 +150,7 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Update Remove Inventory - Insufficient Inventory Case")
     public void testUpdateRemoveInventory_InsufficientInventory() {
         String bookID = "B1001";
         int quantityToDeduct = 15;
@@ -150,10 +162,11 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Update Inventory After Order - Positive Case")
     void testUpdateInventoryAfterOrder_Positive() {
         List<String> bookIDs = List.of("B1001", "B1002");
         List<Integer> quantities = List.of(5, 3);
-        Inventory inventory1=new Inventory();
+        Inventory inventory1 = new Inventory();
         inventory1.setBook_Id("B1001");
         inventory1.setQuantity(15);
         Inventory inventory2 = new Inventory();
@@ -166,14 +179,15 @@ class InventoryServiceImplTestCase {
         inventoryServiceImpl.updateInventoryAfterOrder(bookIDs, quantities);
 
         assertEquals(10, inventory1.getQuantity());
-        assertEquals(25,inventory2.getQuantity());
+        assertEquals(25, inventory2.getQuantity());
     }
 
     @Test
+    @DisplayName("Update Inventory After Order - Negative Case")
     void testUpdateInventoryAfterOrder_Negative() {
         List<String> bookIDs = List.of("B1001", "B1002");
         List<Integer> quantities = List.of(4, 3);
-        Inventory inventory1=new Inventory();
+        Inventory inventory1 = new Inventory();
         inventory1.setBook_Id("B1001");
         inventory1.setQuantity(14);
         Inventory inventory2 = new Inventory();
@@ -185,10 +199,11 @@ class InventoryServiceImplTestCase {
 
         inventoryServiceImpl.updateInventoryAfterOrder(bookIDs, quantities);
         assertEquals(10, inventory1.getQuantity());
-        assertEquals(28,inventory2.getQuantity());
+        assertEquals(28, inventory2.getQuantity());
     }
 
     @Test
+    @DisplayName("Check and Notify Low Stock - Positive Case")
     void testCheckAndNotifyLowStock_Positive() {
         String bookID = "B1001";
         inventory.setBook_Id(bookID);
@@ -201,6 +216,7 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Check and Notify Low Stock - Not Low Stock Case")
     void testCheckAndNotifyLowStock_NotLowStock() {
         String bookID = "B1001";
         inventory.setBook_Id(bookID);
@@ -213,6 +229,7 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Check and Notify Low Stock - Not Found Case")
     void testCheckAndNotifyLowStock_NotFound() {
         String bookID = "B1001";
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.empty());
@@ -225,6 +242,7 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Check and Notify Low Stock - Email Sending Failure Case")
     void testCheckAndNotifyLowStock_EmailSendingFailure() {
         String bookID = "B1001";
         inventory.setBook_Id(bookID);
@@ -238,6 +256,7 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Place Order - Positive Case")
     void testPlaceOrder_Positive() throws BookNotFoundException {
         String bookID = "B1001";
         int quantityToOrder = 5;
@@ -253,8 +272,8 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Place Order - Out of Stock Case")
     void testPlaceOrder_OutOfStock() {
-
         String bookID = "B1001";
         int quantityToOrder = 15;
         inventory.setBook_Id(bookID);
@@ -268,6 +287,7 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Place Order - Book Not Found Case")
     void testPlaceOrder_BookNotFound() {
         String bookID = "B1001";
         int quantityToOrder = 5;
@@ -280,8 +300,9 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Get Number of Books - Positive Case")
     void testGetNoOfBooks_Positive() {
-        String bookID ="B1001";
+        String bookID = "B1001";
         inventory.setBook_Id(bookID);
         inventory.setQuantity(10);
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.of(inventory));
@@ -289,34 +310,49 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Get Number of Books - Negative Case")
     void testGetNoOfBooks_Negative() {
-        String bookID="B1000";
+        String bookID = "B1000";
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.empty());
-        assertThrows(BookNotFoundException.class, ()->{
+        assertThrows(BookNotFoundException.class, () -> {
             inventoryServiceImpl.getInventoryByBookID(bookID);
         });
     }
 
     @Test
+    @DisplayName("Display Inventory - Positive Case")
     void testDisplayInventory_Positive() {
-        when(inventoryRepository.findAll()).thenReturn(Arrays.asList(inventory));
+        Page<Inventory> inventoryPage = new PageImpl<>(Arrays.asList(inventory));
+        int page = 0;
+        int size = 10;
+        Pageable pageable = PageRequest.of(page, size);
+
+        when(inventoryRepository.findAll(pageable)).thenReturn(inventoryPage);
         when(mapper.map(inventory, InventoryDTO.class)).thenReturn(inventoryDTO);
 
-        List<InventoryDTO> result = inventoryServiceImpl.displayInventory();
+        List<InventoryDTO> result = inventoryServiceImpl.displayInventory(page, size);
+
         assertEquals(1, result.size());
         assertEquals(inventoryDTO, result.get(0));
     }
 
     @Test
+    @DisplayName("Display Inventory - Negative Case")
     void testDisplayInventory_Negative() {
-        when(inventoryRepository.findAll()).thenReturn(Collections.emptyList());
+        Page<Inventory> emptyPage = new PageImpl<>(Collections.emptyList());
+        int page = 0;
+        int size = 10;
+        Pageable pageable = PageRequest.of(page, size);
+
+        when(inventoryRepository.findAll(pageable)).thenReturn(emptyPage);
 
         assertThrows(BookNotFoundException.class, () -> {
-            inventoryServiceImpl.displayInventory();
+            inventoryServiceImpl.displayInventory(page, size);
         });
     }
 
     @Test
+    @DisplayName("Add Book to Inventory - Positive Case")
     void testAddBookToInventory_Positive() throws BookAlreadyExistsException {
         String bookID = "12345";
         int quantity = 10;
@@ -331,6 +367,7 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Add Book to Inventory - Negative Case")
     public void testAddBookToInventory_Negative() {
         String bookID = "12345";
         int quantity = 10;
@@ -348,7 +385,8 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
-    public void testDeleteBookFromInventorySuccess() throws BookNotFoundException {
+    @DisplayName("Delete Book from Inventory - Positive Case")
+    public void testDeleteBookFromInventory_Positive() throws BookNotFoundException {
         // Arrange
         String bookID = "12345";
         InventoryRepository inventoryRepository = mock(InventoryRepository.class);
@@ -366,6 +404,7 @@ class InventoryServiceImplTestCase {
     }
 
     @Test
+    @DisplayName("Delete Book from Inventory - Not Found Case")
     public void testDeleteBookFromInventory_NotFound() {
         String bookID = "99999";
         InventoryRepository inventoryRepository = mock(InventoryRepository.class);
