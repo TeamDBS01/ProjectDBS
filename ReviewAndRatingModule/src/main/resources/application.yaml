@@ -45,9 +45,3 @@ management:
         web:
             exposure:
                 include: "*"
-
-info:
-    app:
-        name: Book Catalog Rest API
-        version: 1.0.0
-        description: Book Catalog Rest API
