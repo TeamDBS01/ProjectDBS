@@ -59,12 +59,6 @@
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
         </dependency>
 
-        <!--        SLF4J for logging -->
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-jdk14</artifactId>
-        </dependency>
-
         <!--    AOP - for Logging Aspects before and after each method    -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
