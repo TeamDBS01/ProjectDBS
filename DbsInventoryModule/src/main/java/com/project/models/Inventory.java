@@ -11,6 +11,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Entity class representing the inventory.
+ */
 @Entity
 @Data
 @Table(name = "inventory_table")
@@ -18,14 +21,25 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class Inventory {
+
+    /**
+     * The ID of the inventory.
+     */
     @Id
     @Column(name = "inventory_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long inventoryId;
 
+    /**
+     * The quantity of books in the inventory.
+     */
     @Column(name = "quantity")
     private int quantity;
 
-    @Column(name = "book_Id")
+    /**
+     * The ID of the book.
+     * Cannot be null.
+     */
+    @Column(name = "book_Id", nullable = false)
     private String book_Id;
 }

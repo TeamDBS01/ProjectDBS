@@ -6,14 +6,16 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.ActiveProfiles;
 
-
 import com.project.models.Inventory;
-
 
 @DataJpaTest
 @ActiveProfiles("test")
@@ -23,6 +25,9 @@ class InventoryRepositoryTestCase {
 
     @Autowired
     private InventoryRepository inventoryRepository;
+
+    @Autowired
+    private TestEntityManager testEntityManager;
 
     @BeforeEach
     void setUp() throws Exception {
@@ -35,28 +40,31 @@ class InventoryRepositoryTestCase {
     }
 
     @Test
+    @DisplayName("Display Inventory - Positive Case")
     void testDisplayInventory_Positive() {
-        Inventory savedInventory = inventoryRepository.save(inventory);
-        Iterable<Inventory> listOfInventory = inventoryRepository.findAll();
-        assertTrue(listOfInventory.iterator().hasNext());
+        testEntityManager.persist(inventory);
+        Page<Inventory> inventoryPage = inventoryRepository.findAll(Pageable.unpaged());
+        assertTrue(inventoryPage.hasContent());
+        assertEquals(1, inventoryPage.getTotalElements());
     }
 
     @Test
+    @DisplayName("Display Inventory - Negative Case")
     void testDisplayInventory_Negative() {
-        Iterable<Inventory> listOfInventory = inventoryRepository.findAll();
-        assertFalse(listOfInventory.iterator().hasNext());
+        Page<Inventory> inventoryPage = inventoryRepository.findAll(Pageable.unpaged());
+        assertFalse(inventoryPage.hasContent());
     }
 
     @Test
+    @DisplayName("Add Inventory - Positive Case")
     void testAddInventory_Positive() {
         Inventory expected = inventoryRepository.save(inventory);
-        
-        //assertEquals(savedInventory.getInventoryId(), 1L);
-        Inventory actual = inventoryRepository.findById(expected.getInventoryId()).orElseThrow();
-        assertEquals(expected,actual);
+        Inventory actual = testEntityManager.find(Inventory.class, expected.getInventoryId());
+        assertEquals(expected, actual);
     }
 
     @Test
+    @DisplayName("Add Inventory - Negative Case")
     void testAddInventory_Negative() {
         try {
             inventoryRepository.save(null);
@@ -67,14 +75,16 @@ class InventoryRepositoryTestCase {
     }
 
     @Test
+    @DisplayName("Delete Inventory by ID - Positive Case")
     void testDeleteInventoryById_Positive() {
-        Inventory savedInventory = inventoryRepository.save(inventory);
+        Inventory savedInventory = testEntityManager.persist(inventory);
         inventoryRepository.deleteById(savedInventory.getInventoryId());
-        Optional<Inventory> optionalInventory = inventoryRepository.findById(savedInventory.getInventoryId());
-        assertFalse(optionalInventory.isPresent());
+        Inventory foundInventory = testEntityManager.find(Inventory.class, inventory.getInventoryId());
+        assertNull(foundInventory);
     }
 
     @Test
+    @DisplayName("Delete Inventory by ID - Negative Case")
     void testDeleteInventoryById_Negative() {
         try {
             inventoryRepository.deleteById(null);
@@ -85,49 +95,56 @@ class InventoryRepositoryTestCase {
     }
 
     @Test
+    @DisplayName("Find All Inventory - Positive Case")
     void testFindAll_Positive() {
-        inventoryRepository.save(inventory);
+        testEntityManager.persist(inventory);
         Iterable<Inventory> inventoryList = inventoryRepository.findAll();
         assertTrue(inventoryList.iterator().hasNext());
     }
 
     @Test
+    @DisplayName("Find All Inventory - Negative Case")
     void testFindAll_Negative() {
         Iterable<Inventory> inventoryList = inventoryRepository.findAll();
         assertFalse(inventoryList.iterator().hasNext());
     }
 
     @Test
+    @DisplayName("Find Inventory by ID - Positive Case")
     void testFindById_Positive() {
-        Inventory savedInventory = inventoryRepository.save(inventory);
+        Inventory savedInventory = testEntityManager.persist(inventory);
         Optional<Inventory> optionalOfInventory = inventoryRepository.findById(savedInventory.getInventoryId());
         assertEquals(optionalOfInventory.get(), savedInventory);
     }
 
     @Test
+    @DisplayName("Find Inventory by ID - Negative Case")
     void testFindById_Negative() {
         Optional<Inventory> optionalOfInventory = inventoryRepository.findById(1L);
         assertFalse(optionalOfInventory.isPresent());
     }
 
     @Test
+    @DisplayName("Update Inventory - Positive Case")
     void testUpdateInventory_Positive() {
-        Inventory savedInventory = inventoryRepository.save(inventory);
-        Optional<Inventory> optionalOfInventory = inventoryRepository.findById(1L);
-        assertTrue(optionalOfInventory.isPresent());
+        Inventory savedInventory = testEntityManager.persist(inventory);
+        Inventory foundInventory = testEntityManager.find(Inventory.class, savedInventory.getInventoryId());
+        assertNotNull(foundInventory);
         savedInventory.setQuantity(100);
-        inventoryRepository.save(savedInventory);
+        testEntityManager.persist(savedInventory);
         assertEquals(100, savedInventory.getQuantity());
     }
 
     @Test
+    @DisplayName("Find Inventory by Book ID - Positive Case")
     void testFindByBookId_Positive() {
-        Inventory savedInventory = inventoryRepository.save(inventory);
+        Inventory savedInventory = testEntityManager.persist(inventory);
         Optional<Inventory> optionalOfInventory = inventoryRepository.findByBookId("B1001");
         assertEquals(optionalOfInventory.get(), savedInventory);
     }
 
     @Test
+    @DisplayName("Find Inventory by Book ID - Negative Case")
     void testFindByBookId_Negative() {
         Optional<Inventory> optionalOfInventory = inventoryRepository.findByBookId("B1001");
         assertFalse(optionalOfInventory.isPresent());
