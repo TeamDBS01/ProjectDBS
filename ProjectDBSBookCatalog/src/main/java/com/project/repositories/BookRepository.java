@@ -23,16 +23,16 @@ public interface BookRepository extends JpaRepository<Book, String> {
 	@Query("SELECT b FROM Book b WHERE b.authorID = (SELECT a.authorID FROM Author a WHERE a.authorName = :authorName)")
 	List<Book> getByAuthor(@Param("authorName") String author);
 	
-	@Query(value="delete FROM Book b WHERE b.title= :title")
+	@Query(value="DELETE FROM Book b WHERE b.title= :title")
 	@Modifying
 	void deleteByTitle(String title);
+
 	Optional<Book> findByTitle(String title);
 	@Modifying
-	@Query(value="UPDATE Book b SET b.title = :title, b.price = :price, b.inventoryID = :inventoryID, b.authorID = :authorID, b.categoryID = :categoryID WHERE b.bookID = :bookID")
-	int updateBookById(@Param("bookID") String bookID,
+	@Query(value="UPDATE Book b SET b.title = :title, b.price = :price, b.authorID = :authorID, b.categoryID = :categoryID WHERE b.bookID = :bookID")
+	void updateBookById(@Param("bookID") String bookID,
 					   @Param("title") String title,
 					   @Param("price") double price,
-					   @Param("inventoryID") long inventoryID,
 					   @Param("authorID") int authorID,
 					   @Param("categoryID") int categoryID);
 }

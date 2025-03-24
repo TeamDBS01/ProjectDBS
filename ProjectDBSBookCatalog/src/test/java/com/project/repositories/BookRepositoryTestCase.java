@@ -1,15 +1,12 @@
 package com.project.repositories;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
@@ -18,12 +15,11 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import com.project.models.Author;
 import com.project.models.Book;
 import com.project.models.Category;
+import org.springframework.dao.InvalidDataAccessApiUsageException;
 
 @DataJpaTest
 class BookRepositoryTestCase {
-	
-//	@Mock
-//	private Book bookMock;
+
 	
 	@Autowired
 	private BookRepository bookRepository;
@@ -32,16 +28,12 @@ class BookRepositoryTestCase {
 	
 	
 	@BeforeEach
-	void setUp() throws Exception {
+	void setUp() {
 		MockitoAnnotations.openMocks(this);
 	}
 
-	@AfterEach
-	void tearDown() throws Exception {
-	}
-
 	/**
-	 * @Author Preethi
+	 * @author Preethi
 	 */
 	@Test
 	void testFindAll_positive() {
@@ -50,7 +42,6 @@ class BookRepositoryTestCase {
 		book.setAuthorID(1);
 		book.setCategoryID(1);
 		book.setPrice(500);
-		book.setInventoryID(1);
 		book.setTitle("test");
 		
 		testEntityManager.persist(book);
@@ -66,7 +57,6 @@ class BookRepositoryTestCase {
 		book.setAuthorID(1);
 		book.setCategoryID(1);
 		book.setPrice(500);
-		book.setInventoryID(1);
 		book.setTitle("test");
 		
 		Iterable<Book> bookList=bookRepository.findAll();
@@ -81,11 +71,11 @@ class BookRepositoryTestCase {
 		book.setAuthorID(1);
 		book.setCategoryID(1);
 		book.setPrice(500);
-		book.setInventoryID(1);
 		book.setTitle("test");
 		testEntityManager.persist(book);
 		
 		Optional<Book> optionalOfBook=bookRepository.findById("B001");
+		assertTrue(optionalOfBook.isPresent(), "Book should be present");
 		assertEquals(optionalOfBook.get(), book);
 	}
 	
@@ -96,7 +86,6 @@ class BookRepositoryTestCase {
 		book.setAuthorID(1);
 		book.setCategoryID(1);
 		book.setPrice(500);
-		book.setInventoryID(1);
 		book.setTitle("test");
 		testEntityManager.persist(book);
 		
@@ -113,7 +102,6 @@ class BookRepositoryTestCase {
 		book.setAuthorID(1);
 		book.setCategoryID(1);
 		book.setPrice(500);
-		book.setInventoryID(1);
 		book.setTitle("test");
 		
 		testEntityManager.persist(book);
@@ -125,7 +113,7 @@ class BookRepositoryTestCase {
 		testEntityManager.persist(category);
 		
 		List<Book> bookList=bookRepository.getByCategory("test");
-		assertTrue(!bookList.isEmpty());
+        assertFalse(bookList.isEmpty());
 	}
 	@Test
 	void testGetBookByCategory_negative() {
@@ -135,7 +123,6 @@ class BookRepositoryTestCase {
 		book.setAuthorID(1);
 		book.setCategoryID(1);
 		book.setPrice(500);
-		book.setInventoryID(1);
 		book.setTitle("test");
 		
 		//testEntityManager.persist(book);
@@ -158,7 +145,6 @@ class BookRepositoryTestCase {
 		book.setBookID("B001");
 		book.setAuthorID(1);
 		book.setCategoryID(1);
-		book.setInventoryID(1);
 		book.setTitle("test");
 		
 		testEntityManager.persist(book);
@@ -170,7 +156,7 @@ class BookRepositoryTestCase {
 		testEntityManager.persist(author);
 		
 		List<Book> bookList=bookRepository.getByAuthor("test");
-		assertTrue(!bookList.isEmpty());
+        assertFalse(bookList.isEmpty());
 	}
 	
 	@Test
@@ -182,7 +168,6 @@ class BookRepositoryTestCase {
 		book.setAuthorID(1);
 		book.setCategoryID(1);
 		book.setPrice(500);
-		book.setInventoryID(1);
 		book.setTitle("test");
 		
 		//testEntityManager.persist(book);
@@ -201,7 +186,7 @@ class BookRepositoryTestCase {
 	
 	
 	/**
-	 * @Author Suryanarayanan 
+	 * @author Suryanarayanan
 	 */
 	@Test
 	void testAddBook_positive() {
@@ -210,7 +195,6 @@ class BookRepositoryTestCase {
 		book.setPrice(450);
 		book.setAuthorID(123);
 		book.setCategoryID(456);
-		book.setInventoryID(1);
 		book.setTitle("Wimpy Kid");
 		
 		testEntityManager.persist(book);
@@ -221,8 +205,8 @@ class BookRepositoryTestCase {
 	@Test
 	void testAddBook_negative() {
 		try {
-			Book savedBook= bookRepository.save(null);
-			assertTrue(false);	
+			bookRepository.save(null);
+            fail();
 		}catch(Exception e) {
 			assertTrue(true);
 		}
@@ -236,7 +220,6 @@ class BookRepositoryTestCase {
 		book.setPrice(450);
 		book.setAuthorID(123);
 		book.setCategoryID(456);
-		book.setInventoryID(1);
 		book.setTitle("Wimpy Kid");
 		testEntityManager.persist(book);
 		
@@ -247,12 +230,7 @@ class BookRepositoryTestCase {
 	
 	@Test
 	void testDeleteBookById_negative() {
-		try {
-			bookRepository.deleteById(null);
-			assertTrue(false);
-		}catch(Exception e) {
-			assertTrue(true);
-		}
+		assertThrows(InvalidDataAccessApiUsageException.class, () -> bookRepository.deleteById(null));
 	}
 	
 	@Test
@@ -262,7 +240,6 @@ class BookRepositoryTestCase {
 		book.setPrice(450);
 		book.setAuthorID(123);
 		book.setCategoryID(456);
-		book.setInventoryID(1);
 		book.setTitle("Wimpy Kid");
 		testEntityManager.persistAndFlush(book);
 		bookRepository.deleteByTitle("Wimpy Kid");
@@ -278,7 +255,6 @@ class BookRepositoryTestCase {
 		book.setPrice(450);
 		book.setAuthorID(123);
 		book.setCategoryID(456);
-		book.setInventoryID(1);
 		book.setTitle("Wimpy Kid");
 		testEntityManager.persistAndFlush(book);
 		bookRepository.deleteByTitle("Percy Jackson");
@@ -288,34 +264,31 @@ class BookRepositoryTestCase {
 	}
 
 
-//	@Test
-//    void testUpdateBook_positive() {
-//        Book book = new Book();
-//        book.setBookID("B001");
-//        book.setTitle("Original Title");
-//        book.setAuthorID(123);
-//        book.setCategoryID(456);
-//        book.setInventoryID(1);
-//        book.setPrice(300);
-//        bookRepository.save(book);
-//
-//        Optional<Book> optionalBook = bookRepository.findById("B001");
-//        assertTrue(optionalBook.isPresent());
-//        Book bookToUpdate = optionalBook.get();
-//        bookToUpdate.setTitle("Updated Title");
-//        book.setAuthorID(123);
-//        book.setCategoryID(456);
-//        book.setInventoryID(1);
-//        bookToUpdate.setPrice(450);
-//        bookRepository.save(bookToUpdate);
-//
-//        Optional<Book> updatedBook = bookRepository.findById("B001");
-//        assertTrue(updatedBook.isPresent());
-//        assertEquals("Updated Title", updatedBook.get().getTitle());
-//        assertEquals(123, updatedBook.get().getAuthorID());
-//        assertEquals(456, updatedBook.get().getCategoryID());
-//        assertEquals(10, updatedBook.get().getInventoryID());
-//        assertEquals(450, updatedBook.get().getPrice());
-//    }
-		
+	@Test
+    void testUpdateBook_positive() {
+        Book book = new Book();
+        book.setBookID("B001");
+        book.setTitle("Original Title");
+        book.setAuthorID(123);
+        book.setCategoryID(456);
+        book.setPrice(300);
+        bookRepository.save(book);
+
+        Optional<Book> optionalBook = bookRepository.findById("B001");
+        assertTrue(optionalBook.isPresent());
+        Book bookToUpdate = optionalBook.get();
+        bookToUpdate.setTitle("Updated Title");
+        book.setAuthorID(123);
+        book.setCategoryID(456);
+        bookToUpdate.setPrice(450);
+        bookRepository.save(bookToUpdate);
+
+        Optional<Book> updatedBook = bookRepository.findById("B001");
+        assertTrue(updatedBook.isPresent());
+        assertEquals("Updated Title", updatedBook.get().getTitle());
+        assertEquals(123, updatedBook.get().getAuthorID());
+        assertEquals(456, updatedBook.get().getCategoryID());
+        assertEquals(450, updatedBook.get().getPrice());
+    }
+
 }

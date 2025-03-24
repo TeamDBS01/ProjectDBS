@@ -1,14 +1,11 @@
 package com.project.controller;
 
-import java.util.ArrayList;
 import java.util.List;
 
-import com.project.service.InventoryInterface;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,17 +29,7 @@ public class BookController {
 
     @Autowired
     private BookServiceImpl bookServiceImpl;
-
-//    @PutMapping("/{bookId}/stock/{quantity}")
-//    public ResponseEntity<String> updateBookStock(@PathVariable Long inventoryId, @PathVariable int quantity) {
-//        inventoryService.updateInventoryAfterOrder(inventoryId, quantity);
-//        return ResponseEntity.ok("Book stock updated successfully");
-//    }
-    @ResponseBody
-    @GetMapping("/quantity/{bookId}")
-    public int getNoOfBooks(@PathVariable String bookId) {
-        return bookServiceImpl.getBookQuantity(bookId);
-    }
+    public static final String DELETED = "Book deleted successfully";
 
 
     /**
@@ -50,42 +37,42 @@ public class BookController {
      *
      * @apiNote This method fetches all books from the database.
      * @implSpec This implementation returns an empty list if no books are found.
-     * @return ResponseEntity<List<BookDTO>> - a list of booksDTO
+     * @return ResponseEntity<Object> - a list of booksDTO
      * @see BookDTO
      */
     @Operation(summary = "Get all books", description = "Retrieves a list of all books.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved list"),
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved list of books"),
             @ApiResponse(responseCode = "404", description = "Books not found")
     })
     @GetMapping
-    public ResponseEntity<?> getAllBooks()  {
+    public ResponseEntity<Object> getAllBooks() {
         try {
-            List<BookDTO> books = bookServiceImpl.getAllBooks();
-            return new ResponseEntity<>(books, HttpStatus.OK);
+            List<BookDTO> bookList = bookServiceImpl.getAllBooks();
+            return ResponseEntity.ok(bookList);
         } catch (BookResourceNotFoundException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("ERROR: " + e.getMessage());
         }
     }
 
     /**
      * @author Preethi
      * @param bookId ID of the book
-     * @return ResponseEntity<BookDTO> - Entity of type Book
+     * @return ResponseEntity<Object> - Entity of type Book
      * @see BookDTO
      */
     @Operation(summary = "Get book by ID", description = "Retrieves a book by its ID.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved book"),
-            @ApiResponse(responseCode = "404", description = "Book not found")
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved book by ID"),
+            @ApiResponse(responseCode = "404", description = "Book not found with ID")
     })
     @GetMapping("/{bookId}")
-    public ResponseEntity<?> getBookById(@PathVariable("bookId")  String bookId){
+    public ResponseEntity<Object> getBookById(@PathVariable("bookId")  String bookId){
     	try {
     		BookDTO bookDTO=bookServiceImpl.getBookById(bookId);
     		return new ResponseEntity<>(bookDTO, HttpStatus.OK);
     	}catch(BookResourceNotFoundException e) {
-    		return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+    		return ResponseEntity.status(HttpStatus.NOT_FOUND).body("ERROR: "+e.getMessage());
     	}
     }
 
@@ -97,35 +84,35 @@ public class BookController {
      */
     @Operation(summary = "Get books by category", description = "Retrieves books by category.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved books"),
-            @ApiResponse(responseCode = "404", description = "Books not found")
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved books of category"),
+            @ApiResponse(responseCode = "404", description = "Books not found with specified category")
     })
     @GetMapping("/category/{categoryName}")
-    public ResponseEntity<?> getBooksByCategory(@PathVariable("categoryName") @Valid String categoryName){
+    public ResponseEntity<Object> getBooksByCategory(@PathVariable("categoryName") @Valid String categoryName){
         try {
             List<BookDTO> bookList=bookServiceImpl.getBooksByCategory(categoryName);
             return new ResponseEntity<>(bookList, HttpStatus.OK);
         }catch(BookResourceNotFoundException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
     /**
      * @author Preethi
      * @param authorName Name of the author
-     * @return ResponseEntity<List<BookDTO>> - List of BookDTO
+     * @return ResponseEntity<Object> - List of BookDTO
      */
     @Operation(summary = "Get books by author", description = "Retrieves books by author.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Successfully retrieved books"),
-            @ApiResponse(responseCode = "404", description = "Books not found")
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved books of Authors"),
+            @ApiResponse(responseCode = "404", description = "Books not found with specified category")
     })
     @GetMapping("/author/{authorName}")
-    public ResponseEntity<?> getBooksByAuthor(@PathVariable("authorName") @Valid String authorName){
+    public ResponseEntity<Object> getBooksByAuthor(@PathVariable("authorName") @Valid String authorName){
         try {
             List<BookDTO> bookList=bookServiceImpl.getBooksByAuthor(authorName);
             return new ResponseEntity<>(bookList, HttpStatus.OK);
         }catch(BookResourceNotFoundException e) {
-            return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         }
     }
 
@@ -149,7 +136,7 @@ public class BookController {
 public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false) @Valid String author,
                                                  @RequestParam(required = false) @Valid String category) {
     try {
-        List<BookDTO> books = new ArrayList<>();
+        List<BookDTO> books;
         if (author != null && category != null) {
             books = bookServiceImpl.filter(author, category);
         } else if (author != null) {
@@ -176,14 +163,13 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
     @Operation(summary = "Add a new book", description = "Adds a new book to the database.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Book added successfully"),
-            @ApiResponse(responseCode = "502", description = "Failed to add book"),
-            @ApiResponse(responseCode = "500", description = "An unexpected error occurred")
+            @ApiResponse(responseCode = "400", description = "Failed to add book"),
+            @ApiResponse(responseCode = "400", description = "An unexpected error occurred")
     })
 
     @PostMapping("/addBooks")
     public ResponseEntity<String> addBook(@Valid @RequestBody BookDTO bookDTO) {
         try {
-            System.out.println(bookDTO);
             boolean isAdded = bookServiceImpl.addBook(bookDTO);
             if (isAdded) {
                 return new ResponseEntity<>("Book added successfully", HttpStatus.CREATED);
@@ -207,10 +193,10 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
     })
 
     @DeleteMapping("/delete/{bookID}")
-    public ResponseEntity<?> deleteBookById(@PathVariable String bookID){
+    public ResponseEntity<String> deleteBookById(@PathVariable String bookID){
         try{
-            boolean result= bookServiceImpl.deleteBookById(bookID);
-            return new ResponseEntity<>(result, HttpStatus.OK);
+            bookServiceImpl.deleteBookById(bookID);
+            return new ResponseEntity<>(DELETED, HttpStatus.OK);
         }catch(BookResourceNotFoundException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
@@ -227,10 +213,10 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
             @ApiResponse(responseCode = "404", description = "Book not found")
     })
     @DeleteMapping("/deleteByTitle/{bookTitle}")
-    public ResponseEntity<?> deleteBookByTitle(@PathVariable String bookTitle){
+    public ResponseEntity<String> deleteBookByTitle(@PathVariable String bookTitle){
         try{
-            boolean result= bookServiceImpl.deleteBookByTitle(bookTitle);
-            return new ResponseEntity<>(result, HttpStatus.OK);
+            bookServiceImpl.deleteBookByTitle(bookTitle);
+            return new ResponseEntity<>(DELETED, HttpStatus.OK);
         }catch(BookResourceNotFoundException e){
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
@@ -248,12 +234,12 @@ public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false)
             @ApiResponse(responseCode = "404", description = "Book not found")
     })
     @PutMapping("/update/{bookID}")
-    public ResponseEntity<?> updateBookById(@PathVariable String bookID, @RequestBody BookDTO bookDTO){
+    public ResponseEntity<String> updateBookById(@PathVariable String bookID, @RequestBody BookDTO bookDTO){
         try{
-            boolean result= bookServiceImpl.updateBookById(bookID, bookDTO);
-            return new ResponseEntity<>(result,HttpStatus.OK);
+            bookServiceImpl.updateBookById(bookID, bookDTO);
+            return new ResponseEntity<>("Book updated successfully",HttpStatus.OK);
         }catch(BookResourceNotFoundException e){
             return new ResponseEntity<>(e.getMessage(),HttpStatus.NOT_FOUND);
         }
     }
-    }
+}

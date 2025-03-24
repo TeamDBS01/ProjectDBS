@@ -11,30 +11,28 @@ import org.springframework.stereotype.Service;
 
 import com.project.dto.BookDTO;
 import com.project.exception.BookResourceNotFoundException;
-//import com.project.mapper.BookMapper;
 import com.project.models.Book;
-import com.project.models.Category;
 import com.project.repositories.BookRepository;
 
 @Service
-public class BookServiceImpl{
+public class BookServiceImpl implements BookService{
 
-//	@Autowired
 	private BookRepository bookRepository;
 	
-	//@Autowired
 	private ModelMapper modelMapper;
 	
-	@Autowired
 	private InventoryInterface inventoryInterface;
+
+	private static final String BOOK_NOT_FOUND_MESSAGE = "Book Resource not found";
+
+
 	@Autowired
-	public BookServiceImpl(BookRepository bookRepository, ModelMapper modelMapper) {
+	public BookServiceImpl(BookRepository bookRepository, ModelMapper modelMapper, InventoryInterface inventoryInterface) {
 		this.bookRepository = bookRepository;
 		this.modelMapper = modelMapper;
+		this.inventoryInterface=inventoryInterface;
 	}
-	public int getBookQuantity(String bookId) {
-		return (int) inventoryInterface.getNoOfBooks(bookId).getBody();
-	}
+
 	public List<BookDTO> getAllBooks() throws BookResourceNotFoundException {
 		List<Book> bookList = bookRepository.findAll();
 		if (bookList.isEmpty()) {
@@ -54,6 +52,7 @@ public class BookServiceImpl{
 
 	 public List<BookDTO> getBooksByCategory(String categoryName) throws BookResourceNotFoundException{
 		 List<Book> bookList=bookRepository.getByCategory(categoryName);
+
 		 if (bookList.isEmpty()) {
 	            throw new BookResourceNotFoundException("No books found");
 	        }
@@ -71,18 +70,6 @@ public class BookServiceImpl{
 					.map(book -> modelMapper.map(book, BookDTO.class))
 					.collect(Collectors.toList());
 	 }
-
-//	 public void updateInventoryOnOrder(List<String> inventoryIDs, List<Integer> quantities) {
-//
-//		    for (int i = 0; i < inventoryIDs.size(); i++) {
-//		        Long inventoryID = inventoryIDs.get(i);
-//		        int quantity = quantities.get(i);
-//
-//		        inventoryInterface.updateInventoryAfterOrder(inventoryID, quantity);
-//
-//		    }
-	//	}
-
 
 	 public List<BookDTO> filter(String... criteria) throws BookResourceNotFoundException {
 		 if (criteria.length == 0) {
@@ -115,49 +102,24 @@ public class BookServiceImpl{
 				 .collect(Collectors.toList());
 	 }
 
-
-
-
-
-//	public boolean addBook(BookDTO bookDTO) {
-//		Book book = modelMapper.map(bookDTO, Book.class);
-//		System.out.println("" + book);
-//		Book addedBook = bookRepository.save(book);
-//		return bookDTO.getBookID().equals(addedBook.getBookID());
-//	}
-//public boolean addBook(BookDTO bookDTO) throws BookResourceNotFoundException {
-//	Book book = modelMapper.map(bookDTO, Book.class);
-//	Book addedBook = bookRepository.save(book);
-//	if (addedBook == null) {
-//		return false;
-//	}
-//	return true;
-//}
 public boolean addBook(BookDTO bookDTO) throws BookResourceNotFoundException {
 		if(bookDTO==null){
 			throw new BookResourceNotFoundException("Book resource cannot be null");
 		}
 	Book book = modelMapper.map(bookDTO, Book.class);
 	Book save = bookRepository.save(book);
-    return true;
+	inventoryInterface.addBookToInventory(save.getBookID(), 1); // Assuming quantity is 1 for simplicity
+
+	return true;
 }
-//public boolean addBook(BookDTO bookDTO) {
-//	try {
-//		Book book = modelMapper.map(bookDTO, Book.class);
-//		Book addedBook = bookRepository.save(book);
-//		return addedBook != null;
-//	} catch (Exception e) {
-////		logger.error("Error adding book: ", e);
-//		throw e;
-//	}
-//}
 	public boolean deleteBookById(String bookID) throws BookResourceNotFoundException {
 		Optional<Book> optionalOfBook = bookRepository.findById(bookID);
 		if (optionalOfBook.isPresent()) {
 			bookRepository.deleteById(bookID);
+			inventoryInterface.deleteBookFromInventory(bookID);
 			return true;
 		} else {
-			throw new BookResourceNotFoundException("Book Resource not found");
+			throw new BookResourceNotFoundException(BOOK_NOT_FOUND_MESSAGE);
 		}
 	}
 
@@ -167,7 +129,7 @@ public boolean addBook(BookDTO bookDTO) throws BookResourceNotFoundException {
 			bookRepository.deleteByTitle(bookTitle);
 			return true;
 		} else {
-			throw new BookResourceNotFoundException("Book Resource not found");
+			throw new BookResourceNotFoundException(BOOK_NOT_FOUND_MESSAGE);
 		}
 	}
 
@@ -179,7 +141,7 @@ public boolean addBook(BookDTO bookDTO) throws BookResourceNotFoundException {
 			bookRepository.save(book);
 			return true;
 		} else {
-			throw new BookResourceNotFoundException("Book Resource not found");
+			throw new BookResourceNotFoundException(BOOK_NOT_FOUND_MESSAGE);
 		}
 	}
 

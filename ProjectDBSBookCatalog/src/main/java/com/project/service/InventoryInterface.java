@@ -2,16 +2,15 @@ package com.project.service;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.*;
 
 @FeignClient(name="INVENTORY-SERVICE")
 public interface InventoryInterface {
-	//InventoryDTO getInventoryByBookID(long inventoryID);
 
-	@GetMapping("/dbs/inventory/quantity/{bookID}")
-	ResponseEntity<?> getNoOfBooks(@PathVariable String bookID);
+	@PostMapping("dbs/inventory/add")
+	ResponseEntity<String> addBookToInventory(@RequestParam String bookID, @RequestParam int quantity);
 
-//	void updateInventoryAfterOrder(long inventoryID, int quantity);
-}
+	@DeleteMapping("dbs/inventory/{bookID}")
+	ResponseEntity<String> deleteBookFromInventory(@PathVariable String bookID);
+
+	}
