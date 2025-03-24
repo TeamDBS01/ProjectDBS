@@ -62,7 +62,7 @@ public interface ReviewController {
     ResponseEntity<ReviewDTO> addReview(@DecimalMin(value = "0.1", message = "{com.project.dto.ReviewDTO.rating.min}") @Max(value = 5, message = "{com.project.dto.ReviewDTO.rating.max}") @RequestParam float rating,
                                         @Size(min = 3, max = 200, message = "{com.project.dto.ReviewDTO.comment.size}") @Pattern(regexp = "^\\D.*", message = "{com.project.dto.ReviewDTO.comment.start}") @RequestParam String comment,
                                         @Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @RequestParam long userId,
-                                        @Size(min = 3, max = 200, message = "{com.project.dto.ReviewDTO.bookid.min}") @RequestParam String bookId);
+                                        @Size(min = 3, max = 200, message = "{com.project.dto.ReviewDTO.bookid.size}") @RequestParam String bookId);
 
     @Operation(description = "Add Operation for a Review with ReviewDTO")
     @ApiResponses(value = {
