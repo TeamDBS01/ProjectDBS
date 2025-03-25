@@ -2,6 +2,7 @@ package com.project.controller;
 
 import com.project.dto.BookDTO;
 import com.project.exception.BookResourceNotFoundException;
+import com.project.exception.PageOutOfBoundsException;
 import com.project.service.BookServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,9 +44,11 @@ class BookControllerTestCase {
     @Test
     void testGetAllBooks_Positive() throws Exception {
         List<BookDTO> booksDTOList = Collections.singletonList(bookDataTO);
-        when(bookServiceImpl.getAllBooks()).thenReturn(booksDTOList);
+        when(bookServiceImpl.getAllBooks(0, 10)).thenReturn(booksDTOList);
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books")
+                        .param("page", "0")
+                        .param("size", "10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].bookID").value(bookDataTO.getBookID()))
@@ -53,12 +56,26 @@ class BookControllerTestCase {
     }
 
     @Test
-    void testGetAllBooks_Negative() throws Exception {
-        when(bookServiceImpl.getAllBooks()).thenThrow(new BookResourceNotFoundException("Book Resource not found"));
+    void testGetAllBooks_Negative_BookResourceNotFoundException() throws Exception {
+        when(bookServiceImpl.getAllBooks(0, 10)).thenThrow(new BookResourceNotFoundException("No books found"));
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books"))
+        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books")
+                        .param("page", "0")
+                        .param("size", "10"))
                 .andExpect(status().isNotFound())
-                .andExpect(content().string("ERROR: Book Resource not found"))
+                .andExpect(content().string("ERROR: No books found"))
+                .andReturn();
+    }
+
+    @Test
+    void testGetAllBooks_Negative_PageOutOfBoundsException() throws Exception {
+        when(bookServiceImpl.getAllBooks(10, 10)).thenThrow(new PageOutOfBoundsException("Page number exceeds total pages available"));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books")
+                        .param("page", "10")
+                        .param("size", "10"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Page number exceeds total pages available"))
                 .andReturn();
     }
 

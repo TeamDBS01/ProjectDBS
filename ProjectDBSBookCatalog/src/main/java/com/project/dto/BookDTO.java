@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class BookDTO {
 
-	//@NotNull(message = "{com.project.BookDTO.BookID.notNull}")
 	@Size(min = 3, max = 20, message = "{com.project.BookDTO.BookID.size}")
 	private String bookID;
 

@@ -5,9 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.List;
 import java.util.Optional;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
@@ -16,8 +14,13 @@ import com.project.models.Author;
 import com.project.models.Book;
 import com.project.models.Category;
 import org.springframework.dao.InvalidDataAccessApiUsageException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.ActiveProfiles;
 
 @DataJpaTest
+@ActiveProfiles("test")
 class BookRepositoryTestCase {
 
 	
@@ -25,12 +28,6 @@ class BookRepositoryTestCase {
 	private BookRepository bookRepository;
 	@Autowired
 	private TestEntityManager testEntityManager;
-	
-	
-	@BeforeEach
-	void setUp() {
-		MockitoAnnotations.openMocks(this);
-	}
 
 	/**
 	 * @author Preethi
@@ -45,9 +42,10 @@ class BookRepositoryTestCase {
 		book.setTitle("test");
 		
 		testEntityManager.persist(book);
-		
-		Iterable<Book> bookList=bookRepository.findAll();
-		assertTrue(bookList.iterator().hasNext());
+
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<Book> bookPage = bookRepository.findAll(pageable);
+		assertTrue(bookPage.hasContent());
 	}
 	
 	@Test
@@ -58,9 +56,10 @@ class BookRepositoryTestCase {
 		book.setCategoryID(1);
 		book.setPrice(500);
 		book.setTitle("test");
-		
-		Iterable<Book> bookList=bookRepository.findAll();
-		assertFalse(bookList.iterator().hasNext());
+
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<Book> bookPage = bookRepository.findAll(pageable);
+		assertFalse(bookPage.hasContent());
 
 	}
 	
@@ -290,5 +289,27 @@ class BookRepositoryTestCase {
         assertEquals(456, updatedBook.get().getCategoryID());
         assertEquals(450, updatedBook.get().getPrice());
     }
+
+	@Test
+	void testFindByTitle_positive() {
+		Book book = new Book();
+		book.setBookID("B001");
+		book.setPrice(450);
+		book.setAuthorID(123);
+		book.setCategoryID(456);
+		book.setTitle("Wimpy Kid");
+		testEntityManager.persistAndFlush(book);
+
+		Optional<Book> result = bookRepository.findByTitle("Wimpy Kid");
+
+		assertTrue(result.isPresent());
+		assertEquals("Wimpy Kid", result.get().getTitle());
+	}
+
+	@Test
+	void FindByTitle_negative() {
+			Optional<Book> result = bookRepository.findByTitle("Nonexistent Title");
+			assertFalse(result.isPresent());
+		}
 
 }
