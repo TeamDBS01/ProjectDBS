@@ -1,10 +1,7 @@
 package com.project.controller;
 
 import com.project.dto.InventoryDTO;
-import com.project.exception.BookAlreadyExistsException;
-import com.project.exception.BookNotFoundException;
-import com.project.exception.InsufficientInventoryException;
-import com.project.exception.OutOfStockException;
+import com.project.exception.*;
 import com.project.services.InventoryServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -57,8 +54,8 @@ class InventoryControllerTestCase {
     }
 
     @Test
-    @DisplayName("Display Service - Negative Case")
-    public void testDisplayService_Negative() throws Exception {
+    @DisplayName("Display Inventory - Negative Case")
+    public void testDisplayInventory_Negative() throws Exception {
         when(inventoryServiceimpl.displayInventory(0, 5)).thenThrow(new BookNotFoundException("Inventory is Empty"));
 
         mockMvc.perform(get("/dbs/inventory")
@@ -66,6 +63,18 @@ class InventoryControllerTestCase {
                         .param("size", "5"))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Inventory is Empty"));
+    }
+
+    @Test
+    @DisplayName("Display Inventory - Page Out of Bounds Case")
+    void testDisplayInventory_PageOutOfBounds() throws Exception {
+        when(inventoryServiceimpl.displayInventory(10, 5)).thenThrow(new PageOutOfBoundsException("Page number exceeds total pages available"));
+
+        mockMvc.perform(get("/dbs/inventory")
+                        .param("page", "10")
+                        .param("size", "5"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("Page number exceeds total pages available"));
     }
 
     @Test
