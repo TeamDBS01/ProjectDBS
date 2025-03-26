@@ -2,8 +2,7 @@ package com.project.controller;
 
 import java.util.List;
 
-import com.project.exception.BookAlreadyExistsException;
-import com.project.exception.InsufficientInventoryException;
+import com.project.exception.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -16,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.project.dto.InventoryDTO;
-import com.project.exception.BookNotFoundException;
-import com.project.exception.OutOfStockException;
 import com.project.services.InventoryService;
 
 /** Implementation of InventoryController for managing inventory operations.
@@ -43,14 +40,16 @@ public class InventoryControllerImpl implements InventoryController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved list"),
             @ApiResponse(responseCode = "404", description = "Inventory Empty")
     })
-    public ResponseEntity<?> displayInventory(
+    public ResponseEntity<Object> displayInventory(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
         try {
             List<InventoryDTO> inventoryList = inventoryService.displayInventory(page, size);
             return ResponseEntity.ok(inventoryList);
-        } catch (BookNotFoundException e) {
+        } catch (PageOutOfBoundsException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        }catch (BookNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Inventory is Empty");
         }
     }

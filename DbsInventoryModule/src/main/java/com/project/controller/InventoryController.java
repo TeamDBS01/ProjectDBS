@@ -26,7 +26,7 @@ public interface InventoryController {
      * @return ResponseEntity containing the inventory details.
      */
     @GetMapping("")
-    ResponseEntity<?> displayInventory(int page, int size);
+    ResponseEntity<Object> displayInventory( @Min(value = 0, message = "Page number must be zero or greater")int page, @Min(value = 1, message = "Page size must be at least 1") int size);
 
     /**
      * Retrieves inventory details for a specific book by its ID.
@@ -67,7 +67,7 @@ public interface InventoryController {
     ResponseEntity<?> updateRemoveInventory(@RequestParam @NotBlank(message = "Book ID cannot be blank") String bookID,
                                             @RequestParam @Min(value = 1, message = "Quantity must be at least 1") int quantity) throws BookNotFoundException;
     /**
-     * Places an order for a specified quantity of a book.
+     * Checks if an order can be placed for a specified quantity of a book.
      * @param bookID the ID of the book.
      * @param quantity the quantity to order.
      * @return ResponseEntity indicating the result of the operation.

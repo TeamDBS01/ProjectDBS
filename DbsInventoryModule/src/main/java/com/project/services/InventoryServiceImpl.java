@@ -4,8 +4,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.project.exception.BookAlreadyExistsException;
-import com.project.exception.InsufficientInventoryException;
+import com.project.exception.*;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -14,8 +13,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import com.project.dto.InventoryDTO;
-import com.project.exception.BookNotFoundException;
-import com.project.exception.OutOfStockException;
 import com.project.models.Inventory;
 import com.project.repositories.InventoryRepository;
 
@@ -52,16 +49,18 @@ public class InventoryServiceImpl implements InventoryService {
      * {@inheritDoc}
      */
     @Override
-    public List<InventoryDTO> displayInventory(int page, int size) {
+    public List<InventoryDTO> displayInventory(int page, int size) throws PageOutOfBoundsException, BookNotFoundException {
         Pageable pageable = PageRequest.of(page, size);
         Page<Inventory> inventoryPage = inventoryRepository.findAll(pageable);
+        if (page >= inventoryPage.getTotalPages()) {
+            throw new PageOutOfBoundsException("Page number exceeds total pages available. Total page number is " +inventoryPage.getTotalPages());
+        }
         if (inventoryPage.isEmpty()) {
             throw new BookNotFoundException("Inventory Empty");
         }
-        List<InventoryDTO> inventoryDTOList = inventoryPage.getContent().stream()
+        return inventoryPage.getContent().stream()
                 .map(inventory -> mapper.map(inventory, InventoryDTO.class))
                 .collect(Collectors.toList());
-        return inventoryDTOList;
     }
 
     /**
@@ -141,7 +140,6 @@ public class InventoryServiceImpl implements InventoryService {
      * {@inheritDoc}
      */
     @Override
-    //@EventListener(ApplicationContext.class)
     public void checkAndNotifyLowStock(String bookID) throws BookNotFoundException {
         Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
         if (optionalInventory.isPresent()) {
@@ -159,8 +157,7 @@ public class InventoryServiceImpl implements InventoryService {
      * {@inheritDoc}
      */
     @Override
-    @Transactional
-    public void placeOrder(String bookID, int quantity) throws BookNotFoundException {
+    public void placeOrder(String bookID, int quantity) throws BookNotFoundException, OutOfStockException {
         try {
             Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
             if (optionalInventory.isPresent()) {
@@ -168,8 +165,6 @@ public class InventoryServiceImpl implements InventoryService {
                 if (inventory.getQuantity() < quantity) {
                     throw new OutOfStockException("Not enough stock available");
                 }
-                inventory.setQuantity(inventory.getQuantity() - quantity);
-                inventoryRepository.save(inventory);
                 checkAndNotifyLowStock(bookID);
             } else {
                 throw new BookNotFoundException("Book not found for ID: " + bookID);
@@ -214,6 +209,7 @@ public class InventoryServiceImpl implements InventoryService {
      * {@inheritDoc}
      */
     @Override
+    @Transactional
     public void deleteBookFromInventory(String bookID) throws BookNotFoundException {
 
         Inventory existingInventory = inventoryRepository.findByBookId(bookID)

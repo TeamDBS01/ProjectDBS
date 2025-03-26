@@ -3,8 +3,6 @@ package com.project.services;
 import java.util.List;
 
 import com.project.dto.InventoryDTO;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 /**
  * Service interface for managing inventory operations.
@@ -54,7 +52,7 @@ public interface InventoryService {
     void checkAndNotifyLowStock(String bookID);
 
     /**
-     * Places an order for a specified quantity of a book.
+     * Checks if an order can be placed for a specified quantity of a book.
      * @param bookID the ID of the book.
      * @param quantity the quantity to order.
      */
