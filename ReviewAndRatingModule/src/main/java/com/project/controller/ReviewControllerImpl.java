@@ -36,8 +36,6 @@ public class ReviewControllerImpl implements ReviewController {
         this.reviewService = reviewService;
     }
 
-    private static final Logger logger = LoggerFactory.getLogger(ReviewControllerImpl.class);
-
     /**
      * Retrieves success for redirecting.
      *
@@ -65,7 +63,6 @@ public class ReviewControllerImpl implements ReviewController {
             ReviewDTO reviewDTO = reviewService.retrieveReviewById(reviewId);
             response = new ResponseEntity<>(reviewDTO, headers, HttpStatus.FOUND);
         } catch (ReviewNotFoundException e) {
-            logger.error(e.getMessage());
             response = new ResponseEntity<>(new ReviewDTO(e.toString()), headers, HttpStatus.NOT_FOUND);
         }
         return response;
@@ -86,10 +83,8 @@ public class ReviewControllerImpl implements ReviewController {
             headers.add("Location", "/dbs/review/ok");
             response = new ResponseEntity<>(reviewDTOList, headers, HttpStatus.FOUND);
         } catch (ReviewNotFoundException e) {
-            logger.error(e.getMessage());
             response = new ResponseEntity<>(List.of(new ReviewDTO("No Reviews Found!")), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            logger.error(e.getMessage());
             response = new ResponseEntity<>(List.of(new ReviewDTO("No Reviews Found!")), HttpStatus.BAD_REQUEST);
         }
         return response;
@@ -111,10 +106,8 @@ public class ReviewControllerImpl implements ReviewController {
             headers.add("Location", "/dbs/review/ok");
             response = new ResponseEntity<>(reviewDTOList, headers, HttpStatus.FOUND);
         } catch (ReviewNotFoundException e) {
-            logger.error(e.getMessage());
             response = new ResponseEntity<>(List.of(new ReviewDTO(STR."No Reviews with User ID: \{userId} Found!")), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            logger.error(e.getMessage());
             response = new ResponseEntity<>(List.of(new ReviewDTO("No Reviews Found!")), HttpStatus.BAD_REQUEST);
         }
         return response;
@@ -136,10 +129,8 @@ public class ReviewControllerImpl implements ReviewController {
             headers.add("Location", "/dbs/review/ok");
             response = new ResponseEntity<>(reviewDTOList, headers, HttpStatus.FOUND);
         } catch (ReviewNotFoundException e) {
-            logger.error(e.getMessage());
             response = new ResponseEntity<>(List.of(new ReviewDTO(STR."No Reviews with Book ID: \{bookId} Found!")), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            logger.error(e.getMessage());
             response = new ResponseEntity<>(List.of(new ReviewDTO("No Reviews Found!")), HttpStatus.BAD_REQUEST);
         }
         return response;
@@ -168,10 +159,8 @@ public class ReviewControllerImpl implements ReviewController {
             reviewDTO = reviewService.addReview(rating, comment, userId, bookId);
             response = new ResponseEntity<>(reviewDTO, HttpStatus.CREATED);
         } catch (UserNotFoundException | BookNotFoundException e) {
-            logger.error(e.toString());
             response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            logger.error(e.toString());
             response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.BAD_GATEWAY);
         }
         return response;
@@ -191,10 +180,8 @@ public class ReviewControllerImpl implements ReviewController {
             reviewDTO = reviewService.addReview(reviewDTO.getRating(), reviewDTO.getComment(), reviewDTO.getUserId(), reviewDTO.getBookId());
             response = new ResponseEntity<>(reviewDTO, HttpStatus.CREATED);
         } catch (UserNotFoundException | BookNotFoundException e) {
-            logger.error(e.toString());
             response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.NOT_FOUND);
         } catch (Exception e) {
-            logger.error(e.toString());
             response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.BAD_GATEWAY);
         }
         return response;
@@ -218,7 +205,6 @@ public class ReviewControllerImpl implements ReviewController {
             response = new ResponseEntity<>(reviewDTO, HttpStatus.OK);
         } catch (UserNotAuthorizedException | UserNotFoundException | IDMismatchException | BookNotFoundException |
                  IllegalArgumentException e) {
-            logger.error(e.toString());
             response = switch (e) {
                 case UserNotAuthorizedException ex ->
                         new ResponseEntity<>(new ReviewDTO(STR."Exception: \{ex.getClass().getSimpleName()}, Message: \{ex.getMessage()}"), HttpStatus.UNAUTHORIZED);
@@ -232,7 +218,6 @@ public class ReviewControllerImpl implements ReviewController {
                         new ResponseEntity<>(new ReviewDTO(STR."Exception: \{e.getClass().getSimpleName()}, Message: \{e.getMessage()}"), HttpStatus.BAD_REQUEST);
             };
         } catch (Exception ex) {
-            logger.error(ex.getMessage());
             response = new ResponseEntity<>(new ReviewDTO(STR."Exception: \{ex.getClass().getSimpleName()}, Message: \{ex.getMessage()}"), HttpStatus.NOT_MODIFIED);
         }
         return response;
@@ -257,7 +242,6 @@ public class ReviewControllerImpl implements ReviewController {
             }
         } catch (ReviewNotFoundException | UserNotAuthorizedException | UserNotFoundException |
                  IllegalArgumentException e) {
-            logger.error(e.getMessage());
             response = switch (e) {
                 case ReviewNotFoundException ex -> new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
                 case UserNotFoundException ex -> new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
@@ -265,7 +249,6 @@ public class ReviewControllerImpl implements ReviewController {
                 default -> new ResponseEntity<>(false, HttpStatus.BAD_REQUEST);
             };
         } catch (Exception e) {
-            logger.error(e.getMessage());
             response = new ResponseEntity<>(false, HttpStatus.NOT_MODIFIED);
         }
         return response;
