@@ -37,7 +37,7 @@ public class LoggingAspect {
         logger.info("HTTP Status: {} - Method: {}", statusCode, joinPoint.getSignature().getName());
     }
 
-    @AfterThrowing(pointcut = "controllerMethods() || serviceMethods() || repositoryMethods()", throwing = "error")
+    @AfterThrowing(pointcut = "controllerMethods()", throwing = "error")
     public void logAfterThrowing(JoinPoint joinPoint, Throwable error) {
         logger.error("Method execution failed:{}", error.getMessage());
     }

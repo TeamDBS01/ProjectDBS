@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.project.exception.PageOutOfBoundsException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,10 @@ import com.project.exception.BookResourceNotFoundException;
 import com.project.models.Book;
 import com.project.repositories.BookRepository;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,27 +63,29 @@ class BookServiceImplTestCase {
 	void tearDown() {
 		bookRepository=null;
 		bookServiceImpl=null;
-		book=null;
 	}
-    
+
+
 	@Test
 	void testGetAllBooks_positive() throws BookResourceNotFoundException {
-		when(bookRepository.findAll()).thenReturn(Collections.singletonList(book));
-		//when(bookMapper.bookListToBookDTOList(any())).thenReturn(Arrays.asList(bookDTO));
-		when(modelMapper.map(book, BookDTO.class)).thenReturn(bookDTO);when(modelMapper.map(book, BookDTO.class)).thenReturn(bookDTO);
+		Pageable pageable = PageRequest.of(0, 10);
+		Page<Book> bookPage = new PageImpl<>(Collections.singletonList(book), pageable, 1);
+		when(bookRepository.findAll(pageable)).thenReturn(bookPage);
+		when(modelMapper.map(book, BookDTO.class)).thenReturn(bookDTO);
 
-        List<BookDTO> result = bookServiceImpl.getAllBooks();
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(bookDTO, result.getFirst());
-        
+		List<BookDTO> result = bookServiceImpl.getAllBooks(0, 10);
+		assertNotNull(result);
+		assertEquals(1, result.size());
+		assertEquals(bookDTO, result.get(0));
 	}
-	
+
 	@Test
-	void testGetAllBooks_negative() throws BookResourceNotFoundException{
-		assertThrows(BookResourceNotFoundException.class, ()-> bookServiceImpl.getAllBooks());
-	}
+	void testGetAllBooks_negative() throws PageOutOfBoundsException {
+		Pageable pageable = PageRequest.of(1, 10);
+		when(bookRepository.findAll(pageable)).thenReturn(Page.empty());
 
+		assertThrows(PageOutOfBoundsException.class, () -> bookServiceImpl.getAllBooks(1, 10));
+	}
 	@Test
 	void testGetBookById_positive() throws BookResourceNotFoundException{
 	    book.setBookID("B001");
@@ -144,7 +151,7 @@ class BookServiceImplTestCase {
 	}
 
 	@Test
-	public void testFilter_NoBooksFound_ShouldThrowException() {
+	void testFilter_NoBooksFound_ShouldThrowException() {
 		String criterion = "NonExistent";
 		when(bookRepository.getByAuthor(criterion)).thenReturn(Collections.emptyList());
 		when(bookRepository.getByCategory(criterion)).thenReturn(Collections.emptyList());
@@ -152,70 +159,64 @@ class BookServiceImplTestCase {
 		assertThrows(BookResourceNotFoundException.class, () -> bookServiceImpl.filter(criterion));
 	}
 @Test
-public void testFilter_ByAuthor_ShouldReturnBooks() throws BookResourceNotFoundException {
+void testFilter_ByAuthor_ShouldReturnBooks() throws BookResourceNotFoundException {
 	String author = "Author1";
 	List<Book> booksByAuthor = Arrays.asList(
-			new Book("1", "Book1", 10.0, 1, 1),
-			new Book("2", "Book2", 15.0, 1, 2)
+			new Book("111", "Book1", 10.0, 1, 1)
 	);
+	BookDTO bookDTO=new BookDTO("111", "Book1", 10.0, 1, 1);
+
 	when(bookRepository.getByAuthor(author)).thenReturn(booksByAuthor);
 	when(bookRepository.getByCategory(anyString())).thenReturn(Collections.emptyList());
-	when(modelMapper.map(any(Book.class), eq(BookDTO.class))).thenAnswer(invocation -> {
-		Book book = invocation.getArgument(0);
-		return new BookDTO(book.getBookID(), book.getTitle(), book.getPrice(), book.getAuthorID(), book.getCategoryID());
-	});
+	when(modelMapper.map(any(Book.class), eq(BookDTO.class))).thenReturn(bookDTO);
 
 	List<BookDTO> result = bookServiceImpl.filter(author);
 
-	assertEquals(2, result.size());
+	assertEquals(1, result.size());
 	verify(bookRepository, times(1)).getByAuthor(author);
 	verify(bookRepository, times(1)).getByCategory(author);
 }
 
 	@Test
-	public void testFilter_ByCategory_ShouldReturnBooks() throws BookResourceNotFoundException {
+	void testFilter_ByCategory_ShouldReturnBooks() throws BookResourceNotFoundException {
 		String category = "Category1";
 		List<Book> booksByCategory = Arrays.asList(
-				new Book("1", "Book1", 10.0, 1, 1),
-				new Book("2", "Book2", 15.0, 2, 1)
+				new Book("1", "Book1", 10.0, 1, 1)
 		);
+
+		BookDTO bookDTO=new BookDTO("111", "Book1", 10.0, 1, 1);
+
 		when(bookRepository.getByCategory(category)).thenReturn(booksByCategory);
 		when(bookRepository.getByAuthor(anyString())).thenReturn(Collections.emptyList());
-		when(modelMapper.map(any(Book.class), eq(BookDTO.class))).thenAnswer(invocation -> {
-			Book book = invocation.getArgument(0);
-			return new BookDTO(book.getBookID(), book.getTitle(), book.getPrice(), book.getAuthorID(), book.getCategoryID());
-		});
+		when(modelMapper.map(any(Book.class), eq(BookDTO.class))).thenReturn(bookDTO);
 
 		List<BookDTO> result = bookServiceImpl.filter(category);
 
-		assertEquals(2, result.size());
+		assertEquals(1, result.size());
 		verify(bookRepository, times(1)).getByAuthor(category);
 		verify(bookRepository, times(1)).getByCategory(category);
 	}
 
 	@Test
-	public void testFilter_ByAuthorAndCategory_ShouldReturnBooks() throws BookResourceNotFoundException {
+	void testFilter_ByAuthorAndCategory_ShouldReturnBooks() throws BookResourceNotFoundException {
 		String author = "Author1";
 		String category = "Category1";
 		List<Book> booksByAuthor = Arrays.asList(
-				new Book("1", "Book1", 10.0, 1, 1),
-				new Book("2", "Book2", 15.0, 1, 2)
+				new Book("1", "Book1", 10.0, 1, 1)
 		);
 		List<Book> booksByCategory = List.of(
                 new Book("1", "Book1", 10.0, 1, 1)
         );
+		BookDTO bookDTO=new BookDTO("111", "Book1", 10.0, 1, 1);
+
 		when(bookRepository.getByAuthor(author)).thenReturn(booksByAuthor);
 		when(bookRepository.getByCategory(category)).thenReturn(booksByCategory);
-		when(modelMapper.map(any(Book.class), eq(BookDTO.class))).thenAnswer(invocation -> {
-			Book book = invocation.getArgument(0);
-			return new BookDTO(book.getBookID(), book.getTitle(), book.getPrice(), book.getAuthorID(), book.getCategoryID());
-		});
-
+		when(modelMapper.map(any(Book.class), eq(BookDTO.class))).thenReturn(bookDTO);
 		List<BookDTO> result = bookServiceImpl.filter(author, category);
 
 		assertEquals(1, result.size());
 		verify(bookRepository, times(1)).getByAuthor(author);
-		verify(bookRepository, times(2)).getByCategory(category);
+		verify(bookRepository, times(1)).getByCategory(category);
 	}
 
 @Test
@@ -262,6 +263,7 @@ void testAddBook_Positive() throws BookResourceNotFoundException{
 	@Test
 	void testDeleteBookByTitle_positive() throws BookResourceNotFoundException {
 		book.setTitle("Wimpy Kid");
+		book.setBookID("B001");
 		bookDTO.setTitle("Wimpy Kid");
 
 		when(bookRepository.findByTitle(any())).thenReturn(Optional.of(book));
@@ -271,6 +273,7 @@ void testAddBook_Positive() throws BookResourceNotFoundException{
 		assertTrue(result);
 		verify(bookRepository).findByTitle(any());
 		verify(bookRepository).deleteByTitle(any());
+		verify(inventoryInterface).deleteBookFromInventory(book.getBookID());
 	}
 
 	@Test
@@ -281,6 +284,7 @@ void testAddBook_Positive() throws BookResourceNotFoundException{
 
 		verify(bookRepository, times(1)).findByTitle(any());
 		verify(bookRepository, times(0)).deleteByTitle(any());
+		verify(inventoryInterface, times(0)).deleteBookFromInventory(any());
 	}
 
 	@Test
