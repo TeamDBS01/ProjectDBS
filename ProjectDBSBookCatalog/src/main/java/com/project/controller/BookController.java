@@ -79,7 +79,7 @@ public class BookController {
     /**
      * @author Preethi
      * @param categoryName Name of the category
-     * @return ResponseEntity - List of BookDTO
+     * @return ResponseEntity containing List of BookDTO
      * @see BookDTO
      */
     @Operation(summary = "Get books by category", description = "Retrieves books by category.")

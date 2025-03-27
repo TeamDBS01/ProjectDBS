@@ -49,7 +49,8 @@ public class BookServiceImpl implements BookService {
 
     /**
      * Retrieves all books from the repository.
-     *
+     * @param page
+     * @param size
      * @return a list of BookDTO objects
      * @throws BookResourceNotFoundException if no books are found
      */
