@@ -7,7 +7,7 @@ spring:
     application:
         name: Review-Service
     datasource:
-        driver: com.mysql.cj.jdbc.Driver
+        driverClassName: com.mysql.cj.jdbc.Driver
         url: jdbc:mysql://localhost:3306/ReviewDB?createDatabaseIfNotExist=true
         username: root
         password: root
@@ -23,6 +23,25 @@ spring:
                 enabled: true
                 instance:
                     service-url: http://localhost:8089
+    cloud:
+        openfeign:
+            circuitbreaker:
+                enabled: true
+
+resilience4j:
+    circuitbreaker:
+        configs:
+            default:
+                registerHealthIndicator: true
+        instances:
+            HttpBinClient_getBinWithDelayInSeconds_int:
+                minimumNumberOfCalls: 10
+                failureRateThreshold: 50
+    timelimiter:
+        configs:
+            default:
+                timeoutDuration: 20s
+
 eureka:
     instance:
         hostname: ${vcap.application.uris[0]:localhost}

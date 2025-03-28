@@ -107,6 +107,11 @@
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>2.7.0</version>
         </dependency>
+        <!-- Circuit Breaker  -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>
+        </dependency>
         <!-- Codecentric -->
         <dependency>
             <groupId>de.codecentric</groupId>
@@ -138,10 +143,9 @@
     </dependencyManagement>
 
 
-
     <build>
         <plugins>
-            <!--            Plugin for Compile time arguments and Lombok-->
+            <!-- Plugin for Compile time arguments and Lombok -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -175,7 +179,7 @@
                 </configuration>
             </plugin>
 
-            <!--            Plugin to check with Sonar Qube-->
+            <!-- Plugin to check with Sonar Qube-->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>

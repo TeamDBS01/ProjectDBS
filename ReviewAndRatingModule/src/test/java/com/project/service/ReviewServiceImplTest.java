@@ -9,7 +9,6 @@ import com.project.feign.BookClient;
 import com.project.feign.UserClient;
 import com.project.models.Review;
 import com.project.repositories.ReviewRepository;
-import feign.FeignException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -62,7 +61,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("AddReview-Positive")
-    void test_addReview_positive() {
+    void test_addReview_positive() throws ServiceUnavailableException {
         when(reviewRepository.save(any())).thenReturn(review);
         when(mapper.map(any(), any())).thenReturn(reviewDTO);
         when(userClient.getUserById(USER_ID)).thenReturn(ResponseEntity.ok(userDTO));
@@ -82,7 +81,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("AddReview-Negative")
-    void test_addReview_negative() {
+    void test_addReview_negative() throws ServiceUnavailableException {
         when(reviewRepository.save(any())).thenReturn(new IllegalArgumentException());
         when(userClient.getUserById(USER_ID)).thenReturn(ResponseEntity.ok(userDTO));
         when(bookClient.getBookById(BOOK_ID)).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
@@ -97,7 +96,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("AddReview-Negative-UserNotFound")
-    void test_addReview_negative_userNotFound() {
+    void test_addReview_negative_userNotFound() throws ServiceUnavailableException {
         when(userClient.getUserById(USER_ID)).thenReturn(ResponseEntity.ok(null));
         assertThrows(UserNotFoundException.class,
                 () -> reviewService.addReview(RATING, COMMENT, USER_ID, BOOK_ID),
@@ -108,7 +107,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("AddReview-Negative-UserNotFound-EmptyObject")
-    void test_addReview_negative_userNotFound_emptyObject() {
+    void test_addReview_negative_userNotFound_emptyObject() throws ServiceUnavailableException {
         when(userClient.getUserById(USER_ID)).thenReturn(ResponseEntity.ok(new UserDTO()));
         assertThrows(UserNotFoundException.class,
                 () -> reviewService.addReview(RATING, COMMENT, USER_ID, BOOK_ID),
@@ -119,9 +118,10 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("AddReview-Negative-BookNotFound")
-    void test_addReview_negative_bookNotFound() {
+    void test_addReview_negative_bookNotFound() throws ServiceUnavailableException {
         when(userClient.getUserById(USER_ID)).thenReturn(ResponseEntity.ok(userDTO));
-        when(bookClient.getBookById(BOOK_ID)).thenThrow(FeignException.class);
+//        when(bookClient.getBookById(BOOK_ID)).thenThrow(FeignException.class);
+        when(bookClient.getBookById(any())).thenAnswer(invocation -> new ResponseEntity<>(new BookDTO(), HttpStatus.NO_CONTENT));
         assertThrows(BookNotFoundException.class,
                 () -> reviewService.addReview(RATING, COMMENT, USER_ID, BOOK_ID),
                 "Error not thrown in addReview");
@@ -133,7 +133,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("UpdateReview-Positive-SameUser")
-    void test_updateReview_positive_sameUser() {
+    void test_updateReview_positive_sameUser() throws ServiceUnavailableException {
         when(userClient.getUserById(USER_ID)).thenReturn(ResponseEntity.ok(userDTO));
         when(bookClient.getBookById(any())).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
         when(reviewRepository.findById(any())).thenReturn(Optional.of(review));
@@ -158,7 +158,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("UpdateReview-Positive-Admin")
-    void test_updateReview_positive_admin() {
+    void test_updateReview_positive_admin() throws ServiceUnavailableException {
         userDTO.setRole(Role.ADMIN);
         when(userClient.getUserById(4L)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
         when(bookClient.getBookById(any())).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
@@ -183,7 +183,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("UpdateReview-Negative-Unauthorized")
-    void test_updateReview_negative_unauthorized() {
+    void test_updateReview_negative_unauthorized() throws ServiceUnavailableException {
         when(userClient.getUserById(4L)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
         when(bookClient.getBookById(any())).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
         when(reviewRepository.findById(any())).thenReturn(Optional.of(review));
@@ -198,7 +198,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("UpdateReview-Negative-ReviewIDMismatch")
-    void test_updateReview_negative_reviewIDMismatch() {
+    void test_updateReview_negative_reviewIDMismatch() throws ServiceUnavailableException {
         when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
         when(bookClient.getBookById(any())).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
         when(reviewRepository.findById(any())).thenReturn(Optional.empty());
@@ -213,7 +213,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("UpdateReview-Negative-UserIDMismatch")
-    void test_updateReview_negative_userIDMismatch() {
+    void test_updateReview_negative_userIDMismatch() throws ServiceUnavailableException {
         when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
         when(bookClient.getBookById(any())).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
         review.setUserId(4L);
@@ -229,7 +229,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("UpdateReview-Negative-BookIDMismatch")
-    void test_updateReview_negative_bookIDMismatch() {
+    void test_updateReview_negative_bookIDMismatch() throws ServiceUnavailableException {
         when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
         when(bookClient.getBookById(any())).thenAnswer(invocation -> ResponseEntity.ok(bookDTO));
         review.setBookId("ISBN-NTFND");
@@ -246,10 +246,9 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("UpdateReview-Negative-BookNotFound")
-    void test_updateReview_negative_bookNotFound() {
+    void test_updateReview_negative_bookNotFound() throws ServiceUnavailableException {
         when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
-        when(bookClient.getBookById(any())).thenThrow(FeignException.class);
-        assertThrows(
+        when(bookClient.getBookById(any())).thenAnswer(invocation -> new ResponseEntity<>(new BookDTO(), HttpStatus.NO_CONTENT));        assertThrows(
                 BookNotFoundException.class,
                 () -> reviewService.updateReview(USER_ID, reviewDTO),
                 "Error not thrown in UpdateReview for Book Not Found");
@@ -259,7 +258,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("UpdateReview-Negative-UserNotFound")
-    void test_updateReview_negative_userNotFound() {
+    void test_updateReview_negative_userNotFound() throws ServiceUnavailableException {
         when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(null, HttpStatus.OK));
         assertThrows(
                 UserNotFoundException.class,
@@ -270,7 +269,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("UpdateReview-Negative-UserNotFound-EmptyObject")
-    void test_updateReview_negative_userNotFound_emptyObject() {
+    void test_updateReview_negative_userNotFound_emptyObject() throws ServiceUnavailableException {
         when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(new UserDTO(), HttpStatus.OK));
         assertThrows(
                 UserNotFoundException.class,
@@ -281,7 +280,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("DeleteReview-Positive-SameUser")
-    void test_deleteReview_positive_sameUser() {
+    void test_deleteReview_positive_sameUser() throws ServiceUnavailableException {
         userDTO.setUserId(USER_ID);
         when(reviewRepository.findById(review.getReviewId())).thenReturn(Optional.of(review));
         when(mapper.map(review, ReviewDTO.class)).thenReturn(reviewDTO);
@@ -300,7 +299,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("DeleteReview-Positive-Admin")
-    void test_deleteReview_positive_admin() {
+    void test_deleteReview_positive_admin() throws ServiceUnavailableException {
         userDTO.setRole(Role.ADMIN);
         userDTO.setUserId(USER_ID);
         reviewDTO.setUserId(4L);
@@ -321,7 +320,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("DeleteReview-Negative-UserNotAuthorized")
-    void test_deleteReview_negative_userNotAuthorized() {
+    void test_deleteReview_negative_userNotAuthorized() throws ServiceUnavailableException {
         reviewDTO.setUserId(3L);
         when(reviewRepository.findById(any())).thenReturn(Optional.of(review));
         when(mapper.map(any(), any())).thenReturn(reviewDTO);
@@ -337,7 +336,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("DeleteReview-Negative-UserNotFound")
-    void test_deleteReview_negative_userNotFound() {
+    void test_deleteReview_negative_userNotFound() throws ServiceUnavailableException {
         when(reviewRepository.findById(review.getReviewId())).thenReturn(Optional.of(review));
         when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(null, HttpStatus.OK));
         assertThrows(
@@ -350,7 +349,7 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("DeleteReview-Negative-UserNotFound-EmptyObject")
-    void test_deleteReview_negative_userNotFound_emptyObject() {
+    void test_deleteReview_negative_userNotFound_emptyObject() throws ServiceUnavailableException {
         when(reviewRepository.findById(review.getReviewId())).thenReturn(Optional.of(review));
         when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(new UserDTO(), HttpStatus.OK));
         assertThrows(
@@ -413,7 +412,7 @@ class ReviewServiceImplTest {
         assertThrows(
                 ReviewNotFoundException.class,
                 () -> reviewService.retrieveAllReviews(),
-                "Error not thrown in retireveAll");
+                "Error not thrown in retrieveAll");
         verify(reviewRepository).findAll();
     }
 
