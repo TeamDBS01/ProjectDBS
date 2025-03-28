@@ -10,5 +10,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 public interface BookClient {
 
 	@GetMapping("dbs/books/{bookId}")
-	ResponseEntity<?> getBookById(@PathVariable String bookId) throws ServiceUnavailableException;
+	ResponseEntity<Object> getBookById(@PathVariable String bookId) throws ServiceUnavailableException;
 }

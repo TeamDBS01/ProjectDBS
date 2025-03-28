@@ -8,7 +8,7 @@ import org.springframework.stereotype.Component;
 public class BookClientFallback implements BookClient {
 
     @Override
-    public ResponseEntity<?> getBookById(String bookId) throws ServiceUnavailableException {
+    public ResponseEntity<Object> getBookById(String bookId) throws ServiceUnavailableException {
         throw new ServiceUnavailableException("Book Service is Not Available");
     }
 }
