@@ -27,9 +27,8 @@ import java.util.List;
 @RequestMapping("dbs/review")
 public class ReviewControllerImpl implements ReviewController {
 
+    private ReviewService reviewService;
     private static final String LOCATION = "/dbs/review/ok";
-
-    private final ReviewService reviewService;
 
     @Autowired
     public ReviewControllerImpl(ReviewService reviewService) {
@@ -235,9 +234,10 @@ public class ReviewControllerImpl implements ReviewController {
             @Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId) throws UserNotFoundException, ReviewNotFoundException, UserNotAuthorizedException, ServiceUnavailableException {
         ResponseEntity<Boolean> response = new ResponseEntity<>(true, HttpStatus.OK);
 //        try {
-        if (!reviewService.deleteReview(userId, reviewId)) {
-            response = new ResponseEntity<>(false, HttpStatus.NOT_MODIFIED);
-        }
+        reviewService.deleteReview(userId, reviewId);
+//        if (!reviewService.deleteReview(userId, reviewId)) {
+//            response = new ResponseEntity<>(false, HttpStatus.NOT_MODIFIED);
+//        }
 //        } catch (ReviewNotFoundException | UserNotAuthorizedException | UserNotFoundException |
 //                 IllegalArgumentException e) {
 //            response = switch (e) {

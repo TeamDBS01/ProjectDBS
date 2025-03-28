@@ -5,8 +5,6 @@ import com.project.exception.ServiceUnavailableException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
-
-
 @Component
 public class UserClientFallback implements UserClient {
 
