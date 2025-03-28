@@ -41,7 +41,6 @@ class ReviewServiceImplSpyTest {
 
     private Review review;
     private ReviewDTO reviewDTO;
-    private UserDTO userDTO;
     private static long SIZE;
     private static final float RATING = 4.5f;
     private static final String COMMENT = "Great Book";
@@ -53,8 +52,6 @@ class ReviewServiceImplSpyTest {
         reviewService = new ReviewServiceImpl(reviewRepository, userClient, bookClient, mapper);
         review = new Review(RATING, COMMENT, USER_ID, BOOK_ID);
         reviewDTO = new ReviewDTO(1L, RATING, COMMENT, USER_ID, BOOK_ID);
-        userDTO = new UserDTO(12L, "name", "mail", "pass", Role.CUSTOMER);
-//        bookDTO = new BookDTO("ISBN-1212", "title", 2000, 9L, 8, 7);
         SIZE = reviewRepository.count();
     }
 
@@ -190,7 +187,6 @@ class ReviewServiceImplSpyTest {
     @Test
     @DisplayName("DeleteReview-Positive-SameUser")
     void test_deleteReview_positive_sameUser() {
-        userDTO.setUserId(USER_ID);
         long reviewId = reviewRepository.save(review).getReviewId();
         boolean actual = false;
         try {

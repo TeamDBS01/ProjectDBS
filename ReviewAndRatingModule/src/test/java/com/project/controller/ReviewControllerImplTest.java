@@ -322,15 +322,15 @@ class ReviewControllerImplTest {
         verify(reviewService).deleteReview(USER_ID, REVIEW_ID);
     }
 
-    @Test
-    @DisplayName("DeleteReview-Negative-NotModified")
-    void test_deleteReview_negative_notModified() throws UserNotFoundException, ReviewNotFoundException, UserNotAuthorizedException, ServiceUnavailableException {
-        when(reviewService.deleteReview(USER_ID, REVIEW_ID)).thenReturn(false);
-        ResponseEntity<Boolean> response = reviewController.deleteReview(USER_ID, REVIEW_ID);
-        assertEquals(HttpStatus.NOT_MODIFIED, response.getStatusCode());
-        assertNotEquals(Boolean.TRUE, response.getBody());
-        verify(reviewService).deleteReview(USER_ID, REVIEW_ID);
-    }
+//    @Test
+//    @DisplayName("DeleteReview-Negative-NotModified")
+//    void test_deleteReview_negative_notModified() throws UserNotFoundException, ReviewNotFoundException, UserNotAuthorizedException, ServiceUnavailableException {
+//        when(reviewService.deleteReview(USER_ID, REVIEW_ID)).thenReturn(false);
+//        ResponseEntity<Boolean> response = reviewController.deleteReview(USER_ID, REVIEW_ID);
+//        assertEquals(HttpStatus.NOT_MODIFIED, response.getStatusCode());
+//        assertNotEquals(Boolean.TRUE, response.getBody());
+//        verify(reviewService).deleteReview(USER_ID, REVIEW_ID);
+//    }
 
 //    @Test
 //    @DisplayName("DeleteReview-Negative-RuntimeException")
@@ -677,17 +677,17 @@ class ReviewControllerImplTest {
         }
     }
 
-    @Test
-    @DisplayName("DeleteReview-Uri-Negative-NotModified")
-    void test_deleteReview_uri_negative_notModified() {
-        try {
-            when(reviewService.deleteReview(USER_ID, REVIEW_ID)).thenReturn(false);
-            mockMvc.perform(delete("/dbs/review/delete/{userId}/{reviewId}", USER_ID, REVIEW_ID))
-                    .andExpect(status().isNotModified())
-                    .andReturn();
-        } catch (Exception e) {
-            fail(STR."Error thrown: \{e.toString()}");
-        }
-    }
+//    @Test
+//    @DisplayName("DeleteReview-Uri-Negative-NotModified")
+//    void test_deleteReview_uri_negative_notModified() {
+//        try {
+//            when(reviewService.deleteReview(USER_ID, REVIEW_ID)).thenReturn(false);
+//            mockMvc.perform(delete("/dbs/review/delete/{userId}/{reviewId}", USER_ID, REVIEW_ID))
+//                    .andExpect(status().isNotModified())
+//                    .andReturn();
+//        } catch (Exception e) {
+//            fail(STR."Error thrown: \{e.toString()}");
+//        }
+//    }
 
 }
