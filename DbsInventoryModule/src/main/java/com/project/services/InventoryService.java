@@ -1,8 +1,8 @@
 package com.project.services;
 
-import java.util.List;
-
 import com.project.dto.InventoryDTO;
+
+import java.util.List;
 
 /**
  * Service interface for managing inventory operations.

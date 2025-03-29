@@ -1,9 +1,5 @@
 package com.project.global;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import jakarta.validation.ConstraintViolationException;
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.springframework.http.HttpStatus;
@@ -15,14 +11,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-//	@ExceptionHandler(exception=Exception.class)
-//
-////	public ResponseEntity<String> exceptionHandler(Exception ex){
-////		return new ResponseEntity<String>(ex.getMessage(), HttpStatus.BAD_REQUEST);
-////	}
-
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<?> exceptionHandler(MethodArgumentNotValidException ex){
         List<ObjectError> listOfErrors=ex.getBindingResult().getAllErrors();

@@ -1,9 +1,6 @@
 package com.project.dto;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -20,6 +17,7 @@ public class ReviewDTO {
 	private Float rating;
 
 	@Size(min = 3, max = 200, message = "{com.project.dto.ReviewDTO.comment.size}")
+	@Pattern(regexp = "^\\D.*", message = "{com.project.dto.ReviewDTO.comment.start}")
 	private String comment;
 
 	@Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}")

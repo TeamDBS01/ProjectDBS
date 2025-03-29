@@ -1,5 +1,6 @@
 package com.project.global;
 
+import com.project.exception.*;
 import jakarta.validation.ConstraintViolationException;
 import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.springframework.http.HttpStatus;
@@ -7,18 +8,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Scanner;
 
+@SuppressWarnings("preview")
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(ConstraintViolationException.class)
     public Map<String, String> handleConstraintViolationException(ConstraintViolationException exception) {
@@ -30,7 +30,6 @@ public class GlobalExceptionHandler {
         return errors;
     }
 
-    @ResponseBody
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Map<String, String> handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
@@ -43,10 +42,42 @@ public class GlobalExceptionHandler {
         return errors;
     }
 
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    @ExceptionHandler(IllegalStateException.class)
+    public String handleServiceUnavailableException(IllegalStateException exception) {
+        String str = "Unknown Exception In Global Exception Handler";
+        if (exception.getCause().getClass().equals(ServiceUnavailableException.class)) {
+            Scanner scanner=new Scanner(exception.getMessage());
+            scanner.useDelimiter("xception: ");
+            while(scanner.hasNext()){
+                str = scanner.next();
+            }
+            scanner.close();
+        }
+        else{
+            str = handleException(exception).getBody();
+        }
+        return str;
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler({IDMismatchException.class, UserNotFoundException.class, UserNotAuthorizedException.class, ReviewNotFoundException.class, BookNotFoundException.class})
+    public String handleCustomExceptions(Exception exception) {
+        String str = "Unknown Exception In Global Exception Handler";
+        Scanner scanner=new Scanner(exception.getMessage());
+        scanner.useDelimiter("xception: ");
+        while(scanner.hasNext()){
+            str = scanner.next();
+        }
+        scanner.close();
+        return str;
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({Exception.class})
-    protected ResponseEntity handleException(Exception e, Locale locale) {
+    protected ResponseEntity<String> handleException(Exception e) {
         return ResponseEntity
                 .badRequest()
-                .body(STR."Exception occurred inside API \{e}");
+                .body(STR."Exception occurred inside API :- \{e}");
     }
 }
