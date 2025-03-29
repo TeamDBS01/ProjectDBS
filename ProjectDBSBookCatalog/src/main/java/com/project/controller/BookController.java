@@ -1,8 +1,9 @@
 package com.project.controller;
 
-import java.util.List;
-
+import com.project.dto.BookDTO;
+import com.project.exception.BookResourceNotFoundException;
 import com.project.exception.PageOutOfBoundsException;
+import com.project.service.BookServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -13,9 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import com.project.dto.BookDTO;
-import com.project.exception.BookResourceNotFoundException;
-import com.project.service.BookServiceImpl;
+import java.util.List;
 
 /**
  * RestFul Controller exposing endpoints for resource of type Book.
@@ -72,7 +71,8 @@ public class BookController {
     		BookDTO bookDTO=bookServiceImpl.getBookById(bookId);
     		return new ResponseEntity<>(bookDTO, HttpStatus.OK);
     	}catch(BookResourceNotFoundException e) {
-    		return ResponseEntity.status(HttpStatus.NOT_FOUND).body("ERROR: "+e.getMessage());
+            return new ResponseEntity<>(new BookDTO(),HttpStatus.NO_CONTENT);
+    		//return ResponseEntity.status(HttpStatus.OK).body("ERROR: "+e.getMessage());
     	}
     }
 

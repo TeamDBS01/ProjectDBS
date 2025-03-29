@@ -1,12 +1,11 @@
 package com.project.repositories;
 
-import java.util.List;
-
+import com.project.models.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import com.project.models.Order;
+import java.util.List;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order,Long>{

@@ -27,7 +27,7 @@ import java.util.List;
 @RequestMapping("dbs/review")
 public class ReviewControllerImpl implements ReviewController {
 
-    private ReviewService reviewService;
+    private final ReviewService reviewService;
     private static final String LOCATION = "/dbs/review/ok";
 
     @Autowired
