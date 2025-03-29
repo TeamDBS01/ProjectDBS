@@ -1,23 +1,27 @@
 package com.project.controller;
+import com.project.dto.UserCreditDTO;
 import com.project.dto.UserDTO;
 import com.project.models.User;
 import com.project.services.UserService;
 import jakarta.validation.Valid;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import java.util.List;
+import org.springframework.http.HttpHeaders;
 @RequestMapping("/dbs/user")
 @RestController
 @Validated
 public class UserController {
 
-    @Autowired
-    private UserService usersService;
+
+	 private final UserService usersService;
+
+	    public UserController(UserService usersService) {
+	        this.usersService = usersService;
+	    }
 
     /**
      * Registers a new user.
@@ -78,13 +82,14 @@ public class UserController {
             @ApiResponse(responseCode = "403", description = "Forbidden")
     })
 
-    @GetMapping("/admin/get-all-users")
-   public ResponseEntity<UserDTO> getAllUsers(){
-       return ResponseEntity.ok(usersService.getAllUsers());
-   }
+    @GetMapping("/admin/get-all-users")  
+    public ResponseEntity<UserDTO> getAllUsers(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        UserDTO response = usersService.getAllUsers(authorizationHeader);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
 
     /**
-     * Retrieves a user by ID.
+     * Retrieves a user by ID. 
      *
      * @param userId ID of the user to retrieve
      * @return ResponseEntity<UserDTO> - user details
@@ -94,7 +99,7 @@ public class UserController {
             @ApiResponse(responseCode = "200", description = "Successfully retrieved user"),
             @ApiResponse(responseCode = "404", description = "User not found")
     })
-    @GetMapping("/admin/get-user/{userId}")
+    @GetMapping("/get-user/{userId}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long userId){
         return ResponseEntity.ok(usersService.getUserByID(userId));
     }
@@ -117,6 +122,7 @@ public class UserController {
     }
 
     /**
+     * 
      * Deletes a user.
      *
      * @param userId ID of the user to delete
@@ -130,5 +136,22 @@ public class UserController {
     @DeleteMapping("/admin/deleteUser/{userId}")
     public ResponseEntity<UserDTO> deleteUser(@PathVariable Long userId){
         return ResponseEntity.ok(usersService.deleteUser(userId));
+    }
+    
+    
+    //endpoints for usercredit
+    @PutMapping("/debit-credits/{userId}/{amount}")
+    public ResponseEntity<UserCreditDTO> debitCredits(@PathVariable Long userId, @PathVariable Double amount) {
+        return usersService.debitCredits(userId, amount);
+    }
+
+    @GetMapping("/get-user-credits/{userId}")
+    public UserCreditDTO getUserCredit(@PathVariable Long userId) {
+        return usersService.getUserCredit(userId);
+    }
+
+    @PutMapping("/add-credits/{userId}/{amount}")
+    public ResponseEntity<UserCreditDTO> addCredits(@PathVariable Long userId, @PathVariable Double amount) {
+        return usersService.addCredits(userId, amount);
     }
 }
