@@ -1,8 +1,8 @@
 package com.project.controller;
 
-import java.util.List;
-
+import com.project.dto.InventoryDTO;
 import com.project.exception.*;
+import com.project.services.InventoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -14,8 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.project.dto.InventoryDTO;
-import com.project.services.InventoryService;
+import java.util.List;
 
 /** Implementation of InventoryController for managing inventory operations.
  */

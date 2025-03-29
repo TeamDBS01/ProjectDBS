@@ -3,22 +3,20 @@ package com.project.config;
 import com.project.models.Role;
 import com.project.models.User;
 import com.project.repositories.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
-
+import com.project.services.UserService;
 import jakarta.annotation.PostConstruct;
+import org.springframework.stereotype.Component;
 
 @Component
 public class DataInitializer {
 
     private final UserRepository userRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final UserService userService;  
 
-    @Autowired
-    public DataInitializer(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    
+    public DataInitializer(UserRepository userRepository, UserService userService) {
         this.userRepository = userRepository;
-        this.passwordEncoder = passwordEncoder;
+        this.userService = userService;
     }
 
     @PostConstruct
@@ -27,9 +25,13 @@ public class DataInitializer {
             User adminUser = new User();
             adminUser.setEmail("admin@example.com");
             adminUser.setName("Admin");
-            adminUser.setPassword(passwordEncoder.encode("adminpassword")); // Encode password
+            String encodedPassword = userService.encodePassword("adminpassword");  
+            adminUser.setPassword(encodedPassword);
             adminUser.setRole(Role.ADMIN);
-            userRepository.save(adminUser);
+            userRepository.save(adminUser); 
         }
     }
+
+ 
+    
 }
