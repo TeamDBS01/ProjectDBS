@@ -1,49 +1,69 @@
 package com.project.services;
 
-import java.util.Collections;
+import com.project.dto.InventoryDTO;
+import com.project.exception.*;
+import com.project.models.Inventory;
+import com.project.repositories.InventoryRepository;
+import jakarta.transaction.Transactional;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
-import com.project.exception.BookAlreadyExistsException;
-import org.modelmapper.ModelMapper;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import com.project.dto.InventoryDTO;
-import com.project.exception.BookNotFoundException;
-import com.project.exception.OutOfStockException;
-import com.project.models.Inventory;
-import com.project.repositories.InventoryRepository;
-
-import jakarta.transaction.Transactional;
-
+/**
+ * Implementation of InventoryService for managing inventory operations.
+ */
 @Service
 public class InventoryServiceImpl implements InventoryService {
-    private static final Logger logger = LoggerFactory.getLogger(InventoryServiceImpl.class);
 
-    @Autowired
+
     private InventoryRepository inventoryRepository;
-    
-    @Autowired
+
     private ModelMapper mapper;
-    @Autowired
+
     private EmailService emailService;
 
-    @Override
-    public List<InventoryDTO> displayInventory() {
-        List<Inventory> inventoryList = inventoryRepository.findAll();
-        if (inventoryList.isEmpty()) {
-            throw new BookNotFoundException("Inventory Empty");
-        }
-        List<InventoryDTO> inventoryDTOList = inventoryList.stream()
-                .map(inventory -> mapper.map(inventory, InventoryDTO.class))
-                .collect(Collectors.toList());
-        return inventoryDTOList;
+    /**
+     * Constructs an InventoryServiceImpl with the specified dependencies.
+     * @param inventoryRepository the InventoryRepository to use.
+     * @param mapper the ModelMapper to use.
+     * @param emailService the EmailService to use.
+     */
+    @Autowired
+    public InventoryServiceImpl(InventoryRepository inventoryRepository,ModelMapper mapper, EmailService emailService){
+        this.inventoryRepository = inventoryRepository;
+        this.mapper = mapper;
+        this.emailService = emailService;
+    }
+    public InventoryServiceImpl(){
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<InventoryDTO> displayInventory(int page, int size) throws PageOutOfBoundsException, BookNotFoundException {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Inventory> inventoryPage = inventoryRepository.findAll(pageable);
+        if (page >= inventoryPage.getTotalPages()) {
+            throw new PageOutOfBoundsException("Page number exceeds total pages available. Total page number is " +inventoryPage.getTotalPages());
+        }
+        if (inventoryPage.isEmpty()) {
+            throw new BookNotFoundException("Inventory Empty");
+        }
+        return inventoryPage.getContent().stream()
+                .map(inventory -> mapper.map(inventory, InventoryDTO.class))
+                .collect(Collectors.toList());
+    }
+
+    /**
+         * {@inheritDoc}
+         */
     @Override
     public InventoryDTO getInventoryByBookID(String bookID) throws BookNotFoundException {
         Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
@@ -54,6 +74,9 @@ public class InventoryServiceImpl implements InventoryService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Transactional
     public void updateAddInventory(String bookID, int quantity) throws BookNotFoundException {
@@ -67,19 +90,30 @@ public class InventoryServiceImpl implements InventoryService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Transactional
-    public void updateRemoveInventory(String bookID, int quantity) throws BookNotFoundException {
+    public void updateRemoveInventory(String bookID, int quantity) throws BookNotFoundException, InsufficientInventoryException {
         Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
         if (optionalInventory.isPresent()) {
             Inventory inventory = optionalInventory.get();
-            inventory.setQuantity(inventory.getQuantity() - quantity);
-            inventoryRepository.save(inventory);
+            if (inventory.getQuantity() >= quantity) {
+                inventory.setQuantity(inventory.getQuantity() - quantity);
+                inventoryRepository.save(inventory);
+                checkAndNotifyLowStock(bookID);
+            } else {
+                throw new InsufficientInventoryException("Not enough books in inventory");
+            }
         } else {
             throw new BookNotFoundException("Book not found");
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Transactional
     public void updateInventoryAfterOrder(List<String> bookIDs, List<Integer> quantities) {
@@ -90,32 +124,38 @@ public class InventoryServiceImpl implements InventoryService {
                 Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
                 if (optionalInventory.isPresent()) {
                     Inventory inventory = optionalInventory.get();
-                    inventory.setQuantity(inventory.getQuantity() - quantity);
+                    inventory.setQuantity(Math.max((inventory.getQuantity() - quantity),0));
                     inventoryRepository.save(inventory);
                     checkAndNotifyLowStock(bookID);
                 }
             }
         } catch (Exception e) {
-            logger.error("Error updating inventory after order", e);
+            throw e;
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void checkAndNotifyLowStock(String bookID) throws BookNotFoundException {
         Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
         if (optionalInventory.isPresent()) {
             Inventory inventory = optionalInventory.get();
-            if (inventory.getQuantity() < 10) {
-                emailService.sendLowStockAlert(bookID, inventory.getQuantity());
+            int quantity = inventory.getQuantity();
+            if (quantity< 10) {
+                emailService.sendLowStockAlert(bookID, quantity);
             }
         } else {
             throw new BookNotFoundException("Book not found");
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    @Transactional
-    public void placeOrder(String bookID, int quantity) throws BookNotFoundException {
+    public void placeOrder(String bookID, int quantity) throws BookNotFoundException, OutOfStockException {
         try {
             Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
             if (optionalInventory.isPresent()) {
@@ -123,20 +163,20 @@ public class InventoryServiceImpl implements InventoryService {
                 if (inventory.getQuantity() < quantity) {
                     throw new OutOfStockException("Not enough stock available");
                 }
-                inventory.setQuantity(inventory.getQuantity() - quantity);
-                inventoryRepository.save(inventory);
                 checkAndNotifyLowStock(bookID);
             } else {
                 throw new BookNotFoundException("Book not found for ID: " + bookID);
             }
         } catch (OutOfStockException e) {
-            logger.warn("Out of stock for bookID: " + bookID, e);
             throw e;
         } catch (Exception e) {
-            logger.error("Error placing order for bookID: " + bookID, e);
             throw e;
         }
     }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public int getNoOfBooks(String bookID) throws BookNotFoundException {
         Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
@@ -148,6 +188,9 @@ public class InventoryServiceImpl implements InventoryService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @Transactional
     public void addBookToInventory(String bookID, int quantity) throws BookAlreadyExistsException {
@@ -160,14 +203,16 @@ public class InventoryServiceImpl implements InventoryService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
+    @Transactional
     public void deleteBookFromInventory(String bookID) throws BookNotFoundException {
-        Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
-        if (optionalInventory.isPresent()) {
-            long inventoryId = optionalInventory.get().getInventoryId();
-            inventoryRepository.deleteById(inventoryId);
-        } else {
-            throw new BookNotFoundException("Book not found");
-        }
+
+        Inventory existingInventory = inventoryRepository.findByBookId(bookID)
+                .orElseThrow(()-> new BookNotFoundException("There are no existing books with the given BookId"));
+        inventoryRepository.deleteById(existingInventory.getInventoryId());
     }
+
 }

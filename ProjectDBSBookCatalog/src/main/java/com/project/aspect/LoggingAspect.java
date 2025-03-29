@@ -28,27 +28,18 @@ public class LoggingAspect {
     public void logBefore(JoinPoint joinPoint) {
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getTarget().getClass().getSimpleName();
-        logger.info("Executing method: " + className + "." + methodName);
+        logger.info("Executing method: {}.{}", className, methodName);
     }
-
-//    @AfterReturning(pointcut = "controllerMethods()", returning = "result")
-//    public void logAfterReturning(JoinPoint joinPoint, Object result) {
-//        String methodName = joinPoint.getSignature().getName();
-//        String className = joinPoint.getTarget().getClass().getSimpleName();
-//        logger.info("Result: " + result);
-//    }
 
     @AfterReturning(pointcut = "controllerMethods()", returning = "result")
     public void logAfterReturning(JoinPoint joinPoint, ResponseEntity<?> result) {
         int statusCode = result.getStatusCode().value();
-        logger.info("HTTP Status: " + statusCode + " - Method: " + joinPoint.getSignature().getName());
+        logger.info("HTTP Status: {} - Method: {}", statusCode, joinPoint.getSignature().getName());
     }
 
-    @AfterThrowing(pointcut = "controllerMethods() || serviceMethods() || repositoryMethods()", throwing = "error")
+    @AfterThrowing(pointcut = "controllerMethods()", throwing = "error")
     public void logAfterThrowing(JoinPoint joinPoint, Throwable error) {
-        String methodName = joinPoint.getSignature().getName();
-        String className = joinPoint.getTarget().getClass().getSimpleName();
-        logger.error("Method execution failed:" + error.getMessage());
+        logger.error("Method execution failed:{}", error.getMessage());
     }
 
 }
