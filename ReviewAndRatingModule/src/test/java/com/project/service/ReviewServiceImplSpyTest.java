@@ -1,8 +1,6 @@
 package com.project.service;
 
 import com.project.dto.ReviewDTO;
-import com.project.dto.UserDTO;
-import com.project.enums.Role;
 import com.project.exception.*;
 import com.project.feign.BookClient;
 import com.project.feign.UserClient;

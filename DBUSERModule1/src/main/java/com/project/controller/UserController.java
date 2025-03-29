@@ -1,16 +1,17 @@
 package com.project.controller;
+
 import com.project.dto.UserCreditDTO;
 import com.project.dto.UserDTO;
 import com.project.models.User;
 import com.project.services.UserService;
-import jakarta.validation.Valid;
-import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 @RequestMapping("/dbs/user")
 @RestController
 @Validated

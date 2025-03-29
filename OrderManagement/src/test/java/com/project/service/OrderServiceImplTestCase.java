@@ -1,30 +1,27 @@
 package com.project.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-import java.util.*;
-
 import com.project.dto.*;
 import com.project.enums.PaymentStatus;
+import com.project.enums.Role;
 import com.project.exception.*;
+import com.project.feign.BookClient;
+import com.project.feign.UserClient;
+import com.project.models.Order;
+import com.project.repositories.OrderRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import com.project.enums.Role;
-import com.project.feign.BookClient;
-import com.project.feign.UserClient;
-import com.project.models.Order;
-import com.project.repositories.OrderRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTestCase {

@@ -1,33 +1,32 @@
 package com.project.controllerTest;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.*;
-import org.springframework.http.ResponseEntity;
-import java.security.Key;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-
+import com.project.controller.UserController;
+import com.project.dto.UserDTO;
+import com.project.models.Role;
+import com.project.models.User;
+import com.project.services.UserService;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import io.jsonwebtoken.security.Keys; 
-
-import com.project.controller.UserController;
+import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
- 
+import org.springframework.http.ResponseEntity;
 
-import com.project.dto.UserDTO;
-import com.project.models.Role;
-import com.project.models.User;
-import com.project.services.UserService;
+import java.security.Key;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
 
  class UserControllerTest {
 

@@ -1,31 +1,25 @@
 package com.project.services;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+
 import com.project.dto.UserCreditDTO;
 import com.project.dto.UserDTO;
 import com.project.models.Role;
 import com.project.models.User;
+import com.project.models.UserCredit;
 import com.project.repositories.UserCreditRepository;
 import com.project.repositories.UserRepository;
- 
-import org.springframework.stereotype.Service;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
- 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
-import java.security.Key;
-import java.util.Date;
-import java.util.Map;
-import io.jsonwebtoken.Claims;
- 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-import java.util.ArrayList;
-import com.project.models.UserCredit;
+
+import java.security.Key;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
 
 @Service
 public class UserService {

@@ -1,19 +1,18 @@
 package com.project.repotest;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
+import com.project.models.User;
+import com.project.repositories.UserRepository;
+import com.project.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.project.models.User;
-import com.project.repositories.UserRepository;
-import com.project.services.UserService;
-
 import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
  class UserRepositoryTest {
 
