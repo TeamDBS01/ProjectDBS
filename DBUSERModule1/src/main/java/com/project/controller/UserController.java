@@ -138,6 +138,18 @@ public class UserController {
     public ResponseEntity<UserDTO> deleteUser(@PathVariable Long userId){
         return ResponseEntity.ok(usersService.deleteUser(userId));
     }
+
+
+    @Operation(summary = "Get user profile", description = "Retrieves the user's profile using the JWT token.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved user profile"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized")
+    })
+    @GetMapping("/profile")
+    public ResponseEntity<UserDTO> getUserProfile(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorizationHeader) {
+        UserDTO response = usersService.getUserProfile(authorizationHeader);
+        return ResponseEntity.status(response.getStatusCode()).body(response);
+    }
     
     
     //endpoints for usercredit
