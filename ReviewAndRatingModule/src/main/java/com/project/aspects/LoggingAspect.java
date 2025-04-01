@@ -1,18 +1,17 @@
 package com.project.aspects;
 
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Aspect
 @Component
+@Slf4j
 public class LoggingAspect {
-    private static final Logger logger = LoggerFactory.getLogger(LoggingAspect.class);
 
     @Before("execution(* com.project.repositories.*.*(..))")
     public void beforeRepositories(JoinPoint joinPoint) {
@@ -30,7 +29,7 @@ public class LoggingAspect {
     }
 
     private void loggerInfoBefore(JoinPoint joinPoint) {
-        logger.info("Executing method: {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
+        log.info("Executing method: {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
     }
 
     @AfterReturning(pointcut = "execution(* com.project.repositories.*.*(..))", returning = "result")
@@ -49,9 +48,9 @@ public class LoggingAspect {
     }
 
     private void loggerInfoAfterReturning(JoinPoint joinPoint, Object result) {
-        logger.info("Method executed successfully: {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
+        log.info("Method executed successfully: {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
         if (result != null && result.toString().length() < 1000) {
-            logger.info("Method result: {}", result);
+            log.info("Method result: {}", result);
         }
     }
 
@@ -71,7 +70,7 @@ public class LoggingAspect {
     }
 
     private void loggerInfoAfterThrowing(JoinPoint joinPoint, Throwable error) {
-        logger.error("Method execution failed: {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
-        logger.error("Error: {}", error.getMessage());
+        log.error("Method execution failed: {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
+        log.error("Error: {}", error.getMessage());
     }
 }

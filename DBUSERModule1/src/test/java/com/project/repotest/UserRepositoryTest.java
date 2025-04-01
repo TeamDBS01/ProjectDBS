@@ -1,21 +1,20 @@
 package com.project.repotest;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
+import com.project.models.User;
+import com.project.repositories.UserRepository;
+import com.project.services.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import com.project.models.User;
-import com.project.repositories.UserRepository;
-import com.project.services.UserService;
-
 import java.util.Optional;
 
-public class UserRepositoryTest {
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+ class UserRepositoryTest {
 
     @Mock
     private UserRepository userRepository;
@@ -24,12 +23,12 @@ public class UserRepositoryTest {
     private UserService userService;
 
     @BeforeEach
-    public void setUp() {
+     void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    public void testFindByEmailSuccess() {
+     void testFindByEmailSuccess() {
         User user = new User();
         user.setEmail("test@example.com");
         user.setName("Test User");
@@ -44,7 +43,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testFindByEmailNotFound() {
+     void testFindByEmailNotFound() {
         when(userRepository.findByEmail("nonexistent@example.com")).thenReturn(Optional.empty());
 
         Optional<User> result = userRepository.findByEmail("nonexistent@example.com");
@@ -53,7 +52,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testFindByEmailException() {
+    void testFindByEmailException() {
         when(userRepository.findByEmail("error@example.com")).thenThrow(new RuntimeException("Database error"));
 
         Exception exception = assertThrows(RuntimeException.class, () -> {
@@ -64,7 +63,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testExistsByEmailSuccess() {
+     void testExistsByEmailSuccess() {
         when(userRepository.existsByEmail("test@example.com")).thenReturn(true);
 
         boolean exists = userRepository.existsByEmail("test@example.com");
@@ -73,7 +72,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testExistsByEmailNotFound() {
+     void testExistsByEmailNotFound() {
         when(userRepository.existsByEmail("nonexistent@example.com")).thenReturn(false);
 
         boolean exists = userRepository.existsByEmail("nonexistent@example.com");
@@ -82,7 +81,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testExistsByEmailException() {
+     void testExistsByEmailException() {
         when(userRepository.existsByEmail("error@example.com")).thenThrow(new RuntimeException("Database error"));
 
         Exception exception = assertThrows(RuntimeException.class, () -> {
@@ -93,7 +92,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testSaveUserSuccess() {
+    void testSaveUserSuccess() {
         User user = new User();
         user.setEmail("test@example.com");
         user.setName("Test User");
@@ -108,7 +107,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testSaveUserException() {
+     void testSaveUserException() {
         User user = new User();
         user.setEmail("error@example.com");
         user.setName("Error User");
@@ -123,7 +122,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testFindByIdSuccess() {
+    void testFindByIdSuccess() {
         User user = new User();
         user.setUserId(1L);
         user.setEmail("test@example.com");
@@ -140,7 +139,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testFindByIdNotFound() {
+     void testFindByIdNotFound() {
         when(userRepository.findById(999L)).thenReturn(Optional.empty());
 
         Optional<User> result = userRepository.findById(999L);
@@ -149,7 +148,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testFindByIdException() {
+    void testFindByIdException() {
         when(userRepository.findById(999L)).thenThrow(new RuntimeException("Database error"));
 
         Exception exception = assertThrows(RuntimeException.class, () -> {
@@ -160,7 +159,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testDeleteByIdSuccess() {
+     void testDeleteByIdSuccess() {
         doNothing().when(userRepository).deleteById(1L);
 
         userRepository.deleteById(1L);
@@ -169,7 +168,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void testDeleteByIdException() {
+    void testDeleteByIdException() {
         doThrow(new RuntimeException("Database error")).when(userRepository).deleteById(999L);
 
         Exception exception = assertThrows(RuntimeException.class, () -> {

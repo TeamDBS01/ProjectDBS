@@ -2,12 +2,11 @@ package com.project.feign;
 
 
 import com.project.dto.UserCreditDTO;
+import com.project.dto.UserDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-
-import com.project.dto.UserDTO;
 import org.springframework.web.bind.annotation.PutMapping;
 
 /**

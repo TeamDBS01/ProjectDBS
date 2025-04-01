@@ -1,53 +1,66 @@
 package com.project.global;
 
+import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
-import org.hibernate.validator.internal.engine.path.PathImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
-
+/**
+ * Global exception handler for handling various types of exceptions across the application.
+ */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ResponseBody
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    @ExceptionHandler(ConstraintViolationException.class)
-    public Map<String, String> handleConstraintViolationException(ConstraintViolationException exception) {
-        Map<String, String> errors = new HashMap<>();
-        exception.getConstraintViolations().forEach(violation -> {
-            String fieldName = ((PathImpl) violation.getPropertyPath()).getLeafNode().getName();
-            errors.put(fieldName, violation.getMessage());
-        });
-        return errors;
-    }
-
-    @ResponseBody
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    /**
+     * Handles validation exceptions for method arguments.
+     * @param ex the MethodArgumentNotValidException.
+     * @return ResponseEntity containing the validation errors.
+     */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Map<String, String> handleMethodArgumentNotValidException(MethodArgumentNotValidException exception) {
+    public ResponseEntity<?> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
-        exception.getBindingResult().getAllErrors().forEach(error -> {
+        ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
         });
-        return errors;
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler({Exception.class})
-    protected ResponseEntity handleException(Exception e, Locale locale) {
-        return ResponseEntity
-                .badRequest()
-                .body("Exception occurred inside API " + e.toString());
+    /**
+     * Handles constraint violation exceptions.
+     * @param ex the ConstraintViolationException.
+     * @return ResponseEntity containing the constraint violation errors.
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<?> handleConstraintViolationException(ConstraintViolationException ex) {
+        Map<String, String> errors = new HashMap<>();
+        Set<ConstraintViolation<?>> violations = ex.getConstraintViolations();
+        for (ConstraintViolation<?> violation : violations) {
+            String fieldName = violation.getPropertyPath().toString();
+            String errorMessage = violation.getMessage();
+            errors.put(fieldName, errorMessage);
+        }
+        return new ResponseEntity<>(errors, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * Handles general exceptions.
+     * @param ex the Exception.
+     * @param request the WebRequest.
+     * @return ResponseEntity containing the exception message.
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<?> handleGlobalException(Exception ex, WebRequest request) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }
