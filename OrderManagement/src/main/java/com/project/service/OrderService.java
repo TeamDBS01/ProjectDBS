@@ -1,9 +1,10 @@
 package com.project.service;
 
+import java.util.Date;
 import java.util.List;
 
 import com.project.dto.BookDTO;
-import com.project.dto.CartItem;
+import com.project.models.CartItem;
 import com.project.dto.OrderDTO;
 import com.project.dto.PaymentDetailsDTO;
 import com.project.exception.InsufficientStockException;
@@ -22,4 +23,8 @@ public interface OrderService {
 	List<BookDTO> getBooksByOrderId(Long orderId) throws ResourceNotFoundException;
 	PaymentDetailsDTO processPayment(Long orderId,Long userId) throws ResourceNotFoundException;
 	OrderDTO cancelOrder(Long orderId,Long userId) throws ResourceNotFoundException;
+	OrderDTO updateTracking(Long orderId, String shippingCarrier, Date estimatedDeliveryDate, Long adminUserId) throws ResourceNotFoundException;
+	OrderDTO requestReturn(Long orderId, Long userId, String reason) throws ResourceNotFoundException;
+	OrderDTO adminProcessReturn(Long orderId, Long adminUserId, String action) throws ResourceNotFoundException;
 }
+

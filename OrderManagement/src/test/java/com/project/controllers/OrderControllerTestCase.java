@@ -3,15 +3,20 @@ package com.project.controllers;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.project.dto.*;
 import com.project.exception.CartEmptyException;
 import com.project.exception.InsufficientCreditsException;
 import com.project.feign.UserClient;
+import com.project.global.GlobalExceptionHandler;
+import com.project.models.CartItem;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,8 +51,10 @@ class OrderControllerTestCase {
 	
 	@BeforeEach
 	void setUp() {
-		mockMvc = MockMvcBuilders.standaloneSetup(orderController).build();
 		objectMapper = new ObjectMapper();
+		mockMvc = MockMvcBuilders.standaloneSetup(orderController)
+				.setControllerAdvice(new GlobalExceptionHandler())
+				.build();
 	}
 
 	
@@ -67,26 +74,23 @@ class OrderControllerTestCase {
 	
 	@Test
 	void addToCart_userNotFound() {
-		try {
 		when(orderService.addToCart(1L, "E112", 2)).thenThrow(new ResourceNotFoundException("User not found"));
-		ResponseEntity<Object> actual = orderController.addToCart(1L, "E112", 2);
-		assertEquals("User not found",actual.getBody());
-		assertEquals(HttpStatus.NOT_FOUND,actual.getStatusCode());
-		}catch(ResourceNotFoundException | InsufficientStockException e) {
-			fail("Should not have thrown an exception");
+		try {
+		orderController.addToCart(1L, "E112", 2);
+		fail("should not have throw exception");
+		}catch(ResourceNotFoundException e) {
+			assertEquals("User not found",e.getMessage());
 		}
 	}
 
-	
 	@Test
 	void addToCart_insufficientStock() {
-		try {
 		when(orderService.addToCart(1L, "E112", 2)).thenThrow(new InsufficientStockException("Insufficient stock"));
-		ResponseEntity<Object> actual = orderController.addToCart(1L, "E112", 2);
-		assertEquals("Insufficient stock",actual.getBody());
-		assertEquals(HttpStatus.BAD_REQUEST,actual.getStatusCode());
-		}catch(ResourceNotFoundException | InsufficientStockException e) {
+		try {
+		orderController.addToCart(1L, "E112", 2);
 			fail("Should not have thrown an exception");
+		}catch(InsufficientStockException e) {
+			assertEquals("Insufficient stock",e.getMessage());
 		}
 	}
 
@@ -115,21 +119,29 @@ class OrderControllerTestCase {
 		assertEquals(HttpStatus.CREATED,actual.getStatusCode());
 		assertEquals(objectMapper.writeValueAsString(orderDTO),objectMapper.writeValueAsString(actual.getBody()));
 	}
-	
+
 	@Test
 	void placeOrder_userNotFound(){
 		when(orderService.placeOrder(1L)).thenThrow(new ResourceNotFoundException("User not found"));
-		ResponseEntity<Object> actual = orderController.placeOrder(1L);
-		assertEquals(HttpStatus.BAD_REQUEST,actual.getStatusCode());
-		assertEquals("User not found",actual.getBody());
+		try {
+			orderController.placeOrder(1L);
+			fail("Expected ResourceNotFoundException to be thrown");
+		}catch(ResourceNotFoundException e){
+			assertEquals("User not found",e.getMessage());
+
+		}
 	}
 
 	@Test
-	void placeOrder_cartEmpty(){
+	void placeOrder_cartEmpty() {
 		when(orderService.placeOrder(1L)).thenThrow(new CartEmptyException("Cart is empty"));
-		ResponseEntity<Object> actual = orderController.placeOrder(1L);
-		assertEquals(HttpStatus.BAD_REQUEST,actual.getStatusCode());
-		assertEquals("Cart is empty",actual.getBody());
+		try {
+			mockMvc.perform(post("/dbs/order/1"))
+					.andExpect(status().isBadRequest())
+					.andExpect(content().string("Cart is empty"));
+		}catch(Exception e){
+			fail("Exception thrown during mockMVC.perform" + e.getMessage());
+		}
 	}
 
 	@Test
@@ -160,9 +172,13 @@ class OrderControllerTestCase {
 	@Test
 	void updateOrderStatus_orderNotFound(){
 		when(orderService.updateOrderStatus(1L, "Shipped",2L)).thenThrow(new ResourceNotFoundException("Order not found"));
-		ResponseEntity<Object> actual = orderController.updateOrderStatus(1L, "Shipped",2L);
-		assertEquals(HttpStatus.NOT_FOUND,actual.getStatusCode());
-		assertEquals("Order not found",actual.getBody());
+		try{
+		mockMvc.perform(put("/dbs/order/1/Shipped/2"))
+				.andExpect(status().isNotFound())
+				.andExpect(content().string("Order not found"));
+	}catch(Exception e){
+			fail("Exception thrown during mockMVC.perform " + e.getMessage());
+		}
 	}
 
 	@Test
@@ -194,9 +210,13 @@ class OrderControllerTestCase {
 	@Test
 	void getOrderDetails_orderNotFound() {
 		when(orderService.getOrderDetails(1L)).thenThrow(new ResourceNotFoundException("Order not found"));
-		ResponseEntity<Object> actual = orderController.getOrderDetails(1L);
-		assertEquals(HttpStatus.NOT_FOUND,actual.getStatusCode());
-		assertEquals("Order not found",actual.getBody());
+		try{
+			mockMvc.perform(get("/dbs/order/1"))
+					.andExpect(status().isNotFound())
+					.andExpect(content().string("Order not found"));
+		} catch (Exception e) {
+			fail("Exception occured");
+		}
 	}
 	
 	
@@ -265,14 +285,14 @@ class OrderControllerTestCase {
 	    void placeOrder_uri_userNotFound() throws Exception {
 	        when(orderService.placeOrder(1L)).thenThrow(new ResourceNotFoundException("User not found"));
 	        mockMvc.perform(post("/dbs/order/1"))
-	                .andExpect(status().isBadRequest());
+	                .andExpect(status().isNotFound());
 	    }
 	    
 	    @Test
 	    void placeOrder_uri_emptyCart() throws Exception{
 	    	when(orderService.placeOrder(1L)).thenThrow(new ResourceNotFoundException("Cart is empty"));
 	    	mockMvc.perform(post("/dbs/order/1"))
-	    	.andExpect(status().isBadRequest());
+	    	.andExpect(status().isNotFound());
 	    }
 	    
 	    @Test
@@ -355,6 +375,90 @@ class OrderControllerTestCase {
 		assertEquals("User not found.", response.getBody());
 	}
 
+
+
+	@Test
+	void updateTracking_success() throws Exception {
+		OrderDTO orderDTO = new OrderDTO();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		Date date = dateFormat.parse("2025-03-30");
+
+		when(orderService.updateTracking(1L, "UPS", date, 2L)).thenReturn(orderDTO);
+
+		mockMvc.perform(put("/dbs/order/1/tracking")
+						.param("shippingCarrier", "UPS")
+						.param("estimatedDeliveryDate", "2025-03-30")
+						.param("adminUserId", "2"))
+				.andExpect(status().isOk());
+	}
+
+	@Test
+	void requestReturn_success() throws Exception {
+		OrderDTO orderDTO = new OrderDTO();
+		when(orderService.requestReturn(1L, 1L, "Damaged")).thenReturn(orderDTO);
+		mockMvc.perform(put("/dbs/order/1/return/1")
+						.param("reason", "Damaged"))
+				.andExpect(status().isOk());
+	}
+
+	@Test
+	void adminProcessReturn_approve_success() throws Exception {
+		OrderDTO orderDTO = new OrderDTO();
+		when(orderService.adminProcessReturn(1L, 2L, "approve")).thenReturn(orderDTO);
+		mockMvc.perform(put("/dbs/order/1/adminReturn/2")
+						.param("action", "approve"))
+				.andExpect(status().isOk());
+	}
+
+	@Test
+	void adminProcessReturn_reject_success() throws Exception {
+		OrderDTO orderDTO = new OrderDTO();
+		when(orderService.adminProcessReturn(1L, 2L, "reject")).thenReturn(orderDTO);
+		mockMvc.perform(put("/dbs/order/1/adminReturn/2")
+						.param("action", "reject"))
+				.andExpect(status().isOk());
+	}
+
+	@Test
+	void updateTracking_orderNotFound() throws Exception {
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		Date date = dateFormat.parse("2025-03-30");
+		when(orderService.updateTracking(1L, "UPS", date, 2L)).thenThrow(new ResourceNotFoundException("Order not found"));
+		mockMvc.perform(put("/dbs/order/1/tracking")
+						.param("shippingCarrier", "UPS")
+						.param("estimatedDeliveryDate", "2025-03-30")
+						.param("adminUserId", "2"))
+				.andExpect(status().isNotFound())
+				.andExpect(content().string("Order not found"));
+	}
+
+
+	@Test
+	void requestReturn_orderNotFound() throws Exception {
+		when(orderService.requestReturn(1L, 1L, "Damaged")).thenThrow(new ResourceNotFoundException("Order not found"));
+		mockMvc.perform(put("/dbs/order/1/return/1")
+						.param("reason", "Damaged"))
+				.andExpect(status().isNotFound())
+				.andExpect(content().string("Order not found"));
+	}
+
+	@Test
+	void adminProcessReturn_orderNotFound() throws Exception {
+		when(orderService.adminProcessReturn(1L, 2L, "approve")).thenThrow(new ResourceNotFoundException("Order not found"));
+		mockMvc.perform(put("/dbs/order/1/adminReturn/2")
+						.param("action", "approve"))
+				.andExpect(status().isNotFound())
+				.andExpect(content().string("Order not found"));
+	}
+
+	@Test
+	void adminProcessReturn_invalidAction() throws Exception {
+		when(orderService.adminProcessReturn(1L, 2L, "invalid")).thenThrow(new IllegalArgumentException("Invalid action"));
+		mockMvc.perform(put("/dbs/order/1/adminReturn/2")
+						.param("action", "invalid"))
+				.andExpect(status().isBadRequest())
+				.andExpect(content().string("Invalid action"));
+	}
 
 }
 
