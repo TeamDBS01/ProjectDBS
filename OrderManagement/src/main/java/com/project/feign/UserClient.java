@@ -22,7 +22,7 @@ public interface UserClient {
 	 * @param userId The ID of the user to retrieve.
 	 * @return A ResponseEntity containing the UserDTO representing the user, or null if not found.
 	 */
-	@GetMapping("dbs/user/admin/get-user/{userId}")
+	@GetMapping("dbs/user/get-user/{userId}")
 	ResponseEntity<UserDTO> getUserById(@PathVariable Long userId);
 
 	/**

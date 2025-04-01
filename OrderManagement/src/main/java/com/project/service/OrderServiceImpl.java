@@ -32,7 +32,7 @@ public class OrderServiceImpl implements  OrderService{
 	private final OrderRepository orderRepository;
 	private final UserClient userClient;
 	private final BookClient bookClient;
-	private final BookClient.InventoryClient inventoryClient;
+//	private final BookClient.InventoryClient inventoryClient;
 	private final Map<Long,Cart> cartStorage = new HashMap<>();
 	private final TrackingDetailsRepository trackingDetailsRepository;
 	private final ReturnDetailsRepository returnDetailsRepository;
@@ -49,16 +49,14 @@ public class OrderServiceImpl implements  OrderService{
 	 * @param orderRepository          The repository for managing order data.
 	 * @param userClient               The Feign client for interacting with user-related services.
 	 * @param bookClient               The Feign client for retrieving book information.
-	 * @param inventoryClient          The Feign client for updating inventory levels.
 	 * @param trackingDetailsRepository The repository for managing tracking details.
 	 * @param returnDetailsRepository  The repository for managing return details.
 	 */
 	@Autowired
-	public OrderServiceImpl(OrderRepository orderRepository,UserClient userClient, BookClient bookClient,BookClient.InventoryClient inventoryClient,TrackingDetailsRepository trackingDetailsRepository,ReturnDetailsRepository returnDetailsRepository){
+	public OrderServiceImpl(OrderRepository orderRepository,UserClient userClient, BookClient bookClient,TrackingDetailsRepository trackingDetailsRepository,ReturnDetailsRepository returnDetailsRepository){
 		this.orderRepository = orderRepository;
 		this.userClient = userClient;
 		this.bookClient = bookClient;
-		this.inventoryClient = inventoryClient;
 		this.trackingDetailsRepository = trackingDetailsRepository;
 		this.returnDetailsRepository = returnDetailsRepository;
 	}
@@ -148,7 +146,7 @@ public class OrderServiceImpl implements  OrderService{
 				quantitiesToUpdate.add(quantity);
 			}
 
-			inventoryClient.updateInventoryAfterOrder(bookIDsUpdate,quantitiesToUpdate);
+			bookClient.updateInventoryAfterOrder(bookIDsUpdate,quantitiesToUpdate);
 			order.setBookIds(bookIds);
 			order.setTotalAmount(totalAmount);
 			orderRepository.save(order);
@@ -251,7 +249,7 @@ public class OrderServiceImpl implements  OrderService{
 						quantitiesToUpdate.add(-quantity);
 					}
 				}
-				inventoryClient.updateInventoryAfterOrder(bookIDsToUpdate,quantitiesToUpdate);
+				bookClient.updateInventoryAfterOrder(bookIDsToUpdate,quantitiesToUpdate);
 				order.setPaymentStatus(PaymentStatus.REFUNDED);
 			}
 		}else{
@@ -267,7 +265,7 @@ public class OrderServiceImpl implements  OrderService{
 						quantitiesToUpdate.add(-quantity);
 					}
 				}
-				inventoryClient.updateInventoryAfterOrder(bookIDsToUpdate,quantitiesToUpdate);
+				bookClient.updateInventoryAfterOrder(bookIDsToUpdate,quantitiesToUpdate);
 			}
 		}
 		order.setStatus("Cancelled");
@@ -461,7 +459,7 @@ public class OrderServiceImpl implements  OrderService{
 							quantitiesToUpdate.add(-quantity);
 						}
 					}
-					inventoryClient.updateInventoryAfterOrder(bookIDsToUpdate, quantitiesToUpdate);
+					bookClient.updateInventoryAfterOrder(bookIDsToUpdate, quantitiesToUpdate);
 				}
 				order.setTotalAmount(0.0);
 				order.setPaymentStatus(PaymentStatus.REFUNDED);
