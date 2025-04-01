@@ -1,6 +1,7 @@
 package com.project.controller;
 
 import com.project.dto.ReviewDTO;
+import com.project.exception.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -30,28 +31,28 @@ public interface ReviewController {
             @ApiResponse(responseCode = "302", description = "Get the review by Id"),
             @ApiResponse(responseCode = "404", description = "Review not found")
     })
-    ResponseEntity<ReviewDTO> getReviewById(@Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId);
+    ResponseEntity<ReviewDTO> getReviewById(@Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId) throws ReviewNotFoundException;
 
     @Operation(description = "Get Operation for all Reviews")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "302", description = "Get all reviews"),
             @ApiResponse(responseCode = "404", description = "No Reviews found")
     })
-    ResponseEntity<List<ReviewDTO>> getAllReviews();
+    ResponseEntity<List<ReviewDTO>> getAllReviews() throws ReviewNotFoundException;
 
     @Operation(description = "Get Operation for all Reviews by User Id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "302", description = "All reviews found by User Id"),
             @ApiResponse(responseCode = "404", description = "No Reviews found for given User Id")
     })
-    ResponseEntity<List<ReviewDTO>> getAllReviewsByUserId(@Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId);
+    ResponseEntity<List<ReviewDTO>> getAllReviewsByUserId(@Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId) throws ReviewNotFoundException;
 
     @Operation(description = "Get Operation for all Reviews by Book Id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "302", description = "All reviews found by Book Id"),
             @ApiResponse(responseCode = "404", description = "No Reviews found for given Book Id")
     })
-    ResponseEntity<List<ReviewDTO>> getAllReviewsByBookId(@Size(min = 3, max = 20, message = "{com.project.dto.ReviewDTO.bookid.size}") @PathVariable String bookId);
+    ResponseEntity<List<ReviewDTO>> getAllReviewsByBookId(@Size(min = 3, max = 20, message = "{com.project.dto.ReviewDTO.bookid.size}") @PathVariable String bookId) throws ReviewNotFoundException;
 
     @Operation(description = "Add Operation for a Review with rating, comment, userId, and bookId")
     @ApiResponses(value = {
@@ -62,7 +63,7 @@ public interface ReviewController {
     ResponseEntity<ReviewDTO> addReview(@DecimalMin(value = "0.1", message = "{com.project.dto.ReviewDTO.rating.min}") @Max(value = 5, message = "{com.project.dto.ReviewDTO.rating.max}") @RequestParam float rating,
                                         @Size(min = 3, max = 200, message = "{com.project.dto.ReviewDTO.comment.size}") @Pattern(regexp = "^\\D.*", message = "{com.project.dto.ReviewDTO.comment.start}") @RequestParam String comment,
                                         @Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @RequestParam long userId,
-                                        @Size(min = 3, max = 200, message = "{com.project.dto.ReviewDTO.bookid.size}") @RequestParam String bookId);
+                                        @Size(min = 3, max = 200, message = "{com.project.dto.ReviewDTO.bookid.size}") @RequestParam String bookId) throws UserNotFoundException, BookNotFoundException, ServiceUnavailableException;
 
     @Operation(description = "Add Operation for a Review with ReviewDTO")
     @ApiResponses(value = {
@@ -70,7 +71,7 @@ public interface ReviewController {
             @ApiResponse(responseCode = "404", description = "User/Book Not Found - Unable to add Review"),
             @ApiResponse(responseCode = "502", description = "Bad gateway - Review not created")
     })
-    ResponseEntity<ReviewDTO> addReview(@Valid @RequestBody ReviewDTO reviewDTO);
+    ResponseEntity<ReviewDTO> addReview(@Valid @RequestBody ReviewDTO reviewDTO) throws UserNotFoundException, BookNotFoundException, ServiceUnavailableException;
 
     @Operation(description = "Update Operation for a Review by User Id")
     @ApiResponses(value = {
@@ -80,7 +81,7 @@ public interface ReviewController {
             @ApiResponse(responseCode = "404", description = "User not found")
     })
     ResponseEntity<ReviewDTO> updateReview(@Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId,
-                                           @Valid @RequestBody ReviewDTO reviewDTO);
+                                           @Valid @RequestBody ReviewDTO reviewDTO) throws ServiceUnavailableException, UserNotFoundException, UserNotAuthorizedException, IDMismatchException, BookNotFoundException;
 
     @Operation(description = "Delete Operation for a Review by User Id and Review Id")
     @ApiResponses(value = {
@@ -90,5 +91,5 @@ public interface ReviewController {
             @ApiResponse(responseCode = "404", description = "Review or User not found")
     })
     ResponseEntity<Boolean> deleteReview(@Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId,
-                                         @Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId);
+                                         @Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId) throws UserNotFoundException, ReviewNotFoundException, UserNotAuthorizedException, ServiceUnavailableException;
 }

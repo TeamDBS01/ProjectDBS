@@ -1,6 +1,6 @@
 package com.project.exception;
 
-public class PageOutOfBoundsException extends RuntimeException{
+public class PageOutOfBoundsException extends RuntimeException {
     public PageOutOfBoundsException(String message) {
         super(message);
     }
