@@ -45,8 +45,6 @@ class OrderServiceImplTestCase {
 	@Mock
 	private BookClient bookClient;
 
-	@Mock
-	private BookClient.InventoryClient inventoryClient;
 
 	@Mock
 	private ReturnDetailsRepository returnDetailsRepository;
@@ -144,13 +142,13 @@ class OrderServiceImplTestCase {
 		orderService.addToCart(1L, "E112", 2);
 		orderService.addToCart(1L, "E113", 1);
 
-		when(inventoryClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1)))
+		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1)))
 				.thenReturn(ResponseEntity.ok("Book stock updated successfully"));
 
 		OrderDTO orderDTO = orderService.placeOrder(1L);
 		assertNotNull(orderDTO);
 		assertEquals(70.0,orderDTO.getTotalAmount());
-		verify(inventoryClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1));
+		verify(bookClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1));
 		verify(orderRepository,times(1)).save(any(Order.class));
 	}
 
@@ -305,24 +303,24 @@ class OrderServiceImplTestCase {
 		order.setStatus("Pending");
 		when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 		when(userClient.addCredits(1L,50.0)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
-		when(inventoryClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1)))
+		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1)))
 				.thenReturn(ResponseEntity.ok("Book stock updated successfully"));
 		OrderDTO cancelledOrder= orderService.cancelOrder(1L,1L);
 		assertEquals("Cancelled",cancelledOrder.getStatus());
 		verify(userClient,times(1)).addCredits(1L,50.0);
-		verify(inventoryClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1));
+		verify(bookClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1));
 	}
 
 	@Test
 	void cancelOrder_unpaidOrder_success(){
 		order.setPaymentStatus(PaymentStatus.PENDING);
 		when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-		when(inventoryClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1)))
+		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1)))
 				.thenReturn(ResponseEntity.ok("Book stock updated successfully"));
 		OrderDTO cancelledOrder= orderService.cancelOrder(1L,1L);
 		assertEquals("Cancelled",cancelledOrder.getStatus());
 		verify(userClient,times(0)).addCredits(anyLong(),anyDouble());
-		verify(inventoryClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1));
+		verify(bookClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1));
 	}
 
 	@Test
@@ -330,7 +328,7 @@ class OrderServiceImplTestCase {
 		when(orderRepository.findById(1L)).thenReturn(Optional.empty());
 		assertThrows(ResourceNotFoundException.class,()->orderService.cancelOrder(1L,1L));
 		verify(userClient,times(0)).addCredits(anyLong(),anyDouble());
-		verify(inventoryClient, times(0)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1));
+		verify(bookClient, times(0)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1));
 	}
 
 	@Test
@@ -367,7 +365,7 @@ class OrderServiceImplTestCase {
 	void updateTracking_success() throws ParseException {
 		UserDTO adminUser = new UserDTO();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		Date date = dateFormat.parse("2025-03-30");
+		Date date = dateFormat.parse("2025-05-30");
 		adminUser.setUserId(2L);
 		adminUser.setRole(Role.ADMIN);
 		when(userClient.getUserById(2L)).thenReturn(new ResponseEntity<>(adminUser, HttpStatus.OK));
@@ -393,7 +391,7 @@ class OrderServiceImplTestCase {
 	void updateTracking_orderNotFound() throws ParseException {
 		UserDTO adminUser = new UserDTO();
 		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-		Date date = dateFormat.parse("2025-03-30");
+		Date date = dateFormat.parse("2025-05-30");
 		adminUser.setUserId(2L);
 		adminUser.setRole(Role.ADMIN);
 		when(userClient.getUserById(2L)).thenReturn(new ResponseEntity<>(adminUser, HttpStatus.OK));
@@ -429,7 +427,7 @@ class OrderServiceImplTestCase {
 		order.setStatus("Return Requested");
 		order.setPaymentStatus(PaymentStatus.PAID);
 		when(userClient.addCredits(1L, 50.0)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
-		when(inventoryClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1)))
+		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1)))
 				.thenReturn(ResponseEntity.ok("Book stock updated successfully"));
 		OrderDTO processedOrder = orderService.adminProcessReturn(1L, 2L, "approve");
 		assertEquals("Return Approved", processedOrder.getStatus());

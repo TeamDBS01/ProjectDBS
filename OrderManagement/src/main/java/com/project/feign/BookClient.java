@@ -29,7 +29,7 @@ public interface BookClient {
     /**
      * Retrieves the stock quantity of a book by its ID.
      *
-     * @param bookId The ID of the book.
+     * @param bookID The ID of the book.
      * @return The current stock quantity of the book.
      */
     @GetMapping("dbs/books/inventory/quantity/{bookID}")
