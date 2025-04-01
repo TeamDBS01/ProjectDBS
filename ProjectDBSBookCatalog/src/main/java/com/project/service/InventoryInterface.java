@@ -22,8 +22,8 @@ public interface InventoryInterface {
 	@GetMapping("dbs/inventory/quantity/{bookID}")
 	ResponseEntity<?> getNoOfBooks(@PathVariable String bookID);
 
-	@PutMapping("/updateAfterOrder")
-	ResponseEntity<?> updateInventoryAfterOrder(@RequestParam  List<String> bookIDs,
+	@PutMapping("dbs/inventory/updateAfterOrder")
+	ResponseEntity<String> updateInventoryAfterOrder(@RequestParam  List<String> bookIDs,
 												@RequestParam  List<Integer> quantities);
 
 
