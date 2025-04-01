@@ -48,7 +48,8 @@ public class BookServiceImpl implements BookService {
 
     /**
      * Retrieves all books from the repository.
-     *
+     * @param page
+     * @param size
      * @return a list of BookDTO objects
      * @throws BookResourceNotFoundException if no books are found
      */
@@ -229,5 +230,6 @@ public class BookServiceImpl implements BookService {
             throw new BookResourceNotFoundException(BOOK_NOT_FOUND_MESSAGE);
         }
     }
+
 
 }
