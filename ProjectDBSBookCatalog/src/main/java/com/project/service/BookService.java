@@ -19,5 +19,4 @@ public interface BookService {
 	boolean deleteBookByTitle(String bookTitle) throws BookResourceNotFoundException;
 	boolean updateBookById(String bookID, BookDTO bookDTO) throws BookResourceNotFoundException;
 
-
 }
