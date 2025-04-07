@@ -1,5 +1,5 @@
 # Main application configuration file for review-service.
-# Configures server, data source, JPA, Eureka, and SpringDoc settings.
+# Configures server, data source, JPA, Eureka, Resilience4J, Endpoints and SpringDoc settings.
 server:
     port: 8089
 
