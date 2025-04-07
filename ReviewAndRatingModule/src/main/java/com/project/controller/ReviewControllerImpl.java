@@ -6,7 +6,6 @@ import com.project.service.ReviewService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -25,10 +24,11 @@ import java.util.List;
 @RestController
 @Validated
 @RequestMapping("dbs/review")
+//@CrossOrigin(origins = "*")
 public class ReviewControllerImpl implements ReviewController {
 
     private final ReviewService reviewService;
-    private static final String LOCATION = "/dbs/review/ok";
+//    private static final String LOCATION = "/dbs/review/ok";
 
     @Autowired
     public ReviewControllerImpl(ReviewService reviewService) {
@@ -40,11 +40,11 @@ public class ReviewControllerImpl implements ReviewController {
      *
      * @return ResponseEntity containing the status OK.
      */
-    @Override
-    @GetMapping("/ok")
-    public ResponseEntity<Boolean> getOk() {
-        return ResponseEntity.ok(true);
-    }
+//    @Override
+//    @GetMapping("/ok")
+//    public ResponseEntity<Boolean> getOk() {
+//        return ResponseEntity.ok(true);
+//    }
 
     /**
      * Retrieves a review by its ID.
@@ -56,11 +56,13 @@ public class ReviewControllerImpl implements ReviewController {
     @GetMapping("/{reviewId}")
     public ResponseEntity<ReviewDTO> getReviewById(@Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId) throws ReviewNotFoundException {
         ResponseEntity<ReviewDTO> response;
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.LOCATION, LOCATION);
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.add(HttpHeaders.LOCATION, LOCATION);
+//        headers.add.LOCATION, LOCATION);
 //        try {
         ReviewDTO reviewDTO = reviewService.retrieveReviewById(reviewId);
-        response = new ResponseEntity<>(reviewDTO, headers, HttpStatus.FOUND);
+//        response = new ResponseEntity<>(reviewDTO, headers, HttpStatus.OK);
+        response = new ResponseEntity<>(reviewDTO, HttpStatus.OK);
 //        } catch (ReviewNotFoundException e) {
 //            response = new ResponseEntity<>(new ReviewDTO(e.toString()), headers, HttpStatus.NOT_FOUND);
 //        }
@@ -78,9 +80,10 @@ public class ReviewControllerImpl implements ReviewController {
         ResponseEntity<List<ReviewDTO>> response;
 //        try {
         List<ReviewDTO> reviewDTOList = reviewService.retrieveAllReviews();
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.LOCATION, LOCATION);
-        response = new ResponseEntity<>(reviewDTOList, headers, HttpStatus.FOUND);
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.add(HttpHeaders.LOCATION, LOCATION);
+//        response = new ResponseEntity<>(reviewDTOList, headers, HttpStatus.OK);
+        response = new ResponseEntity<>(reviewDTOList, HttpStatus.OK);
 //        } catch (ReviewNotFoundException e) {
 //            response = new ResponseEntity<>(List.of(new ReviewDTO("No Reviews Found!")), HttpStatus.NOT_FOUND);
 //        } catch (Exception e) {
@@ -101,9 +104,10 @@ public class ReviewControllerImpl implements ReviewController {
         ResponseEntity<List<ReviewDTO>> response;
 //        try {
         List<ReviewDTO> reviewDTOList = reviewService.retrieveAllReviewsByUserId(userId);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.LOCATION, LOCATION);
-        response = new ResponseEntity<>(reviewDTOList, headers, HttpStatus.FOUND);
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.add(HttpHeaders.LOCATION, LOCATION);
+//        response = new ResponseEntity<>(reviewDTOList, headers, HttpStatus.OK);
+        response = new ResponseEntity<>(reviewDTOList, HttpStatus.OK);
 //        } catch (ReviewNotFoundException e) {
 //            response = new ResponseEntity<>(List.of(new ReviewDTO(STR."No Reviews with User ID: \{userId} Found!")), HttpStatus.NOT_FOUND);
 //        } catch (Exception e) {
@@ -124,9 +128,10 @@ public class ReviewControllerImpl implements ReviewController {
         ResponseEntity<List<ReviewDTO>> response;
 //        try {
         List<ReviewDTO> reviewDTOList = reviewService.retrieveAllReviewsByBookId(bookId);
-        HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.LOCATION, LOCATION);
-        response = new ResponseEntity<>(reviewDTOList, headers, HttpStatus.FOUND);
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.add(HttpHeaders.LOCATION, LOCATION);
+//        response = new ResponseEntity<>(reviewDTOList, headers, HttpStatus.OK);
+        response = new ResponseEntity<>(reviewDTOList, HttpStatus.OK);
 //        } catch (ReviewNotFoundException e) {
 //            response = new ResponseEntity<>(List.of(new ReviewDTO(STR."No Reviews with Book ID: \{bookId} Found!")), HttpStatus.NOT_FOUND);
 //        } catch (Exception e) {
