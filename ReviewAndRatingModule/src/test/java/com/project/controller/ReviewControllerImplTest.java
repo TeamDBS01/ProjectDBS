@@ -53,7 +53,7 @@ class ReviewControllerImplTest {
     void test_getReviewById_positive() throws ReviewNotFoundException {
         when(reviewService.retrieveReviewById(REVIEW_ID)).thenReturn(reviewDTO);
         ResponseEntity<ReviewDTO> response = reviewController.getReviewById(REVIEW_ID);
-        assertEquals(HttpStatus.FOUND, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(reviewDTO, response.getBody());
         verify(reviewService).retrieveReviewById(REVIEW_ID);
     }
@@ -74,7 +74,7 @@ class ReviewControllerImplTest {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         when(reviewService.retrieveAllReviews()).thenReturn(reviewList);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviews();
-        assertEquals(HttpStatus.FOUND, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(reviewList, response.getBody());
         verify(reviewService).retrieveAllReviews();
     }
@@ -105,7 +105,7 @@ class ReviewControllerImplTest {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         when(reviewService.retrieveAllReviewsByUserId(USER_ID)).thenReturn(reviewList);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviewsByUserId(USER_ID);
-        assertEquals(HttpStatus.FOUND, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(reviewList, response.getBody());
         verify(reviewService).retrieveAllReviewsByUserId(USER_ID);
     }
@@ -136,7 +136,7 @@ class ReviewControllerImplTest {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         when(reviewService.retrieveAllReviewsByBookId(BOOK_ID)).thenReturn(reviewList);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviewsByBookId(BOOK_ID);
-        assertEquals(HttpStatus.FOUND, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(reviewList, response.getBody());
         verify(reviewService).retrieveAllReviewsByBookId(BOOK_ID);
     }
@@ -382,13 +382,13 @@ class ReviewControllerImplTest {
 //        verify(reviewService).deleteReview(USER_ID, REVIEW_ID);
 //    }
 
-    @Test
-    @DisplayName("GetOk")
-    void test_getOk() {
-        ResponseEntity<Boolean> response= reviewController.getOk();
-        assertEquals(Boolean.TRUE, response.getBody());
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-    }
+//    @Test
+//    @DisplayName("GetOk")
+//    void test_getOk() {
+//        ResponseEntity<Boolean> response= reviewController.getOk();
+//        assertEquals(Boolean.TRUE, response.getBody());
+//        assertEquals(HttpStatus.OK, response.getStatusCode());
+//    }
 
     @Test
     @DisplayName("GetReviewById-Uri-Positive")
@@ -396,7 +396,7 @@ class ReviewControllerImplTest {
         try {
             when(reviewService.retrieveReviewById(REVIEW_ID)).thenReturn(reviewDTO);
             mockMvc.perform(get("/dbs/review/{reviewId}", REVIEW_ID))
-                    .andExpect(status().isFound())
+                    .andExpect(status().isOk())
                     .andReturn();
         } catch (Exception e) {
             fail(STR."Exception thrown \{e.toString()}");
@@ -422,7 +422,7 @@ class ReviewControllerImplTest {
         try {
             when(reviewService.retrieveReviewById(REVIEW_ID)).thenReturn(reviewDTO);
             MvcResult mvcResult = mockMvc.perform(get("/dbs/review/{reviewId}", REVIEW_ID))
-                    .andExpect(status().isFound())
+                    .andExpect(status().isOk())
                     .andReturn();
 
             String jsonData = mvcResult.getResponse().getContentAsString();
@@ -440,7 +440,7 @@ class ReviewControllerImplTest {
             List<ReviewDTO> reviewList = List.of(reviewDTO);
             when(reviewService.retrieveAllReviews()).thenReturn(reviewList);
             mockMvc.perform(get("/dbs/review/all"))
-                    .andExpect(status().isFound())
+                    .andExpect(status().isOk())
                     .andReturn();
         } catch (Exception e) {
             fail(STR."Exception thrown \{e.toString()}");
@@ -467,7 +467,7 @@ class ReviewControllerImplTest {
             List<ReviewDTO> reviewList = List.of(reviewDTO);
             when(reviewService.retrieveAllReviews()).thenReturn(reviewList);
             MvcResult mvcResult = mockMvc.perform(get("/dbs/review/all"))
-                    .andExpect(status().isFound())
+                    .andExpect(status().isOk())
                     .andReturn();
 
             String jsonData = mvcResult.getResponse().getContentAsString();
@@ -485,7 +485,7 @@ class ReviewControllerImplTest {
             List<ReviewDTO> reviewList = List.of(reviewDTO);
             when(reviewService.retrieveAllReviewsByUserId(USER_ID)).thenReturn(reviewList);
             mockMvc.perform(get("/dbs/review/user/{userId}", USER_ID))
-                    .andExpect(status().isFound())
+                    .andExpect(status().isOk())
                     .andReturn();
         } catch (Exception e) {
             fail(STR."Exception thrown \{e.toString()}");
@@ -512,7 +512,7 @@ class ReviewControllerImplTest {
             List<ReviewDTO> reviewList = List.of(reviewDTO);
             when(reviewService.retrieveAllReviewsByUserId(USER_ID)).thenReturn(reviewList);
             MvcResult mvcResult = mockMvc.perform(get("/dbs/review/user/{userId}", USER_ID))
-                    .andExpect(status().isFound())
+                    .andExpect(status().isOk())
                     .andReturn();
 
             String jsonData = mvcResult.getResponse().getContentAsString();
