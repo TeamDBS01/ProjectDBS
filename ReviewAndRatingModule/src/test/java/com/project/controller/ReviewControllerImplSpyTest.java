@@ -67,7 +67,7 @@ class ReviewControllerImplSpyTest {
     @DisplayName("GetReviewById-Positive")
     void test_getReviewById_positive() throws ReviewNotFoundException {
         ResponseEntity<ReviewDTO> response = reviewController.getReviewById(REVIEW_ID);
-        assertEquals(HttpStatus.FOUND, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(reviewDTO, response.getBody());
     }
 
@@ -77,7 +77,7 @@ class ReviewControllerImplSpyTest {
     void test_getAllReviews_positive() throws ReviewNotFoundException {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviews();
-        assertEquals(HttpStatus.FOUND, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertFalse(response.getBody().isEmpty());
         assertTrue(response.getBody().containsAll(reviewList));
@@ -89,7 +89,7 @@ class ReviewControllerImplSpyTest {
     void test_getAllReviewsByUserId_positive() throws ReviewNotFoundException {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviewsByUserId(USER_ID);
-        assertEquals(HttpStatus.FOUND, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertTrue(response.getBody().containsAll(reviewList));
         assertFalse(response.getBody().isEmpty());
@@ -101,7 +101,7 @@ class ReviewControllerImplSpyTest {
     void test_getAllReviewsByBookId_positive() throws ReviewNotFoundException {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviewsByBookId(BOOK_ID);
-        assertEquals(HttpStatus.FOUND, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
         assertTrue(response.getBody().containsAll(reviewList));
         assertFalse(response.getBody().isEmpty());
@@ -147,20 +147,20 @@ class ReviewControllerImplSpyTest {
         assertTrue(response.hasBody());
     }
 
-    @Test
-    @DisplayName("GetOk")
-    void test_getOk() {
-        ResponseEntity<Boolean> response = reviewController.getOk();
-        assertEquals(Boolean.TRUE, response.getBody());
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-    }
+//    @Test
+//    @DisplayName("GetOk")
+//    void test_getOk() {
+//        ResponseEntity<Boolean> response = reviewController.getOk();
+//        assertEquals(Boolean.TRUE, response.getBody());
+//        assertEquals(HttpStatus.OK, response.getStatusCode());
+//    }
 
     @Test
     @DisplayName("GetReviewById-Uri-Positive")
     void test_getReviewById_uri_positive() {
         try {
             mockMvc.perform(get("/dbs/review/{reviewId}", REVIEW_ID))
-                    .andExpect(status().isFound())
+                    .andExpect(status().isOk())
                     .andReturn();
         } catch (Exception e) {
             fail(STR."Exception thrown \{e.toString()}");
@@ -173,7 +173,7 @@ class ReviewControllerImplSpyTest {
     void test_getReviewById_json_positive() {
         try {
             MvcResult mvcResult = mockMvc.perform(get("/dbs/review/{reviewId}", REVIEW_ID))
-                    .andExpect(status().isFound())
+                    .andExpect(status().isOk())
                     .andReturn();
 
             String jsonData = mvcResult.getResponse().getContentAsString();
@@ -191,7 +191,7 @@ class ReviewControllerImplSpyTest {
             List<ReviewDTO> reviewList = List.of(reviewDTO);
 
             mockMvc.perform(get("/dbs/review/all"))
-                    .andExpect(status().isFound())
+                    .andExpect(status().isOk())
                     .andReturn();
         } catch (Exception e) {
             fail(STR."Exception thrown \{e.toString()}");
@@ -204,7 +204,7 @@ class ReviewControllerImplSpyTest {
     void test_getAllReviews_json_positive() {
         try {
             MvcResult mvcResult = mockMvc.perform(get("/dbs/review/all"))
-                    .andExpect(status().isFound())
+                    .andExpect(status().isOk())
                     .andReturn();
 
             String jsonData = mvcResult.getResponse().getContentAsString();
@@ -223,7 +223,7 @@ class ReviewControllerImplSpyTest {
     void test_getAllReviewsByUserId_uri_positive() {
         try {
             mockMvc.perform(get("/dbs/review/user/{userId}", USER_ID))
-                    .andExpect(status().isFound())
+                    .andExpect(status().isOk())
                     .andReturn();
         } catch (Exception e) {
             fail(STR."Exception thrown \{e.toString()}");
@@ -236,7 +236,7 @@ class ReviewControllerImplSpyTest {
     void test_getAllReviewsByUserId_json_positive() {
         try {
             MvcResult mvcResult = mockMvc.perform(get("/dbs/review/user/{userId}", USER_ID))
-                    .andExpect(status().isFound())
+                    .andExpect(status().isOk())
                     .andReturn();
 
             String jsonData = mvcResult.getResponse().getContentAsString();

@@ -22,6 +22,7 @@ spring:
                             - POST
                             - DELETE
                             - PATCH
+                            - PUT
             routes:
                 -   id: book-service
                     uri: lb://BOOK-SERVICE
