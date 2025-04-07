@@ -19,12 +19,12 @@ import java.util.List;
 @Tag(description = "Review Rest API", name = "ReviewRestAPIV01")
 public interface ReviewController {
 
-    @Operation(description = "Get Operation for Returning OK")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Returns OK")
-    })
-    @GetMapping("/ok")
-    ResponseEntity<Boolean> getOk();
+//    @Operation(description = "Get Operation for Returning OK")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "Returns OK")
+//    })
+//    @GetMapping("/ok")
+//    ResponseEntity<Boolean> getOk();
 
     @Operation(description = "Get Operation for Resource Review by Id")
     @ApiResponses(value = {
