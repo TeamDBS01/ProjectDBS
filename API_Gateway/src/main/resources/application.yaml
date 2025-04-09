@@ -23,6 +23,9 @@ spring:
                             - DELETE
                             - PATCH
                             - PUT
+                        allowedHeaders:
+                            - "*" # Allow all headers
+                        allowCredentials: true # Allow credentials like cookies or authentication headers
             routes:
                 - id: book-service
                   uri: lb://BOOK-SERVICE
