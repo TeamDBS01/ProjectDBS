@@ -60,6 +60,10 @@ public class Order {
 	@Column(name="book_ids")
 	private List<String> bookIds;
 
+
+	@OneToOne(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	private ShippingInfo shippingInfo;
+
 	/**
 	 * Constructs a new Order object with the specified attributes.
 	 *

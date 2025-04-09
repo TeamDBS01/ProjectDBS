@@ -17,6 +17,7 @@ import com.project.models.CartItem;
 import com.project.models.ReturnDetails;
 import com.project.models.TrackingDetails;
 import com.project.repositories.ReturnDetailsRepository;
+import com.project.repositories.ShippingInfoRepository;
 import com.project.repositories.TrackingDetailsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -49,6 +50,8 @@ class OrderServiceImplTestCase {
 	@Mock
 	private ReturnDetailsRepository returnDetailsRepository;
 
+	@Mock
+	private ShippingInfoRepository shippingInfoRepository;
 	@Mock
 	private TrackingDetailsRepository trackingDetailsRepository;
 
@@ -139,13 +142,14 @@ class OrderServiceImplTestCase {
 		when(bookClient.getBookById("E113")).thenReturn(bookDTO2);
 		when(bookClient.getBookStockQuantity("E112")).thenReturn(10);
 		when(bookClient.getBookStockQuantity("E113")).thenReturn(5);
+		ShippingDetailsDTO shippingDetailsDTO = new ShippingDetailsDTO();
 		orderService.addToCart(1L, "E112", 2);
 		orderService.addToCart(1L, "E113", 1);
 
 		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1)))
 				.thenReturn(ResponseEntity.ok("Book stock updated successfully"));
 
-		OrderDTO orderDTO = orderService.placeOrder(1L);
+		OrderDTO orderDTO = orderService.placeOrder(1L,shippingDetailsDTO);
 		assertNotNull(orderDTO);
 		assertEquals(70.0,orderDTO.getTotalAmount());
 		verify(bookClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1));
@@ -160,7 +164,7 @@ class OrderServiceImplTestCase {
 		orderService.addToCart(1L, "E112", 2);
 		ResponseEntity<UserDTO> responseEntity = new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
 		when(userClient.getUserById(1L)).thenReturn(responseEntity);
-		ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,()->orderService.placeOrder(1L));
+		ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,()->orderService.placeOrder(1L,new ShippingDetailsDTO()));
 		assertEquals("User not found for ID: 1",exception.getMessage());
 	}
 
@@ -174,7 +178,7 @@ class OrderServiceImplTestCase {
 		when(bookClient.getBookStockQuantity("E112")).thenReturn(10);
 		orderService.addToCart(1L, "E112", 2);
 		when(bookClient.getBookById("E112")).thenReturn(null);
-		assertThrows(ResourceNotFoundException.class, () -> orderService.placeOrder(1L));
+		assertThrows(ResourceNotFoundException.class, () -> orderService.placeOrder(1L,new ShippingDetailsDTO()));
 	}
 
 	@Test
@@ -344,7 +348,7 @@ class OrderServiceImplTestCase {
 	@Test
 	void placeOrder_cartEmpty() {
 		when(userClient.getUserById(1L)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
-		assertThrows(CartEmptyException.class, () -> orderService.placeOrder(1L));
+		assertThrows(CartEmptyException.class, () -> orderService.placeOrder(1L,new ShippingDetailsDTO()));
 	}
 	@Test
 	void processPayment_userNotFound() {

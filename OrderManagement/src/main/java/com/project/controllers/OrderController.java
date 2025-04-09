@@ -3,15 +3,18 @@ package com.project.controllers;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.project.dto.*;
 import com.project.exception.*;
+import com.project.feign.BookClient;
 import com.project.feign.UserClient;
 import com.project.models.CartItem;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,11 +29,13 @@ import com.project.service.OrderServiceImpl;
  */
 
 @RestController
+//@CrossOrigin(origins = "http://localhost:4200")
 @RequestMapping("dbs/order")
 public class OrderController {
 
 	private final OrderServiceImpl orderService;
 	private final UserClient userClient;
+	private final BookClient bookClient;
 
 	/**
 	 * Constructs a new OrderController with the specified OrderServiceImpl and UserClient.
@@ -39,10 +44,11 @@ public class OrderController {
 	 * @param userClient   The Feign client for user-related operations.
 	 */
 	@Autowired
-	public OrderController(OrderServiceImpl orderService, UserClient userClient) {
+	public OrderController(OrderServiceImpl orderService, UserClient userClient, BookClient bookClient) {
 		this.orderService = orderService;
 		this.userClient = userClient;
-	}
+        this.bookClient = bookClient;
+    }
 
 	/**
 	 * Adds a book to the user's cart.
@@ -99,8 +105,8 @@ public class OrderController {
 			@ApiResponse(responseCode = "400", description = "User not found or invalid request")
 	})
 	@PostMapping("/{userId}")
-	public ResponseEntity<Object> placeOrder(@PathVariable Long userId) {
-		OrderDTO order = orderService.placeOrder(userId);
+	public ResponseEntity<Object> placeOrder(@PathVariable Long userId,@RequestBody ShippingDetailsDTO shippingDetails) {
+		OrderDTO order = orderService.placeOrder(userId,shippingDetails);
 		return new ResponseEntity<>(order, HttpStatus.CREATED);
 	}
 
@@ -331,6 +337,65 @@ public class OrderController {
 		List<BookDTO> books = orderService.getBooksByOrderId(orderId);
 		return new ResponseEntity<>(books, HttpStatus.OK);
 
+	}
+
+
+	/**
+	 * Updates the quantity of a specific item in the user's cart.
+	 *
+	 * @param userId   The ID of the user.
+	 * @param bookId   The ID of the book to update.
+	 * @param quantity The new quantity of the book.
+	 * @return ResponseEntity containing the updated cart or an error message.
+	 * @throws ResourceNotFoundException If the user or book is not found in the cart.
+	 */
+	@Operation(summary = "Update cart item quantity", description = "Updates the quantity of a specific item in the user's cart.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Cart item quantity updated successfully"),
+			@ApiResponse(responseCode = "404", description = "User or book not found in cart"),
+			@ApiResponse(responseCode = "400", description = "Invalid quantity")
+	})
+	@PutMapping("/{userId}/cart/update")
+	public ResponseEntity<List<CartItem>> updateCartItem(
+			@PathVariable Long userId,
+			@RequestParam String bookId,
+			@RequestParam int quantity) {
+		try {
+			if (quantity < 1) {
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+			}
+			List<CartItem> updatedCart = orderService.updateCartItem(userId, bookId, quantity);
+			return ResponseEntity.ok(updatedCart);
+		} catch (ResourceNotFoundException e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+		}
+	}
+
+	@GetMapping("books/{bookId}")
+	public ResponseEntity<Object> getBookById(@PathVariable("bookId") String bookId) {
+		try {
+			BookDTO bookDTO = orderService.getBookById(bookId);
+			return new ResponseEntity<>(bookDTO, HttpStatus.OK);
+		} catch (ResourceNotFoundException e) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("ERROR: " + e.getMessage());
+		}
+	}
+
+	@GetMapping("books/available-book-ids")
+	public ResponseEntity<List<String>> getAvailableBookIds() {
+		// Fetch all books from the Book Service (without pagination for simplicity here)
+		ResponseEntity<List<BookDTO>> response = bookClient.getAllBooks(0, Integer.MAX_VALUE);
+
+		if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+			List<String> bookIds = response.getBody().stream()
+					.map(BookDTO::getBookID)
+					.collect(Collectors.toList());
+			return ResponseEntity.ok(bookIds);
+		} else {
+			return ResponseEntity.status(response.getStatusCode()).body(null);
+		}
 	}
 
 }

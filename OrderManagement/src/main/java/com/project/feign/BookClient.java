@@ -37,6 +37,12 @@ public interface BookClient {
 
     @PutMapping("dbs/books/updateAfterOrder")
     ResponseEntity<String> updateInventoryAfterOrder(@RequestParam("bookIDs") List<String> bookIDs, @RequestParam("quantities") List<Integer> quantities);
+
+
+    @GetMapping("dbs/books")
+    ResponseEntity<List<BookDTO>> getAllBooks(@RequestParam(defaultValue = "0") int page,
+                                              @RequestParam(defaultValue = "10") int size);
+
 }
 
 

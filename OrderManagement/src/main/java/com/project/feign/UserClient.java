@@ -32,7 +32,7 @@ public interface UserClient {
 	 * @param amount The amount of credits to debit.
 	 * @return A ResponseEntity containing the UserCreditDTO with updated credit information.
 	 */
-	@PutMapping("dbs/user/admin/debit-credits/{userId}/{amount}")
+	@PutMapping("dbs/user/debit-credits/{userId}/{amount}")
 	ResponseEntity<UserCreditDTO> debitCredits(@PathVariable Long userId,@PathVariable Double amount);
 
 
@@ -42,7 +42,7 @@ public interface UserClient {
 	 * @param userId The ID of the user.
 	 * @return The UserCreditDTO representing the user's credit information.
 	 */
-	@GetMapping("dbs/user/admin/get-user-credits/{userId}")
+	@GetMapping("dbs/user/get-user-credits/{userId}")
 	UserCreditDTO getUserCredit(@PathVariable Long userId);
 
 	/**
@@ -52,7 +52,7 @@ public interface UserClient {
 	 * @param amount The amount of credits to add.
 	 * @return A ResponseEntity containing the UserCreditDTO with updated credit information.
 	 */
-	@PutMapping("dbs/user/admin/add-credits/{userId}/{amount}")
+	@PutMapping("dbs/user/add-credits/{userId}/{amount}")
 	ResponseEntity<UserCreditDTO> addCredits(@PathVariable Long userId, @PathVariable Double amount);
 }
 

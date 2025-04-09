@@ -2,11 +2,13 @@ package com.project.service;
 
 import java.util.*;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.dto.*;
 import com.project.enums.PaymentStatus;
 import com.project.exception.*;
 import com.project.models.*;
 import com.project.repositories.ReturnDetailsRepository;
+import com.project.repositories.ShippingInfoRepository;
 import com.project.repositories.TrackingDetailsRepository;
 import feign.FeignException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,6 +38,8 @@ public class OrderServiceImpl implements  OrderService{
 	private final Map<Long,Cart> cartStorage = new HashMap<>();
 	private final TrackingDetailsRepository trackingDetailsRepository;
 	private final ReturnDetailsRepository returnDetailsRepository;
+	private final ShippingInfoRepository shippingInfoRepository;
+	private ObjectMapper objectMapper;
 
 	private static final String BOOK_NOT_FOUND = "Book not found for ID: ";
 	private static final String USER_NOT_FOUND = "User not found for ID: ";
@@ -53,13 +57,14 @@ public class OrderServiceImpl implements  OrderService{
 	 * @param returnDetailsRepository  The repository for managing return details.
 	 */
 	@Autowired
-	public OrderServiceImpl(OrderRepository orderRepository,UserClient userClient, BookClient bookClient,TrackingDetailsRepository trackingDetailsRepository,ReturnDetailsRepository returnDetailsRepository){
+	public OrderServiceImpl(OrderRepository orderRepository, UserClient userClient, BookClient bookClient, TrackingDetailsRepository trackingDetailsRepository, ReturnDetailsRepository returnDetailsRepository, ShippingInfoRepository shippingInfoRepository){
 		this.orderRepository = orderRepository;
 		this.userClient = userClient;
 		this.bookClient = bookClient;
 		this.trackingDetailsRepository = trackingDetailsRepository;
 		this.returnDetailsRepository = returnDetailsRepository;
-	}
+        this.shippingInfoRepository = shippingInfoRepository;
+    }
 
 	/**
 	 * Adds a book to the user's cart.
@@ -110,7 +115,7 @@ public class OrderServiceImpl implements  OrderService{
 	 * @throws InsufficientStockException If there is insufficient stock for any item.
 	 */
 	@Transactional
-	public OrderDTO placeOrder(Long userId) {
+	public OrderDTO placeOrder(Long userId,ShippingDetailsDTO shippingDetails) {
 		ResponseEntity<UserDTO> response = userClient.getUserById(userId);
 		if(response.getStatusCode() == HttpStatus.OK && response.getBody()!=null && response.getBody().getUserId() != null) {
 			Cart userCart = cartStorage.getOrDefault(userId, new Cart());
@@ -123,10 +128,25 @@ public class OrderServiceImpl implements  OrderService{
 			order.setStatus(PENDING);
 			order.setUserId(userId);
 			order.setPaymentStatus(PaymentStatus.PENDING);
+			ShippingInfo shippingInfo = new ShippingInfo();
+			shippingInfo.setShippingName(shippingDetails.getShippingName());
+			shippingInfo.setShippingEmail(shippingDetails.getShippingEmail());
+			shippingInfo.setShippingPhone(shippingDetails.getShippingPhone());
+			shippingInfo.setShippingAddress(shippingDetails.getShippingAddress());
+			shippingInfo.setShippingCity(shippingDetails.getShippingCity());
+			shippingInfo.setShippingState(shippingDetails.getShippingState());
+			shippingInfo.setShippingZipCode(shippingDetails.getShippingZipCode());
+			order.setShippingInfo(shippingInfo);
+
+			shippingInfo.setOrder(order);
+
+			shippingInfoRepository.save(shippingInfo);
+
 			List<String> bookIds = new ArrayList<>();
 			double totalAmount = 0.0;
 			List<String> bookIDsUpdate = new ArrayList<>();
 			List<Integer> quantitiesToUpdate = new ArrayList<>();
+
 
 			for (CartItem item : cartItems) {
 				String bookId = item.getBookId();
@@ -150,7 +170,7 @@ public class OrderServiceImpl implements  OrderService{
 			order.setBookIds(bookIds);
 			order.setTotalAmount(totalAmount);
 			orderRepository.save(order);
-			clearCart(userId);
+//			clearCart(userId);
 			return convertToOrderDTO(order);
 		}else{
 			throw new ResourceNotFoundException(USER_NOT_FOUND + userId);
@@ -636,6 +656,32 @@ public class OrderServiceImpl implements  OrderService{
 	 */
 	private String generateTrackingNumber() {
 		return UUID.randomUUID().toString();
+	}
+
+
+	public List<CartItem> updateCartItem(Long userId, String bookId, int quantity) {
+		Cart cart = cartStorage.get(userId);
+		if (cart != null) {
+			List<CartItem> cartItems = cart.getItems();
+			for (CartItem item : cartItems) {
+				if (item.getBookId().equals(bookId)) {
+					item.setQuantity(quantity);
+					return cartItems; // Return the updated list
+				}
+			}
+			throw new ResourceNotFoundException(BOOK_NOT_FOUND + bookId + " in cart for user: " + userId);
+		} else {
+			throw new ResourceNotFoundException("Cart not found for user: " + userId);
+		}
+	}
+
+
+	public BookDTO getBookById(String bookId) {
+		BookDTO bookDTO = bookClient.getBookById(bookId);
+		if (bookDTO == null) {
+			throw new ResourceNotFoundException("Book not found with ID: " + bookId);
+		}
+		return bookDTO;
 	}
 }
 

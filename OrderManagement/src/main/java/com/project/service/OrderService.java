@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.List;
 
 import com.project.dto.BookDTO;
+import com.project.dto.ShippingDetailsDTO;
 import com.project.models.CartItem;
 import com.project.dto.OrderDTO;
 import com.project.dto.PaymentDetailsDTO;
@@ -16,7 +17,7 @@ public interface OrderService {
 	List<CartItem> getCartItems(Long userId);
 	void clearCart(Long userId);
 	void clearCartItem(Long userId,String bookId) throws ResourceNotFoundException;
-	OrderDTO placeOrder(Long userId) throws ResourceNotFoundException;
+	OrderDTO placeOrder(Long userId, ShippingDetailsDTO shippingDetails) throws ResourceNotFoundException;
 	OrderDTO updateOrderStatus(Long orderId,String status,Long adminUserId) throws ResourceNotFoundException;
 	List<OrderDTO> getUserOrders(Long userId) throws ResourceNotFoundException;
 	OrderDTO getOrderDetails(Long orderId) throws ResourceNotFoundException;

@@ -41,7 +41,7 @@ class OrderControllerTestCase {
 
 	@Mock
 	private UserClient userClient;
-	
+
 	@InjectMocks
 	private OrderController orderController;
 	
@@ -114,17 +114,19 @@ class OrderControllerTestCase {
 	@Test
 	void placeOrder_success() throws Exception{
 		OrderDTO orderDTO = new OrderDTO();
-		when(orderService.placeOrder(1L)).thenReturn(orderDTO);
-		ResponseEntity<Object> actual = orderController.placeOrder(1L);
+		ShippingDetailsDTO shippingDetailsDTO = new ShippingDetailsDTO();
+		when(orderService.placeOrder(1L, shippingDetailsDTO)).thenReturn(orderDTO);
+		ResponseEntity<Object> actual = orderController.placeOrder(1L,shippingDetailsDTO);
 		assertEquals(HttpStatus.CREATED,actual.getStatusCode());
 		assertEquals(objectMapper.writeValueAsString(orderDTO),objectMapper.writeValueAsString(actual.getBody()));
 	}
 
 	@Test
 	void placeOrder_userNotFound(){
-		when(orderService.placeOrder(1L)).thenThrow(new ResourceNotFoundException("User not found"));
+		ShippingDetailsDTO shippingDetailsDTO = new ShippingDetailsDTO();
+		when(orderService.placeOrder(1L,shippingDetailsDTO)).thenThrow(new ResourceNotFoundException("User not found"));
 		try {
-			orderController.placeOrder(1L);
+			orderController.placeOrder(1L,shippingDetailsDTO);
 			fail("Expected ResourceNotFoundException to be thrown");
 		}catch(ResourceNotFoundException e){
 			assertEquals("User not found",e.getMessage());
@@ -134,9 +136,12 @@ class OrderControllerTestCase {
 
 	@Test
 	void placeOrder_cartEmpty() {
-		when(orderService.placeOrder(1L)).thenThrow(new CartEmptyException("Cart is empty"));
+		ShippingDetailsDTO shippingDetailsDTO = new ShippingDetailsDTO();
+		when(orderService.placeOrder(anyLong(), eq(shippingDetailsDTO))).thenThrow(new CartEmptyException("Cart is empty"));
 		try {
-			mockMvc.perform(post("/dbs/order/1"))
+			mockMvc.perform(post("/dbs/order/1")
+							.contentType("application/json")
+							.content(objectMapper.writeValueAsString(shippingDetailsDTO)))
 					.andExpect(status().isBadRequest())
 					.andExpect(content().string("Cart is empty"));
 		}catch(Exception e){
@@ -273,26 +278,40 @@ class OrderControllerTestCase {
 						.param("bookId", bookId))
 				.andExpect(status().isOk());
 	}
-	
-	 @Test
-	    void placeOrder_uri_positive() throws Exception {
-	        when(orderService.placeOrder(1L)).thenReturn(new OrderDTO());
-	        mockMvc.perform(post("/dbs/order/1"))
-	                .andExpect(status().isCreated());
-	    }
+	@Test
+	void placeOrder_uri_positive() throws Exception {
+		ShippingDetailsDTO shippingDetailsDTO = new ShippingDetailsDTO();
+		OrderDTO orderDTO = new OrderDTO(); // Create the OrderDTO to be returned
 
-	    @Test
-	    void placeOrder_uri_userNotFound() throws Exception {
-	        when(orderService.placeOrder(1L)).thenThrow(new ResourceNotFoundException("User not found"));
-	        mockMvc.perform(post("/dbs/order/1"))
-	                .andExpect(status().isNotFound());
-	    }
+		when(orderService.placeOrder(anyLong(), eq(shippingDetailsDTO))).thenReturn(orderDTO);
+
+		mockMvc.perform(post("/dbs/order/1")
+						.contentType("application/json") // Set the content type
+						.content(objectMapper.writeValueAsString(shippingDetailsDTO)))
+				.andExpect(status().isCreated())
+				.andExpect(content().json(objectMapper.writeValueAsString(orderDTO)));
+	}
+
+	@Test
+	void placeOrder_uri_userNotFound() throws Exception {
+		ShippingDetailsDTO shippingDetailsDTO = new ShippingDetailsDTO();
+		when(orderService.placeOrder(anyLong(), any(ShippingDetailsDTO.class)))
+				.thenThrow(new ResourceNotFoundException("User not found"));
+		mockMvc.perform(post("/dbs/order/1")
+						.contentType("application/json")
+						.content(objectMapper.writeValueAsString(shippingDetailsDTO)))
+				.andExpect(status().isNotFound());
+	}
 	    
 	    @Test
 	    void placeOrder_uri_emptyCart() throws Exception{
-	    	when(orderService.placeOrder(1L)).thenThrow(new ResourceNotFoundException("Cart is empty"));
-	    	mockMvc.perform(post("/dbs/order/1"))
-	    	.andExpect(status().isNotFound());
+			ShippingDetailsDTO shippingDetailsDTO = new ShippingDetailsDTO();
+			when(orderService.placeOrder(anyLong(), any(ShippingDetailsDTO.class)))
+					.thenThrow(new ResourceNotFoundException("Cart is empty"));
+			mockMvc.perform(post("/dbs/order/1")
+							.contentType("application/json")
+							.content(objectMapper.writeValueAsString(shippingDetailsDTO)))
+					       .andExpect(status().isNotFound());
 	    }
 	    
 	    @Test
