@@ -381,7 +381,7 @@ class ReviewServiceImplTest {
             verify(reviewRepository).findAll();
             verify(mapper).map(review, ReviewDTO.class);
             assertEquals(1, actual.size());
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveAll \{e.getMessage()}");
         }
     }
@@ -397,7 +397,7 @@ class ReviewServiceImplTest {
         List<ReviewDTO> actual = null, expected = List.of(reviewDTO, reviewDTO1);
         try {
             actual = reviewService.retrieveAllReviews();
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveAll \{e.getMessage()}");
         }
         verify(reviewRepository).findAll();
@@ -424,7 +424,7 @@ class ReviewServiceImplTest {
         ReviewDTO actual = null;
         try {
             actual = reviewService.retrieveReviewById(review.getReviewId());
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveById \{e.getMessage()}");
         }
         verify(reviewRepository).findById(any());
@@ -455,7 +455,7 @@ class ReviewServiceImplTest {
         List<ReviewDTO> expected = List.of(reviewDTO, reviewDTO2);
         try {
             actual = reviewService.retrieveAllReviewsByUserId(review.getUserId());
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveById \{e.getMessage()}");
         }
         verify(reviewRepository).findByUserId(USER_ID);
@@ -485,7 +485,7 @@ class ReviewServiceImplTest {
         List<ReviewDTO> expected = List.of(reviewDTO, reviewDTO2);
         try {
             actual = reviewService.retrieveAllReviewsByBookId(review.getBookId());
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveById \{e.getMessage()}");
         }
         verify(reviewRepository).findByBookId(BOOK_ID);

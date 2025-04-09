@@ -24,7 +24,6 @@ import java.util.List;
 @RestController
 @Validated
 @RequestMapping("dbs/review")
-//@CrossOrigin(origins = "*")
 public class ReviewControllerImpl implements ReviewController {
 
     private final ReviewService reviewService;
@@ -54,7 +53,7 @@ public class ReviewControllerImpl implements ReviewController {
      */
     @Override
     @GetMapping("/{reviewId}")
-    public ResponseEntity<ReviewDTO> getReviewById(@Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId) throws ReviewNotFoundException {
+    public ResponseEntity<ReviewDTO> getReviewById(@Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId) throws ReviewNotFoundException, ServiceUnavailableException {
         ResponseEntity<ReviewDTO> response;
 //        HttpHeaders headers = new HttpHeaders();
 //        headers.add(HttpHeaders.LOCATION, LOCATION);
@@ -76,7 +75,7 @@ public class ReviewControllerImpl implements ReviewController {
      */
     @Override
     @GetMapping("/all")
-    public ResponseEntity<List<ReviewDTO>> getAllReviews() throws ReviewNotFoundException {
+    public ResponseEntity<List<ReviewDTO>> getAllReviews() throws ReviewNotFoundException, ServiceUnavailableException {
         ResponseEntity<List<ReviewDTO>> response;
 //        try {
         List<ReviewDTO> reviewDTOList = reviewService.retrieveAllReviews();
@@ -100,7 +99,7 @@ public class ReviewControllerImpl implements ReviewController {
      */
     @Override
     @GetMapping("/user/{userId}")
-    public ResponseEntity<List<ReviewDTO>> getAllReviewsByUserId(@Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId) throws ReviewNotFoundException {
+    public ResponseEntity<List<ReviewDTO>> getAllReviewsByUserId(@Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId) throws ReviewNotFoundException, ServiceUnavailableException {
         ResponseEntity<List<ReviewDTO>> response;
 //        try {
         List<ReviewDTO> reviewDTOList = reviewService.retrieveAllReviewsByUserId(userId);
@@ -124,7 +123,7 @@ public class ReviewControllerImpl implements ReviewController {
      */
     @Override
     @GetMapping("/book/{bookId}")
-    public ResponseEntity<List<ReviewDTO>> getAllReviewsByBookId(@Size(min = 3, max = 20, message = "{com.project.dto.ReviewDTO.bookid.size}") @PathVariable String bookId) throws ReviewNotFoundException {
+    public ResponseEntity<List<ReviewDTO>> getAllReviewsByBookId(@Size(min = 3, max = 20, message = "{com.project.dto.ReviewDTO.bookid.size}") @PathVariable String bookId) throws ReviewNotFoundException, ServiceUnavailableException {
         ResponseEntity<List<ReviewDTO>> response;
 //        try {
         List<ReviewDTO> reviewDTOList = reviewService.retrieveAllReviewsByBookId(bookId);
@@ -138,6 +137,12 @@ public class ReviewControllerImpl implements ReviewController {
 //            response = new ResponseEntity<>(List.of(new ReviewDTO("No Reviews Found!")), HttpStatus.BAD_REQUEST);
 //        }
         return response;
+    }
+
+    @Override
+    @GetMapping("/book/average/{bookId}")
+    public ResponseEntity<Float> getAverageByBookId(@PathVariable String bookId) throws ReviewNotFoundException, ServiceUnavailableException {
+        return ResponseEntity.ok(reviewService.retrieveAverageRating(bookId));
     }
 
     /**
@@ -154,9 +159,9 @@ public class ReviewControllerImpl implements ReviewController {
     public ResponseEntity<ReviewDTO> addReview(
             @DecimalMin(value = "0.1", message = "{com.project.dto.ReviewDTO.rating.min}")
             @Max(value = 5, message = "{com.project.dto.ReviewDTO.rating.max}") @RequestParam float rating,
-            @Size(min = 3, max = 200, message = "{com.project.dto.ReviewDTO.comment.size}") @Pattern(regexp = "^\\D.*", message = "{com.project.dto.ReviewDTO.comment.start}") @RequestParam String comment,
+            @Size(min = 3, max = 2000, message = "{com.project.dto.ReviewDTO.comment.size}") @Pattern(regexp = "^\\D.*", message = "{com.project.dto.ReviewDTO.comment.start}") @RequestParam String comment,
             @Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @RequestParam long userId,
-            @Size(min = 3, max = 200, message = "{com.project.dto.ReviewDTO.bookid.size}") @RequestParam String bookId) throws UserNotFoundException, BookNotFoundException, ServiceUnavailableException {
+            @Size(min = 3, max = 20, message = "{com.project.dto.ReviewDTO.bookid.size}") @RequestParam String bookId) throws UserNotFoundException, BookNotFoundException, ServiceUnavailableException {
         ResponseEntity<ReviewDTO> response;
         ReviewDTO reviewDTO = null;
 //        try {
