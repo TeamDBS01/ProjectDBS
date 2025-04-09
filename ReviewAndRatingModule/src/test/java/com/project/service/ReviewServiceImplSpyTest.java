@@ -248,7 +248,7 @@ class ReviewServiceImplSpyTest {
         try {
             List<ReviewDTO> actual = reviewService.retrieveAllReviews();
             assertEquals(1, actual.size());
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveAll \{e.getMessage()}");
         }
     }
@@ -264,7 +264,7 @@ class ReviewServiceImplSpyTest {
         List<ReviewDTO> actual = null, expected = List.of(reviewDTO, reviewDTO1);
         try {
             actual = reviewService.retrieveAllReviews();
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveAll \{e.getMessage()}");
         }
         assertEquals(expected, actual);
@@ -288,7 +288,7 @@ class ReviewServiceImplSpyTest {
         reviewDTO.setReviewId(reviewId);
         try {
             actual = reviewService.retrieveReviewById(reviewId);
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveById \{e.getMessage()}");
         }
         assertEquals(reviewDTO, actual);
@@ -316,7 +316,7 @@ class ReviewServiceImplSpyTest {
         reviewDTO2.setReviewId(reviewRepository.save(review2).getReviewId());
         try {
             actual = reviewService.retrieveAllReviewsByUserId(review.getUserId());
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveById \{e.getMessage()}");
         }
         assertEquals(expected, actual);
@@ -343,7 +343,7 @@ class ReviewServiceImplSpyTest {
         reviewDTO2.setReviewId(reviewRepository.save(review2).getReviewId());
         try {
             actual = reviewService.retrieveAllReviewsByBookId(review.getBookId());
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveById \{e.getMessage()}");
         }
         assertEquals(expected, actual);

@@ -16,7 +16,7 @@ public class ReviewDTO {
 	@Max(value = 5, message = "{com.project.dto.ReviewDTO.rating.max}")
 	private Float rating;
 
-	@Size(min = 3, max = 200, message = "{com.project.dto.ReviewDTO.comment.size}")
+	@Size(min = 3, max = 2000, message = "{com.project.dto.ReviewDTO.comment.size}")
 	@Pattern(regexp = "^\\D.*", message = "{com.project.dto.ReviewDTO.comment.start}")
 	private String comment;
 
@@ -25,7 +25,18 @@ public class ReviewDTO {
 	@Size(min = 3, max = 20, message = "{com.project.dto.ReviewDTO.bookid.size}")
 	private String bookId;
 
+	private String userName;
+//	private String bookTitle;
+
 	public ReviewDTO(String comment) {
 		this.comment = comment;
+	}
+
+	public ReviewDTO(Long reviewId, Float rating, String comment, Long userId, String bookId) {
+		this.reviewId = reviewId;
+		this.rating = rating;
+		this.comment = comment;
+		this.userId = userId;
+		this.bookId = bookId;
 	}
 }
