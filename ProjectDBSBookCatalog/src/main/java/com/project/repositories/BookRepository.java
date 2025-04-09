@@ -1,5 +1,6 @@
 package com.project.repositories;
 
+import com.project.models.Author;
 import com.project.models.Book;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -78,4 +79,26 @@ public interface BookRepository extends JpaRepository<Book, String> {
 					   @Param("price") double price,
 					   @Param("authorID") int authorID,
 					   @Param("categoryID") int categoryID);
+
+	@Query("SELECT a.authorName FROM Author a JOIN Book b ON a.authorID = b.authorID WHERE b.title = :title")
+	Optional<String> findAuthorNameByBookTitle(@Param("title") String title);
+
+	@Query("SELECT a.categoryName FROM Category a JOIN Book b ON a.categoryID = b.categoryID WHERE b.title = :title")
+	Optional<String> findCategoryNameByBookTitle(@Param("title") String title);
+
+	@Query("SELECT b FROM Book b WHERE b.title LIKE %:title%")
+	List<Book> findBooksByTitleContaining(@Param("title") String title);
+
+
+	@Query("SELECT b FROM Book b JOIN Author a ON b.authorID = a.authorID WHERE a.authorName LIKE %:authorName%")
+	List<Book> findByAuthorContaining(@Param("authorName") String author);
+
+	@Query("SELECT b FROM Book b JOIN Category c ON b.categoryID = c.categoryID WHERE c.categoryName LIKE %:categoryName%")
+	List<Book> findByCategoryContaining(@Param("categoryName") String category);
+
+	@Query("SELECT a.authorName FROM Author a WHERE a.authorID = :authorID")
+	Optional<String> findAuthorNameById(@Param("authorID") int authorID);
+
+	@Query("SELECT c.categoryName FROM Category c WHERE c.categoryID = :categoryID")
+	Optional<String> findCategoryNameById(@Param("categoryID") int categoryID);
 }
