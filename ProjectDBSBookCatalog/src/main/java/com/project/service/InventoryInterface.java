@@ -6,10 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -25,8 +22,8 @@ public interface InventoryInterface {
 	@GetMapping("dbs/inventory/quantity/{bookID}")
 	ResponseEntity<?> getNoOfBooks(@PathVariable String bookID);
 
-	@PutMapping("/updateAfterOrder")
-	ResponseEntity<?> updateInventoryAfterOrder(@RequestParam  List<String> bookIDs,
+	@PutMapping("dbs/inventory/updateAfterOrder")
+	ResponseEntity<String> updateInventoryAfterOrder(@RequestParam  List<String> bookIDs,
 												@RequestParam  List<Integer> quantities);
 
 

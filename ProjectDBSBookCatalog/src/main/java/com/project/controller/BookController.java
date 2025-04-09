@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import com.project.dto.BookDTO;
 import com.project.exception.BookResourceNotFoundException;
 import com.project.service.BookServiceImpl;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * RestFul Controller exposing endpoints for resource of type Book.
@@ -25,6 +26,7 @@ import com.project.service.BookServiceImpl;
 @RestController
 @RequestMapping("/dbs/books")
 @Validated
+@CrossOrigin(origins = "http://localhost:4200")
 public class BookController {
 
     @Autowired
@@ -79,6 +81,25 @@ public class BookController {
             return new ResponseEntity<>(bookDTO, HttpStatus.OK);
         } catch (BookResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("ERROR: " + e.getMessage());
+        }
+    }
+    @GetMapping("/title/{title}")
+    public ResponseEntity<BookDTO> getBookByTitle(@PathVariable String title) {
+        try {
+            BookDTO bookDTO = bookServiceImpl.getBookByTitle(title);
+            return ResponseEntity.ok(bookDTO);
+        } catch (BookResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @GetMapping("/search/{title}")
+    public ResponseEntity<List<BookDTO>> searchBooksByTitle(@PathVariable String title) {
+        try {
+            List<BookDTO> bookDTOs = bookServiceImpl.getBooksByTitle(title);
+            return ResponseEntity.ok(bookDTOs);
+        } catch (BookResourceNotFoundException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 
@@ -139,20 +160,12 @@ public class BookController {
             @ApiResponse(responseCode = "404", description = "Books not found"),
             @ApiResponse(responseCode = "400", description = "Invalid criteria provided")
     })
+//
     @GetMapping("/filter")
-    public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false) @Valid String author,
-                                                     @RequestParam(required = false) @Valid String category) {
+    public ResponseEntity<List<BookDTO>> filterBooks(@RequestParam(required = false) String author,
+                                                     @RequestParam(required = false) String category) {
         try {
-            List<BookDTO> books;
-            if (author != null && category != null) {
-                books = bookServiceImpl.filter(author, category);
-            } else if (author != null) {
-                books = bookServiceImpl.filter(author);
-            } else if (category != null) {
-                books = bookServiceImpl.filter(category);
-            } else {
-                throw new IllegalArgumentException("At least one criterion must be provided");
-            }
+            List<BookDTO> books = bookServiceImpl.filter(author, category);
             return new ResponseEntity<>(books, HttpStatus.OK);
         } catch (BookResourceNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
@@ -160,7 +173,6 @@ public class BookController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
-
 
     /**
      * @param bookDTO Details of the book to be added
@@ -259,5 +271,15 @@ public class BookController {
     public ResponseEntity<?> updateInventoryAfterOrder(@RequestParam List<String> bookIDs,
                                                        @RequestParam List<Integer> quantities) {
         return inventoryInterface.updateInventoryAfterOrder(bookIDs, quantities);
+    }
+
+    @PostMapping("/{bookID}/upload-image")
+    public ResponseEntity<String> uploadImage(@PathVariable String bookID, @RequestParam("imageFile") MultipartFile imageFile){
+        try{
+            bookServiceImpl.saveBookImage(bookID, imageFile);
+            return ResponseEntity.ok("Image uploaded successfully");
+        }catch(Exception e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("upload failed");
+        }
     }
 }
