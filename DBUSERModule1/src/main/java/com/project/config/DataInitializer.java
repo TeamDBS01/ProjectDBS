@@ -3,9 +3,11 @@ package com.project.config;
 import com.project.models.Role;
 import com.project.models.User;
 import com.project.repositories.UserRepository;
-import com.project.services.UserService;
-import jakarta.annotation.PostConstruct;
+import com.project.services.UserService; // Import your UserService
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import jakarta.annotation.PostConstruct;
 
 @Component
 public class DataInitializer {
