@@ -96,7 +96,7 @@ public class BookServiceImpl implements BookService {
     public BookDTO getBookById(String bookId) throws BookResourceNotFoundException {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new BookResourceNotFoundException("No book with ID found: " + bookId));
-         BookDTO bookDTO=modelMapper.map(book, BookDTO.class);
+        BookDTO bookDTO=modelMapper.map(book, BookDTO.class);
 
         String authorName = bookRepository.findAuthorNameByBookTitle(book.getTitle())
                 .orElse("Unknown Author");
@@ -105,10 +105,10 @@ public class BookServiceImpl implements BookService {
         bookDTO.setAuthorName(authorName);
         bookDTO.setCategoryName(categoryName);
 
-         if(book.getCoverImage()!=null){
-             bookDTO.setBase64img(Base64.getEncoder().encodeToString(book.getCoverImage()));
-         }
-         return bookDTO;
+        if(book.getCoverImage()!=null){
+            bookDTO.setBase64img(Base64.getEncoder().encodeToString(book.getCoverImage()));
+        }
+        return bookDTO;
     }
     @Override
     public BookDTO getBookByTitle(String title) throws BookResourceNotFoundException {
@@ -299,13 +299,13 @@ public class BookServiceImpl implements BookService {
         return true;
     }
 
-	/**
-	 * Deletes a book by its ID.
-	 *
-	 * @param bookID the ID of the book
-	 * @return true if the book is deleted successfully
-	 * @throws BookResourceNotFoundException if no book with the given ID is found
-	 */
+    /**
+     * Deletes a book by its ID.
+     *
+     * @param bookID the ID of the book
+     * @return true if the book is deleted successfully
+     * @throws BookResourceNotFoundException if no book with the given ID is found
+     */
     public boolean deleteBookById(String bookID) throws BookResourceNotFoundException {
         Optional<Book> optionalOfBook = bookRepository.findById(bookID);
         if (optionalOfBook.isPresent()) {

@@ -10,18 +10,38 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.List;
 
-
-@FeignClient(name="BOOK-SERVICE")
+/**
+ * Feign client interface for interacting with the BOOK-SERVICE.
+ * This interface defines methods to retrieve book details and update inventory.
+ */
+@FeignClient(name = "BOOK-SERVICE")
 public interface BookClient {
 
-	@GetMapping("dbs/books/{bookId}")
-	BookDTO getBookById(@PathVariable String bookId);
+    /**
+     * Retrieves a book by its ID.
+     *
+     * @param bookId The ID of the book to retrieve.
+     * @return The BookDTO representing the book, or null if not found.
+     */
+    @GetMapping("dbs/books/{bookId}")
+    BookDTO getBookById(@PathVariable String bookId);
 
-	@GetMapping("dbs/books/quantity/{bookId}")
-	int getBookStockQuantity(@PathVariable String bookId);
+    /**
+     * Retrieves the stock quantity of a book by its ID.
+     *
+     * @param bookID The ID of the book.
+     * @return The current stock quantity of the book.
+     */
+    @GetMapping("dbs/books/inventory/quantity/{bookID}")
+    int getBookStockQuantity(@PathVariable String bookID);
 
-	@PutMapping("dbs/inventory/updateAfterOrder")
-	ResponseEntity<String>  updateInventoryAfterOrder(@RequestParam("bookIDs") List<String> bookIDs, @RequestParam("quantities") List<Integer> quantities);
+    @PutMapping("dbs/books/updateAfterOrder")
+    ResponseEntity<String> updateInventoryAfterOrder(@RequestParam("bookIDs") List<String> bookIDs, @RequestParam("quantities") List<Integer> quantities);
+
+
+    @GetMapping("dbs/books")
+    ResponseEntity<List<BookDTO>> getAllBooks(@RequestParam(defaultValue = "0") int page,
+                                              @RequestParam(defaultValue = "10") int size);
 
 }
 
