@@ -50,7 +50,7 @@ class ReviewControllerImplTest {
 
     @Test
     @DisplayName("GetReviewById-Positive")
-    void test_getReviewById_positive() throws ReviewNotFoundException {
+    void test_getReviewById_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         when(reviewService.retrieveReviewById(REVIEW_ID)).thenReturn(reviewDTO);
         ResponseEntity<ReviewDTO> response = reviewController.getReviewById(REVIEW_ID);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -70,7 +70,7 @@ class ReviewControllerImplTest {
 
     @Test
     @DisplayName("GetAllReviews-Positive")
-    void test_getAllReviews_positive() throws ReviewNotFoundException {
+    void test_getAllReviews_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         when(reviewService.retrieveAllReviews()).thenReturn(reviewList);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviews();
@@ -101,7 +101,7 @@ class ReviewControllerImplTest {
 
     @Test
     @DisplayName("GetAllReviewsByUserId-Positive")
-    void test_getAllReviewsByUserId_positive() throws ReviewNotFoundException {
+    void test_getAllReviewsByUserId_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         when(reviewService.retrieveAllReviewsByUserId(USER_ID)).thenReturn(reviewList);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviewsByUserId(USER_ID);
@@ -132,7 +132,7 @@ class ReviewControllerImplTest {
 
     @Test
     @DisplayName("GetAllReviewsByBookId-Positive")
-    void test_getAllReviewsByBookId_positive() throws ReviewNotFoundException {
+    void test_getAllReviewsByBookId_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         when(reviewService.retrieveAllReviewsByBookId(BOOK_ID)).thenReturn(reviewList);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviewsByBookId(BOOK_ID);
