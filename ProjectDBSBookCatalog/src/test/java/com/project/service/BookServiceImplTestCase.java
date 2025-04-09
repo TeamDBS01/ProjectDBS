@@ -35,7 +35,6 @@ class BookServiceImplTestCase {
 	@Mock
     private BookRepository bookRepository;
 
-
 	@Mock
 	private ModelMapper modelMapper;
 

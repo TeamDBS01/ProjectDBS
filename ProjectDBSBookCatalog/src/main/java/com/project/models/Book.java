@@ -1,16 +1,16 @@
 package com.project.models;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Entity
 @Table(name="book")
 public class Book {
@@ -26,4 +26,17 @@ public class Book {
 	private int authorID;
 	@Column(name="category_id")
 	private int categoryID;
+
+	@Lob
+	@Column(name="cover_img")
+	private byte[] coverImage;
+
+	public Book(String bookID, String title, double price, int authorID, int categoryID) {
+		this.bookID = bookID;
+		this.title = title;
+		this.price = price;
+		this.authorID = authorID;
+		this.categoryID = categoryID;
+	}
 }
+

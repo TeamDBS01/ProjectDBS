@@ -297,6 +297,7 @@ class BookRepositoryTestCase {
 		book.setAuthorID(123);
 		book.setCategoryID(456);
 		book.setTitle("Wimpy Kid");
+
 		testEntityManager.persistAndFlush(book);
 
 		Optional<Book> result = bookRepository.findByTitle("Wimpy Kid");
