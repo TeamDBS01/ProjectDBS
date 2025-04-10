@@ -65,7 +65,7 @@ class ReviewControllerImplSpyTest {
 
     @Test
     @DisplayName("GetReviewById-Positive")
-    void test_getReviewById_positive() throws ReviewNotFoundException {
+    void test_getReviewById_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         ResponseEntity<ReviewDTO> response = reviewController.getReviewById(REVIEW_ID);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(reviewDTO, response.getBody());
@@ -74,7 +74,7 @@ class ReviewControllerImplSpyTest {
 
     @Test
     @DisplayName("GetAllReviews-Positive")
-    void test_getAllReviews_positive() throws ReviewNotFoundException {
+    void test_getAllReviews_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviews();
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -86,7 +86,7 @@ class ReviewControllerImplSpyTest {
 
     @Test
     @DisplayName("GetAllReviewsByUserId-Positive")
-    void test_getAllReviewsByUserId_positive() throws ReviewNotFoundException {
+    void test_getAllReviewsByUserId_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviewsByUserId(USER_ID);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -98,7 +98,7 @@ class ReviewControllerImplSpyTest {
 
     @Test
     @DisplayName("GetAllReviewsByBookId-Positive")
-    void test_getAllReviewsByBookId_positive() throws ReviewNotFoundException {
+    void test_getAllReviewsByBookId_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviewsByBookId(BOOK_ID);
         assertEquals(HttpStatus.OK, response.getStatusCode());

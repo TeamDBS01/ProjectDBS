@@ -326,39 +326,6 @@ public class UserService {
         }
         return userDTO;
     }
-
-     //get-userprofile
-    public UserDTO getUserProfile(String authorizationHeader) {
-        UserDTO userDTO = new UserDTO();
-
-        try {
-            Claims claims = verifyJwtAndGetClaims(authorizationHeader);
-            Long userId = claims.get("userId", Long.class);
-
-            Optional<User> userOptional = usersRepository.findById(userId);
-
-            if (userOptional.isPresent()) {
-                User user = userOptional.get();
-                userDTO.setUserId(user.getUserId());
-                userDTO.setName(user.getName());
-                userDTO.setEmail(user.getEmail());
-                userDTO.setRole(user.getRole());
-                userDTO.setStatusCode(200);
-                userDTO.setMessage("User profile retrieved successfully");
-            } else {
-                userDTO.setStatusCode(404);
-                userDTO.setMessage(USER_NOT_FOUND);
-            }
-        } catch (ResponseStatusException rse) {
-            userDTO.setStatusCode(rse.getStatusCode().value());
-            userDTO.setMessage(rse.getReason());
-        } catch (Exception e) {
-            userDTO.setStatusCode(500);
-            userDTO.setMessage("Error occurred: " + e.getMessage());
-        }
-        return userDTO;
-    }
-    
     
     
     //service code for userCredit

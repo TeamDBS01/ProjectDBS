@@ -9,38 +9,63 @@ eureka:
         instance-id: ${spring.application.name}:${server.port}
 
 spring:
-    application:
-        name: api-gateway
-    cloud:
-        gateway:
-            globalcors:
-                cors-configurations:
-                    '[/**]':
-                        allowedOrigins: "http://localhost:4200"
-                        allowedMethods:
-                            - GET
-                            - POST
-                            - DELETE
-                            - PATCH
-                            - PUT
-            routes:
-                -   id: book-service
-                    uri: lb://BOOK-SERVICE
-                    predicates:
-                        - Path=/dbs/books/**
-                -   id: user-service
-                    uri: lb://USER-SERVICE
-                    predicates:
-                        - Path=/dbs/user/**
-                -   id: order-service
-                    uri: lb://ORDER-SERVICE
-                    predicates:
-                        - Path=/dbs/order/**
-                -   id: inventory-service
-                    uri: lb://INVENTORY-SERVICE
-                    predicates:
-                        - Path=/dbs/inventory/**
-                -   id: review-service
-                    uri: lb://REVIEW-SERVICE
-                    predicates:
-                        - Path=/dbs/review/**
+  main:
+    web-application-type: reactive
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:4200"
+            allowedMethods:
+              - GET
+              - POST
+              - DELETE
+              - PATCH
+              - PUT
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        - id: book-service
+          uri: lb://BOOK-SERVICE
+          predicates:
+            - Path=/dbs/books/**
+        - id: user-service
+          uri: lb://USER-SERVICE
+          predicates:
+            - Path=/dbs/user/**
+        - id: order-service
+          uri: lb://ORDER-SERVICE
+          predicates:
+            - Path=/dbs/order/**
+        - id: inventory-service
+          uri: lb://INVENTORY-SERVICE
+          predicates:
+            - Path=/dbs/inventory/**
+        - id: review-service
+          uri: lb://REVIEW-SERVICE
+          predicates:
+            - Path=/dbs/review/**
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration
+      - org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration
+
+  eureka:
+    client:
+      serviceUrl:
+        defaultZone: http://localhost:8761/eureka/
+      register-with-eureka: true
+      fetch-registry: true
+    instance:
+      hostname: localhost
+      instance-id: ${spring.application.name}:${spring.application.instance-id:${random.value}}
+
+  logging:
+    level:
+      org.springframework.cloud.gateway: TRACE
+      org.springframework.web.reactive.filter.ForwardingFilter: TRACE
+      org.springframework.web.server.WebFilter: TRACE
+      com.project.gateway.filter: DEBUG

@@ -1,5 +1,11 @@
 package com.project.dto;
 
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.project.enums.PaymentStatus;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -9,12 +15,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
-import java.util.List;
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonInclude(Include.NON_NULL)
 public class OrderDTO {
 	private Long orderId;
 	private Date orderDate;
@@ -28,4 +32,6 @@ public class OrderDTO {
 	@NotEmpty(message="Book IDs cannot be empty")
 	private List<String> bookIds;
 	private PaymentStatus paymentStatus;
+	private TrackingDetailsDTO trackingDetails;
+	private ReturnDetailsDTO returnDetails;
 }
