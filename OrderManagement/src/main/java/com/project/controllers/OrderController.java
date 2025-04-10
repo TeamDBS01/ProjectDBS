@@ -398,4 +398,18 @@ public class OrderController {
 		}
 	}
 
+	@PostMapping("/{orderId}/cash-on-delivery/{userId}")
+	public ResponseEntity<Object> cashOnDelivery(@PathVariable Long orderId, @PathVariable Long userId) {
+		try {
+			orderService.processCashOnDelivery(orderId, userId);
+			return ResponseEntity.ok().body("Cash on Delivery order placed successfully.");
+		} catch (ResourceNotFoundException ex) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(ex.getMessage());
+		} catch (SecurityException ex) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+		} catch (Exception ex) {
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+		}
+	}
+
 }
