@@ -1,16 +1,18 @@
 server:
-  port: 8082
+    port: 8082
 
 eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-  instance:
-    instance-id: ${spring.application.name}:${server.port}
+    client:
+        service-url:
+            defaultZone: http://localhost:8761/eureka/
+    instance:
+        instance-id: ${spring.application.name}:${server.port}
 
 spring:
+  main:
+    web-application-type: reactive
   application:
-    name: api-gateway
+    name: gateway-service
   cloud:
     gateway:
       globalcors:
@@ -23,9 +25,8 @@ spring:
               - DELETE
               - PATCH
               - PUT
-            allowedHeaders:
-              - "*" # Allow all headers
-            allowCredentials: true # Allow credentials like cookies or authentication headers
+            allowedHeaders: "*"
+            allowCredentials: true
       routes:
         - id: book-service
           uri: lb://BOOK-SERVICE
@@ -47,3 +48,24 @@ spring:
           uri: lb://REVIEW-SERVICE
           predicates:
             - Path=/dbs/review/**
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.web.servlet.WebMvcAutoConfiguration
+      - org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration
+
+  eureka:
+    client:
+      serviceUrl:
+        defaultZone: http://localhost:8761/eureka/
+      register-with-eureka: true
+      fetch-registry: true
+    instance:
+      hostname: localhost
+      instance-id: ${spring.application.name}:${spring.application.instance-id:${random.value}}
+
+  logging:
+    level:
+      org.springframework.cloud.gateway: TRACE
+      org.springframework.web.reactive.filter.ForwardingFilter: TRACE
+      org.springframework.web.server.WebFilter: TRACE
+      com.project.gateway.filter: DEBUG
