@@ -76,7 +76,10 @@ public class BookServiceImpl implements BookService {
             BookDTO bookDTO = modelMapper.map(book, BookDTO.class);
             String authorName = bookRepository.findAuthorNameByBookTitle(book.getTitle())
                     .orElse("Unknown Author");
+            String categoryName= bookRepository.findCategoryNameByBookTitle(book.getTitle())
+                    .orElse("Unknown Category");
             bookDTO.setAuthorName(authorName);
+            bookDTO.setCategoryName(categoryName);
             if (book.getCoverImage() != null) {
                 bookDTO.setBase64img(Base64.getEncoder().encodeToString(book.getCoverImage()));
             }
@@ -96,7 +99,7 @@ public class BookServiceImpl implements BookService {
     public BookDTO getBookById(String bookId) throws BookResourceNotFoundException {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new BookResourceNotFoundException("No book with ID found: " + bookId));
-        BookDTO bookDTO=modelMapper.map(book, BookDTO.class);
+         BookDTO bookDTO=modelMapper.map(book, BookDTO.class);
 
         String authorName = bookRepository.findAuthorNameByBookTitle(book.getTitle())
                 .orElse("Unknown Author");
@@ -105,10 +108,10 @@ public class BookServiceImpl implements BookService {
         bookDTO.setAuthorName(authorName);
         bookDTO.setCategoryName(categoryName);
 
-        if(book.getCoverImage()!=null){
-            bookDTO.setBase64img(Base64.getEncoder().encodeToString(book.getCoverImage()));
-        }
-        return bookDTO;
+         if(book.getCoverImage()!=null){
+             bookDTO.setBase64img(Base64.getEncoder().encodeToString(book.getCoverImage()));
+         }
+         return bookDTO;
     }
     @Override
     public BookDTO getBookByTitle(String title) throws BookResourceNotFoundException {
@@ -293,19 +296,24 @@ public class BookServiceImpl implements BookService {
             throw new BookResourceNotFoundException("Book resource cannot be null");
         }
         Book book = modelMapper.map(bookDTO, Book.class);
+
+        if (bookDTO.getBase64img() != null && !bookDTO.getBase64img().isEmpty() && !bookDTO.getBase64img().equals("null")) {
+            book.setCoverImage(base64ToByteArray(bookDTO.getBase64img()));
+        }
         Book save = bookRepository.save(book);
         inventoryInterface.addBookToInventory(save.getBookID(), 1); // Assuming quantity is 1 for simplicity
 
         return true;
     }
 
+
     /**
-     * Deletes a book by its ID.
-     *
-     * @param bookID the ID of the book
-     * @return true if the book is deleted successfully
-     * @throws BookResourceNotFoundException if no book with the given ID is found
-     */
+	 * Deletes a book by its ID.
+	 *
+	 * @param bookID the ID of the book
+	 * @return true if the book is deleted successfully
+	 * @throws BookResourceNotFoundException if no book with the given ID is found
+	 */
     public boolean deleteBookById(String bookID) throws BookResourceNotFoundException {
         Optional<Book> optionalOfBook = bookRepository.findById(bookID);
         if (optionalOfBook.isPresent()) {
@@ -365,6 +373,26 @@ public class BookServiceImpl implements BookService {
             bookRepository.save(book);
         }else{
             throw new RuntimeException("Book not found");
+        }
+    }
+
+    private byte[] base64ToByteArray(String base64Image) throws IllegalArgumentException {
+        if (base64Image == null || base64Image.isEmpty() || base64Image.equals("null")) {
+            return null;
+        }
+
+        String imageData;
+        if (base64Image.startsWith("data:")) {
+            imageData = base64Image.substring(base64Image.indexOf(',') + 1);
+        } else {
+            imageData = base64Image; // Assume it's already just the base64 data
+        }
+
+        try {
+            return Base64.getDecoder().decode(imageData);
+        } catch (IllegalArgumentException e) {
+            System.err.println("Error decoding base64 image (invalid format): " + e.getMessage());
+            throw e; // Re-throw the exception to be handled by the caller
         }
     }
 
