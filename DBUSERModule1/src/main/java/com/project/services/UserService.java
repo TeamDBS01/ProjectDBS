@@ -1,42 +1,51 @@
 package com.project.services;
-
+import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
 import com.project.dto.UserCreditDTO;
 import com.project.dto.UserDTO;
 import com.project.models.Role;
 import com.project.models.User;
-import com.project.models.UserCredit;
 import com.project.repositories.UserCreditRepository;
 import com.project.repositories.UserRepository;
-import io.jsonwebtoken.Claims;
+
+import org.springframework.stereotype.Service;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import java.security.Key;
+import java.util.Date;
+import java.util.Map;
+import io.jsonwebtoken.Claims;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.security.Key;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.util.*;
+import java.util.ArrayList;
+import com.project.models.UserCredit;
 
 @Service
 public class UserService {
 
     private final UserRepository usersRepository;
-    
+
     private UserCreditRepository userCreditRepository;
-    
+
     private static final String USER_NOT_FOUND = "User not found";
-    
-    
- 
+
+//    private final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256); // Keep the same key as Gateway
+
+    private final byte[] secretKeyBytes = "9rxnn8Qd700nlHOxDqsfnEAmwRAuPHzi".getBytes(StandardCharsets.UTF_8);
+    private final Key secretKey = Keys.hmacShaKeyFor(secretKeyBytes);
+
     public UserService(UserRepository usersRepository,UserCreditRepository userCreditRepository) {
         this.usersRepository = usersRepository;
         this.userCreditRepository = userCreditRepository;
     }
-    
 
     public String encodePassword(String password) {
         try {
@@ -48,7 +57,6 @@ public class UserService {
         }
     }
 
-    
     private String bytesToHex(byte[] hash) {
         StringBuilder hexString = new StringBuilder(2 * hash.length);
         for (int i = 0; i < hash.length; i++) {
@@ -60,14 +68,6 @@ public class UserService {
         }
         return hexString.toString();
     }
-    
-    
-    public void setKey(Key key){
-        this.key = key;
-    }
-
-    
-    private Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);  
 
     public String generateJwtToken(User user) {
         Map<String, Object> claims = new HashMap<>();
@@ -77,9 +77,10 @@ public class UserService {
 
         return Jwts.builder()
                 .setClaims(claims)
+                .setSubject(user.getEmail()) // Use email as subject
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
-                .signWith(key)
+                .signWith(secretKey)
                 .compact();
     }
 
@@ -98,6 +99,8 @@ public class UserService {
                     response.setRole(user.getRole());
                     response.setMessage("Successfully logged in");
                     response.setToken(generateJwtToken(user));
+                    response.setUserId(user.getUserId());
+                    response.setName(user.getName());
                 } else {
                     response.setStatusCode(401);
                     response.setMessage("Invalid credentials");
@@ -113,15 +116,24 @@ public class UserService {
         }
         return response;
     }
-    //working on the method
+
     public UserDTO refreshToken(UserDTO refreshTokenRequest) {
         UserDTO response = new UserDTO();
 
         try {
             String email = refreshTokenRequest.getEmail();
             usersRepository.findByEmail(email).orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
-            response.setStatusCode(200);
-            response.setMessage("Successfully refreshed the token");
+            // In a real refresh token scenario, you'd likely have a separate refresh token and logic
+            // For simplicity, we're just generating a new access token based on the email.
+            Optional<User> userOptional = usersRepository.findByEmail(email);
+            if (userOptional.isPresent()) {
+                response.setStatusCode(200);
+                response.setMessage("Successfully refreshed the token");
+                response.setToken(generateJwtToken(userOptional.get()));
+            } else {
+                response.setStatusCode(404);
+                response.setMessage(USER_NOT_FOUND);
+            }
         } catch (RuntimeException e) {
             response.setStatusCode(404);
             response.setMessage(e.getMessage());
@@ -131,8 +143,7 @@ public class UserService {
         }
         return response;
     }
-    
-    
+
     public UserDTO register(UserDTO registrationRequest) {
         UserDTO resp = new UserDTO();
 
@@ -145,7 +156,6 @@ public class UserService {
                 user.setEmail(registrationRequest.getEmail());
                 user.setName(registrationRequest.getName());
 
-               
                 String encodedPassword = encodePassword(registrationRequest.getPassword());
                 if (encodedPassword == null) {
                     resp.setStatusCode(500);
@@ -154,7 +164,6 @@ public class UserService {
                 }
                 user.setPassword(encodedPassword);
 
-              
                 user.setRole(Role.CUSTOMER);
 
                 User userResult = usersRepository.save(user);
@@ -174,22 +183,14 @@ public class UserService {
         }
         return resp;
     }
- 
-  
 
-    
- 
-    public UserDTO getAllUsers(String authorizationHeader) {  
+    public UserDTO getAllUsers(String authorizationHeader) {
         UserDTO userDTO = new UserDTO();
 
         try {
-            
-            Claims claims = verifyJwtAndGetClaims(authorizationHeader);
-
-            
-            if (!claims.get("role", String.class).equals(Role.ADMIN.name())) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied. Admin role required.");
-            }
+            // The Gateway will have already verified the token and the user's role
+            // You can optionally extract user info from the headers set by the Gateway if needed
+            // For this example, we'll just proceed with fetching users.
 
             List<User> result = usersRepository.findAll();
 
@@ -216,9 +217,6 @@ public class UserService {
                 userDTO.setStatusCode(404);
                 userDTO.setMessage("No customers found");
             }
-        } catch (ResponseStatusException rse) {
-            userDTO.setStatusCode(rse.getStatusCode().value());
-            userDTO.setMessage(rse.getReason());
         } catch (Exception e) {
             userDTO.setStatusCode(500);
             userDTO.setMessage("Error occurred: " + e.getMessage());
@@ -226,25 +224,6 @@ public class UserService {
         return userDTO;
     }
 
-    // helper method to verify the JWT and extract the claims.
-    private Claims verifyJwtAndGetClaims(String authorizationHeader) {
-        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Missing or invalid Authorization header");
-        }
-
-        String token = authorizationHeader.substring(7);
-
-        try {
-            return Jwts.parserBuilder()
-                    .setSigningKey(key)
-                    .build()
-                    .parseClaimsJws(token)
-                    .getBody();
-        } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid JWT token");
-        }
-    }    
-    
     public UserDTO getUserByID(Long id) {
         UserDTO userDTO = new UserDTO();
 
@@ -270,7 +249,6 @@ public class UserService {
         return userDTO;
     }
 
-    
     public UserDTO deleteUser(Long userId) {
         UserDTO userDTO = new UserDTO();
 
@@ -291,8 +269,7 @@ public class UserService {
         }
         return userDTO;
     }
-    
-    
+
     public UserDTO updateUser(Long userId, User updatedUser) {
         UserDTO userDTO = new UserDTO();
 
@@ -301,10 +278,8 @@ public class UserService {
             if (userOptional.isPresent()) {
                 User existingUser = userOptional.get();
 
-                
                 existingUser.setName(updatedUser.getName());
 
-              
                 if (updatedUser.getPassword() != null && !updatedUser.getPassword().isEmpty()) {
                     existingUser.setPassword(encodePassword(updatedUser.getPassword()));
                 }
@@ -312,7 +287,7 @@ public class UserService {
                 User savedUser = usersRepository.save(existingUser);
                 userDTO.setUserId(savedUser.getUserId());
                 userDTO.setName(savedUser.getName());
-                userDTO.setEmail(savedUser.getEmail()); // setting the original email
+                userDTO.setEmail(savedUser.getEmail());
                 userDTO.setRole(savedUser.getRole());
                 userDTO.setStatusCode(200);
                 userDTO.setMessage("User updated successfully");
@@ -326,8 +301,48 @@ public class UserService {
         }
         return userDTO;
     }
-    
-    
+
+    public UserDTO getUserProfile(String authorizationHeader) {
+        UserDTO userDTO = new UserDTO();
+
+        try {
+            // The Gateway will have already verified the token and the user's identity
+            // You can extract user identifier (e.g., email or userId) from headers
+            // set by the Gateway if needed. For simplicity, we'll assume the Gateway
+            // ensures the request is for the authenticated user's profile.
+
+            // For example, the Gateway might set a header "X-Authenticated-User-Email"
+
+            // In this simplified scenario, we'll just extract the email from the token
+            // that was passed (Gateway already validated it).
+            Claims claims = Jwts.parserBuilder()
+                    .setSigningKey(secretKey)
+                    .build()
+                    .parseClaimsJws(authorizationHeader.substring(7))
+                    .getBody();
+            String userEmail = claims.getSubject();
+
+            Optional<User> userOptional = usersRepository.findByEmail(userEmail);
+
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+                userDTO.setUserId(user.getUserId());
+                userDTO.setName(user.getName());
+                userDTO.setEmail(user.getEmail());
+                userDTO.setRole(user.getRole());
+                userDTO.setStatusCode(200);
+                userDTO.setMessage("User profile retrieved successfully");
+            } else {
+                userDTO.setStatusCode(404);
+                userDTO.setMessage(USER_NOT_FOUND);
+            }
+        } catch (Exception e) {
+            userDTO.setStatusCode(500);
+            userDTO.setMessage("Error occurred: " + e.getMessage());
+        }
+        return userDTO;
+    }
+
     //service code for userCredit
     public ResponseEntity<UserCreditDTO> debitCredits(Long userId, Double amount) {
         UserCredit userCredit = userCreditRepository.findByUserId(userId);
@@ -347,7 +362,6 @@ public class UserService {
         return new UserCreditDTO(userId, userCredit.getCredits());
     }
 
-    
     public ResponseEntity<UserCreditDTO> addCredits(Long userId, Double amount) {
         UserCredit userCredit = userCreditRepository.findByUserId(userId);
         if(userCredit == null){
@@ -361,5 +375,4 @@ public class UserService {
         userCreditRepository.save(userCredit);
         return ResponseEntity.ok(new UserCreditDTO(userId, userCredit.getCredits()));
     }
-
 }
