@@ -4,6 +4,7 @@ import com.project.dto.UserDTO;
 import com.project.models.User;
 import com.project.services.UserService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -31,7 +32,13 @@ public class UserController {
     })
     @PostMapping("/auth/register")
     public ResponseEntity<UserDTO> register(@Valid  @RequestBody UserDTO reg){
-        return ResponseEntity.ok(usersService.register(reg));
+//        return ResponseEntity.ok(usersService.register(reg));
+        UserDTO userDTO = usersService.register(reg);
+        if(userDTO.getName()!=null){
+            return new ResponseEntity<>(userDTO,HttpStatus.ACCEPTED);
+        } else{
+            return new ResponseEntity<>(userDTO,HttpStatus.FORBIDDEN);
+        }
     }
 
     @Operation(summary = "Login a user", description = "Logs in a user with the provided credentials.")
@@ -40,8 +47,14 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PostMapping("/auth/login")
-    public ResponseEntity<UserDTO> login(@RequestBody UserDTO req){
-        return ResponseEntity.ok(usersService.login(req));
+    public ResponseEntity<?> login(@RequestBody UserDTO req){
+        UserDTO userDTO = usersService.login(req);
+        if(userDTO.getName()!=null){
+            return new ResponseEntity<>(userDTO,HttpStatus.ACCEPTED);
+        } else{
+            return new ResponseEntity<>(userDTO,HttpStatus.FORBIDDEN);
+        }
+//        return ResponseEntity.ok(usersService.login(req));
     }
 
     @Operation(summary = "Refresh authentication token", description = "Refreshes the authentication token for the user.")
