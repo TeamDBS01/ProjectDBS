@@ -34,7 +34,6 @@ public class OrderServiceImpl implements  OrderService{
 	private final OrderRepository orderRepository;
 	private final UserClient userClient;
 	private final BookClient bookClient;
-//	private final BookClient.InventoryClient inventoryClient;
 	private final Map<Long,Cart> cartStorage = new HashMap<>();
 	private final TrackingDetailsRepository trackingDetailsRepository;
 	private final ReturnDetailsRepository returnDetailsRepository;
@@ -683,6 +682,27 @@ public class OrderServiceImpl implements  OrderService{
 		}
 		return bookDTO;
 	}
+
+	@Transactional
+	public void processCashOnDelivery(Long orderId, Long userId) {
+		Order order = orderRepository.findById(orderId)
+				.orElseThrow(() -> new ResourceNotFoundException(ORDER_NOT_FOUND));
+
+		if (!order.getUserId().equals(userId)) {
+			throw new SecurityException("User ID does not match the order's user ID.");
+		}
+
+		if (order.getPaymentStatus() != PaymentStatus.PENDING) {
+			throw new RuntimeException("Order payment or status has already been processed.");
+		}
+
+		order.setPaymentStatus(PaymentStatus.PENDING);
+		order.setStatus(PENDING);
+		orderRepository.save(order);
+		clearCart(userId);
+	}
 }
+
+
 
 
