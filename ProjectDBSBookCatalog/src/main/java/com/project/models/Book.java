@@ -31,12 +31,15 @@ public class Book {
 	@Column(name="cover_img")
 	private byte[] coverImage;
 
-	public Book(String bookID, String title, double price, int authorID, int categoryID) {
+	private String description;
+
+	public Book(String bookID, String title, double price, int authorID, int categoryID, String description) {
 		this.bookID = bookID;
 		this.title = title;
 		this.price = price;
 		this.authorID = authorID;
 		this.categoryID = categoryID;
+		this.description=description;
 	}
 }
 
