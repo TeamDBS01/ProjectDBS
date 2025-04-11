@@ -109,6 +109,14 @@ class ReviewControllerImplSpyTest {
 
 
     @Test
+    @DisplayName("GetAverageByBookId-Positive")
+    void test_getAverageByBookId_positive() {
+        ResponseEntity<Float> response = reviewController.getAverageByBookId(BOOK_ID);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(3.5f, response.getBody());
+    }
+
+    @Test
     @DisplayName("AddReviewWithParameters-Positive")
     void test_addReviewWithParameters_positive() throws UserNotFoundException, BookNotFoundException, ServiceUnavailableException {
         ResponseEntity<ReviewDTO> response = reviewController.addReview(RATING, COMMENT, USER_ID, BOOK_ID);
@@ -208,7 +216,8 @@ class ReviewControllerImplSpyTest {
                     .andReturn();
 
             String jsonData = mvcResult.getResponse().getContentAsString();
-            List<ReviewDTO> jsonObject = new ObjectMapper().readValue(jsonData, new TypeReference<>() {});
+            List<ReviewDTO> jsonObject = new ObjectMapper().readValue(jsonData, new TypeReference<>() {
+            });
             ReviewDTO actual = jsonObject.stream()
                     .filter(o -> o.getReviewId() == REVIEW_ID)
                     .findFirst().orElseThrow();
@@ -240,7 +249,8 @@ class ReviewControllerImplSpyTest {
                     .andReturn();
 
             String jsonData = mvcResult.getResponse().getContentAsString();
-            List<ReviewDTO> jsonObject = new ObjectMapper().readValue(jsonData, new TypeReference<>() {});
+            List<ReviewDTO> jsonObject = new ObjectMapper().readValue(jsonData, new TypeReference<>() {
+            });
             ReviewDTO actual = jsonObject.stream()
                     .filter(o -> o.getReviewId() == REVIEW_ID)
                     .findFirst().orElseThrow();
@@ -286,7 +296,7 @@ class ReviewControllerImplSpyTest {
     @DisplayName("UpdateReview-Uri-Positive")
     void test_updateReview_uri_positive() {
         try {
-            mockMvc.perform(patch("/dbs/review/update/{userId}", USER_ID)
+            mockMvc.perform(put("/dbs/review/update/{userId}", USER_ID)
                             .contentType("application/json")
                             .content(STR."{\"reviewId\":\{REVIEW_ID},\"rating\":4.0,\"comment\":\"Good book!\",\"userId\":12,\"bookId\":\"ISBN-1212\"}"))
                     .andExpect(status().isOk())

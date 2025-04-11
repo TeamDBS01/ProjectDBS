@@ -141,7 +141,7 @@ public class ReviewControllerImpl implements ReviewController {
 
     @Override
     @GetMapping("/book/average/{bookId}")
-    public ResponseEntity<Float> getAverageByBookId(@PathVariable String bookId) throws ReviewNotFoundException, ServiceUnavailableException {
+    public ResponseEntity<Float> getAverageByBookId(@PathVariable String bookId) {
         return ResponseEntity.ok(reviewService.retrieveAverageRating(bookId));
     }
 
@@ -204,7 +204,7 @@ public class ReviewControllerImpl implements ReviewController {
      * @return ResponseEntity containing the updated review or an error message.
      */
     @Override
-    @PatchMapping("/update/{userId}")
+    @PutMapping("/update/{userId}")
     public ResponseEntity<ReviewDTO> updateReview(
             @Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId,
             @Valid @RequestBody ReviewDTO reviewDTO) throws ServiceUnavailableException, UserNotFoundException, UserNotAuthorizedException, IDMismatchException, BookNotFoundException {
