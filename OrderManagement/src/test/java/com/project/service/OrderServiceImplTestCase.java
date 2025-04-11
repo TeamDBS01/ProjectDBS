@@ -1,27 +1,38 @@
 package com.project.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+
 import com.project.dto.*;
 import com.project.enums.PaymentStatus;
-import com.project.enums.Role;
 import com.project.exception.*;
-import com.project.feign.BookClient;
-import com.project.feign.UserClient;
-import com.project.models.Order;
-import com.project.repositories.OrderRepository;
+import com.project.models.CartItem;
+import com.project.models.ReturnDetails;
+import com.project.models.TrackingDetails;
+import com.project.repositories.ReturnDetailsRepository;
+import com.project.repositories.ShippingInfoRepository;
+import com.project.repositories.TrackingDetailsRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+
+import com.project.enums.Role;
+import com.project.feign.BookClient;
+import com.project.feign.UserClient;
+import com.project.models.Order;
+import com.project.repositories.OrderRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class OrderServiceImplTestCase {
@@ -34,6 +45,15 @@ class OrderServiceImplTestCase {
 
 	@Mock
 	private BookClient bookClient;
+
+
+	@Mock
+	private ReturnDetailsRepository returnDetailsRepository;
+
+	@Mock
+	private ShippingInfoRepository shippingInfoRepository;
+	@Mock
+	private TrackingDetailsRepository trackingDetailsRepository;
 
 	@InjectMocks
 	private OrderServiceImpl orderService;
@@ -79,8 +99,8 @@ class OrderServiceImplTestCase {
 		List<CartItem> cartItems = orderService.addToCart(1L,"E112",2);
 		assertFalse(cartItems.isEmpty());
 		assertEquals(1,cartItems.size());
-		assertEquals("E112",cartItems.get(0).getBookId());
-		assertEquals(2,cartItems.get(0).getQuantity());
+		assertEquals("E112",cartItems.getFirst().getBookId());
+		assertEquals(2,cartItems.getFirst().getQuantity());
 	}
 
 	@Test
@@ -122,16 +142,17 @@ class OrderServiceImplTestCase {
 		when(bookClient.getBookById("E113")).thenReturn(bookDTO2);
 		when(bookClient.getBookStockQuantity("E112")).thenReturn(10);
 		when(bookClient.getBookStockQuantity("E113")).thenReturn(5);
+		ShippingDetailsDTO shippingDetailsDTO = new ShippingDetailsDTO();
 		orderService.addToCart(1L, "E112", 2);
 		orderService.addToCart(1L, "E113", 1);
 
-		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1)))
+		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1)))
 				.thenReturn(ResponseEntity.ok("Book stock updated successfully"));
 
-		OrderDTO orderDTO = orderService.placeOrder(1L);
+		OrderDTO orderDTO = orderService.placeOrder(1L,shippingDetailsDTO);
 		assertNotNull(orderDTO);
 		assertEquals(70.0,orderDTO.getTotalAmount());
-		verify(bookClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1));
+		verify(bookClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1));
 		verify(orderRepository,times(1)).save(any(Order.class));
 	}
 
@@ -143,7 +164,7 @@ class OrderServiceImplTestCase {
 		orderService.addToCart(1L, "E112", 2);
 		ResponseEntity<UserDTO> responseEntity = new ResponseEntity<>(null,HttpStatus.NOT_FOUND);
 		when(userClient.getUserById(1L)).thenReturn(responseEntity);
-		ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,()->orderService.placeOrder(1L));
+		ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,()->orderService.placeOrder(1L,new ShippingDetailsDTO()));
 		assertEquals("User not found for ID: 1",exception.getMessage());
 	}
 
@@ -157,7 +178,7 @@ class OrderServiceImplTestCase {
 		when(bookClient.getBookStockQuantity("E112")).thenReturn(10);
 		orderService.addToCart(1L, "E112", 2);
 		when(bookClient.getBookById("E112")).thenReturn(null);
-		assertThrows(ResourceNotFoundException.class, () -> orderService.placeOrder(1L));
+		assertThrows(ResourceNotFoundException.class, () -> orderService.placeOrder(1L,new ShippingDetailsDTO()));
 	}
 
 	@Test
@@ -174,6 +195,7 @@ class OrderServiceImplTestCase {
 		adminUser.setRole(Role.ADMIN);
 		when(userClient.getUserById(2L)).thenReturn(new ResponseEntity<>(adminUser,HttpStatus.OK));
 		when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
 		OrderDTO orderDTO = orderService.updateOrderStatus(1L, "Shipped",2L);
 		assertNotNull(orderDTO);
 		assertEquals("Shipped",orderDTO.getStatus());
@@ -205,12 +227,13 @@ class OrderServiceImplTestCase {
 		List<OrderDTO> orderDTOs = orderService.getUserOrders(1L);
 		assertFalse(orderDTOs.isEmpty());
 		assertEquals(1,orderDTOs.size());
-		assertEquals(1L,orderDTOs.get(0).getOrderId());
+		assertEquals(1L,orderDTOs.getFirst().getOrderId());
 	}
 
 	@Test
 	void getOrderDetails_success() {
 		when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+
 		OrderDTO orderDTO = orderService.getOrderDetails(1L);
 		assertNotNull(orderDTO);
 		assertEquals(1L,orderDTO.getOrderId());
@@ -235,7 +258,7 @@ class OrderServiceImplTestCase {
 		List<BookDTO> bookDTOs = orderService.getBooksByOrderId(1L);
 		assertFalse(bookDTOs.isEmpty());
 		assertEquals(2,bookDTOs.size());
-		assertEquals("E112",bookDTOs.get(0).getBookID());
+		assertEquals("E112",bookDTOs.getFirst().getBookID());
 	}
 
 	@Test
@@ -281,26 +304,27 @@ class OrderServiceImplTestCase {
 	@Test
 	void cancelOrder_paidOrder_success(){
 		order.setPaymentStatus(PaymentStatus.PAID);
+		order.setStatus("Pending");
 		when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
 		when(userClient.addCredits(1L,50.0)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
-		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1)))
+		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1)))
 				.thenReturn(ResponseEntity.ok("Book stock updated successfully"));
 		OrderDTO cancelledOrder= orderService.cancelOrder(1L,1L);
 		assertEquals("Cancelled",cancelledOrder.getStatus());
 		verify(userClient,times(1)).addCredits(1L,50.0);
-		verify(bookClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1));
+		verify(bookClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1));
 	}
 
 	@Test
 	void cancelOrder_unpaidOrder_success(){
 		order.setPaymentStatus(PaymentStatus.PENDING);
 		when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
-		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1)))
+		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1)))
 				.thenReturn(ResponseEntity.ok("Book stock updated successfully"));
 		OrderDTO cancelledOrder= orderService.cancelOrder(1L,1L);
 		assertEquals("Cancelled",cancelledOrder.getStatus());
 		verify(userClient,times(0)).addCredits(anyLong(),anyDouble());
-		verify(bookClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(2, 1));
+		verify(bookClient, times(1)).updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1));
 	}
 
 	@Test
@@ -324,7 +348,7 @@ class OrderServiceImplTestCase {
 	@Test
 	void placeOrder_cartEmpty() {
 		when(userClient.getUserById(1L)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
-		assertThrows(CartEmptyException.class, () -> orderService.placeOrder(1L));
+		assertThrows(CartEmptyException.class, () -> orderService.placeOrder(1L,new ShippingDetailsDTO()));
 	}
 	@Test
 	void processPayment_userNotFound() {
@@ -339,6 +363,118 @@ class OrderServiceImplTestCase {
 		differentOrder.setUserId(2L);
 		when(orderRepository.findById(1L)).thenReturn(Optional.of(differentOrder));
 		assertThrows(SecurityException.class, () -> orderService.processPayment(1L, 1L));
+	}
+
+	@Test
+	void updateTracking_success() throws ParseException {
+		UserDTO adminUser = new UserDTO();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		Date date = dateFormat.parse("2025-05-30");
+		adminUser.setUserId(2L);
+		adminUser.setRole(Role.ADMIN);
+		when(userClient.getUserById(2L)).thenReturn(new ResponseEntity<>(adminUser, HttpStatus.OK));
+		when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+		TrackingDetails trackingDetails = new TrackingDetails();
+		trackingDetails.setTrackingId(10L);
+		trackingDetails.setOrderId(1L);
+		trackingDetails.setShippingCarrier("UPS");
+		when(trackingDetailsRepository.findByOrderId(1L)).thenReturn(trackingDetails);
+		OrderDTO updatedOrder = orderService.updateTracking(1L, "UPS", date, 2L);
+		assertNotNull(updatedOrder.getTrackingDetails());
+		assertEquals("UPS", updatedOrder.getTrackingDetails().getShippingCarrier());
+		verify(trackingDetailsRepository, times(1)).save(any(TrackingDetails.class));
+	}
+
+	@Test
+	void updateTracking_adminNotFound() {
+		when(userClient.getUserById(2L)).thenReturn(new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
+		assertThrows(ResourceNotFoundException.class, () -> orderService.updateTracking(1L, "UPS", new Date(), 2L));
+	}
+
+	@Test
+	void updateTracking_orderNotFound() throws ParseException {
+		UserDTO adminUser = new UserDTO();
+		SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+		Date date = dateFormat.parse("2025-05-30");
+		adminUser.setUserId(2L);
+		adminUser.setRole(Role.ADMIN);
+		when(userClient.getUserById(2L)).thenReturn(new ResponseEntity<>(adminUser, HttpStatus.OK));
+		when(orderRepository.findById(1L)).thenReturn(Optional.empty());
+		assertThrows(ResourceNotFoundException.class, () -> orderService.updateTracking(1L, "UPS",date, 2L));
+	}
+
+
+	@Test
+	void requestReturn_success() {
+		when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+		when(returnDetailsRepository.findByOrderId(1L)).thenReturn(null);
+		order.setStatus("Delivered");
+		OrderDTO returnedOrder = orderService.requestReturn(1L, 1L, "Damaged");
+		assertEquals("Return Requested", returnedOrder.getStatus());
+		verify(returnDetailsRepository, times(1)).save(any(ReturnDetails.class));
+	}
+
+	@Test
+	void requestReturn_orderNotFound() {
+		when(orderRepository.findById(1L)).thenReturn(Optional.empty());
+		assertThrows(ResourceNotFoundException.class, () -> orderService.requestReturn(1L, 1L, "Damaged"));
+	}
+
+	@Test
+	void adminProcessReturn_approve_success() {
+		UserDTO adminUser = new UserDTO();
+		adminUser.setUserId(2L);
+		adminUser.setRole(Role.ADMIN);
+		when(userClient.getUserById(2L)).thenReturn(new ResponseEntity<>(adminUser, HttpStatus.OK));
+		when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+		when(returnDetailsRepository.findByOrderId(1L)).thenReturn(new ReturnDetails());
+		order.setStatus("Return Requested");
+		order.setPaymentStatus(PaymentStatus.PAID);
+		when(userClient.addCredits(1L, 50.0)).thenReturn(new ResponseEntity<>(HttpStatus.OK));
+		when(bookClient.updateInventoryAfterOrder(Arrays.asList("E112", "E113"), Arrays.asList(-2, -1)))
+				.thenReturn(ResponseEntity.ok("Book stock updated successfully"));
+		OrderDTO processedOrder = orderService.adminProcessReturn(1L, 2L, "approve");
+		assertEquals("Return Approved", processedOrder.getStatus());
+		verify(returnDetailsRepository, times(2)).save(any(ReturnDetails.class));
+	}
+
+	@Test
+	void adminProcessReturn_reject_success() {
+		UserDTO adminUser = new UserDTO();
+		adminUser.setUserId(2L);
+		adminUser.setRole(Role.ADMIN);
+		when(userClient.getUserById(2L)).thenReturn(new ResponseEntity<>(adminUser, HttpStatus.OK));
+		when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+		when(returnDetailsRepository.findByOrderId(1L)).thenReturn(new ReturnDetails());
+		order.setStatus("Return Requested");
+		OrderDTO processedOrder = orderService.adminProcessReturn(1L, 2L, "reject");
+		assertEquals("Return Rejected", processedOrder.getStatus());
+		verify(returnDetailsRepository, times(2)).save(any(ReturnDetails.class));
+	}
+
+	@Test
+	void adminProcessReturn_orderNotFound() {
+		when(orderRepository.findById(1L)).thenReturn(Optional.empty());
+		assertThrows(ResourceNotFoundException.class, () -> orderService.adminProcessReturn(1L, 2L, "approve"));
+	}
+
+	@Test
+	void adminProcessReturn_adminUserNotFound() {
+		when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+		when(userClient.getUserById(2L)).thenReturn(new ResponseEntity<>(null, HttpStatus.NOT_FOUND));
+
+		assertThrows(ResourceNotFoundException.class, () -> orderService.adminProcessReturn(1L, 2L, "approve"));
+	}
+
+	@Test
+	void adminProcessReturn_userNotAdmin() {
+		UserDTO nonAdminUser = new UserDTO();
+		nonAdminUser.setUserId(2L);
+		nonAdminUser.setRole(Role.CUSTOMER);
+		when(orderRepository.findById(1L)).thenReturn(Optional.of(order));
+		when(userClient.getUserById(2L)).thenReturn(new ResponseEntity<>(nonAdminUser, HttpStatus.OK));
+
+		assertThrows(SecurityException.class, () -> orderService.adminProcessReturn(1L, 2L, "approve"));
 	}
 
 }

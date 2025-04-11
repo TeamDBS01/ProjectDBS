@@ -60,7 +60,7 @@ public class GlobalExceptionHandler {
         return str;
     }
 
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @ExceptionHandler({IDMismatchException.class, UserNotFoundException.class, UserNotAuthorizedException.class, ReviewNotFoundException.class, BookNotFoundException.class})
     public String handleCustomExceptions(Exception exception) {
         String str = "Unknown Exception In Global Exception Handler";

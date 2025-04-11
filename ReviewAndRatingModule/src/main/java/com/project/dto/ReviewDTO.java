@@ -26,17 +26,9 @@ public class ReviewDTO {
 	private String bookId;
 
 	private String userName;
-//	private String bookTitle;
+	private String bookTitle;
 
 	public ReviewDTO(String comment) {
 		this.comment = comment;
-	}
-
-	public ReviewDTO(Long reviewId, Float rating, String comment, Long userId, String bookId) {
-		this.reviewId = reviewId;
-		this.rating = rating;
-		this.comment = comment;
-		this.userId = userId;
-		this.bookId = bookId;
 	}
 }

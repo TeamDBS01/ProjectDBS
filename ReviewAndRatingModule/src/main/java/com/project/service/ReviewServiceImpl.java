@@ -159,7 +159,7 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public float retrieveAverageRating(String bookId) throws ReviewNotFoundException, ServiceUnavailableException {
+    public float retrieveAverageRating(String bookId) {
         List<Review> reviewDTOList = reviewRepository.findByBookId(bookId);
         return (float) reviewDTOList.stream()
                 .mapToDouble(Review::getRating)
