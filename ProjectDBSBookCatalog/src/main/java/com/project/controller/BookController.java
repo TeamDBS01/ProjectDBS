@@ -1,5 +1,6 @@
 package com.project.controller;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.project.exception.PageOutOfBoundsException;
@@ -9,7 +10,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +24,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * RestFul Controller exposing endpoints for resource of type Book.
+ *
  * @author Preethi
  */
 @RestController
@@ -83,6 +87,7 @@ public class BookController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("ERROR: " + e.getMessage());
         }
     }
+
     @GetMapping("/title/{title}")
     public ResponseEntity<BookDTO> getBookByTitle(@PathVariable String title) {
         try {
@@ -102,6 +107,21 @@ public class BookController {
             return ResponseEntity.notFound().build();
         }
     }
+
+
+    @GetMapping("/authors")
+    public ResponseEntity<List<String>> getAllAuthors() {
+        List<String> authors = bookServiceImpl.getAllAuthors();
+        return new ResponseEntity<>(authors, HttpStatus.OK);
+    }
+
+
+    @GetMapping("/categories")
+    public ResponseEntity<List<String>> getAllCategories() {
+        List<String> categories = bookServiceImpl.getAllCategories();
+        return new ResponseEntity<>(categories, HttpStatus.OK);
+    }
+
 
     /**
      * @param categoryName Name of the category
@@ -274,12 +294,32 @@ public class BookController {
     }
 
     @PostMapping("/{bookID}/upload-image")
-    public ResponseEntity<String> uploadImage(@PathVariable String bookID, @RequestParam("imageFile") MultipartFile imageFile){
-        try{
+    public ResponseEntity<String> uploadImage(@PathVariable String bookID, @RequestParam("imageFile") MultipartFile imageFile) {
+        try {
             bookServiceImpl.saveBookImage(bookID, imageFile);
             return ResponseEntity.ok("Image uploaded successfully");
-        }catch(Exception e){
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("upload failed");
         }
     }
+
+        @PostMapping("/{bookID}/sample")
+        public ResponseEntity<String> uploadSampleChapter(@PathVariable String bookID, @RequestParam("file") MultipartFile file) {
+            try {
+                bookServiceImpl.saveBookSampleChapter(bookID, file);
+                return ResponseEntity.ok("Sample chapter uploaded successfully");
+            } catch (IOException e) {
+                return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("Error uploading sample chapter");
+            }
+        }
+
+    @GetMapping("/{bookID}/sample")
+    public ResponseEntity<byte[]> getSampleChapter(@PathVariable String bookID) throws BookResourceNotFoundException {
+        byte[] pdfData = bookServiceImpl.getSampleChapter(bookID);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=sample.pdf")
+                .contentType(MediaType.APPLICATION_PDF)
+                .body(pdfData);
+    }
+
 }
