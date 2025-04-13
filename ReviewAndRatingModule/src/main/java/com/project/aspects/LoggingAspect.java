@@ -13,17 +13,17 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class LoggingAspect {
 
-    @Before("execution(* com.project.repositories.*.*(..))")
-    public void beforeRepositories(JoinPoint joinPoint) {
-        loggerInfoBefore(joinPoint);
-    }
+//    @Before("execution(* com.project.repositories.*.*(..))")
+//    public void beforeRepositories(JoinPoint joinPoint) {
+//        loggerInfoBefore(joinPoint);
+//    }
+//
+//    @Before("execution(* com.project.service.*.*(..))")
+//    public void beforeService(JoinPoint joinPoint) {
+//        loggerInfoBefore(joinPoint);
+//    }
 
-    @Before("execution(* com.project.service.*.*(..))")
-    public void beforeService(JoinPoint joinPoint) {
-        loggerInfoBefore(joinPoint);
-    }
-
-    @Before("execution(* com.project.controller.*.*(..))")
+    @Before("execution(* com.project.*.*.*(..))")
     public void beforeController(JoinPoint joinPoint) {
         loggerInfoBefore(joinPoint);
     }
@@ -32,17 +32,17 @@ public class LoggingAspect {
         log.info("Executing method: {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
     }
 
-    @AfterReturning(pointcut = "execution(* com.project.repositories.*.*(..))", returning = "result")
-    public void afterReturningRepositories(JoinPoint joinPoint, Object result) {
-        loggerInfoAfterReturning(joinPoint, result);
-    }
+//    @AfterReturning(pointcut = "execution(* com.project.repositories.*.*(..))", returning = "result")
+//    public void afterReturningRepositories(JoinPoint joinPoint, Object result) {
+//        loggerInfoAfterReturning(joinPoint, result);
+//    }
+//
+//    @AfterReturning(pointcut = "execution(* com.project.service.*.*(..))", returning = "result")
+//    public void afterReturningService(JoinPoint joinPoint, Object result) {
+//        loggerInfoAfterReturning(joinPoint, result);
+//    }
 
-    @AfterReturning(pointcut = "execution(* com.project.service.*.*(..))", returning = "result")
-    public void afterReturningService(JoinPoint joinPoint, Object result) {
-        loggerInfoAfterReturning(joinPoint, result);
-    }
-
-    @AfterReturning(pointcut = "execution(* com.project.controller.*.*(..))", returning = "result")
+    @AfterReturning(pointcut = "execution(* com.project.*.*.*(..))", returning = "result")
     public void afterReturningController(JoinPoint joinPoint, Object result) {
         loggerInfoAfterReturning(joinPoint, result);
     }
@@ -54,17 +54,17 @@ public class LoggingAspect {
         }
     }
 
-    @AfterThrowing(pointcut = "execution(* com.project.repositories.*.*(..))", throwing = "error")
-    public void afterThrowingRepositories(JoinPoint joinPoint, Throwable error) {
-        loggerInfoAfterThrowing(joinPoint, error);
-    }
+//    @AfterThrowing(pointcut = "execution(* com.project.repositories.*.*(..))", throwing = "error")
+//    public void afterThrowingRepositories(JoinPoint joinPoint, Throwable error) {
+//        loggerInfoAfterThrowing(joinPoint, error);
+//    }
+//
+//    @AfterThrowing(pointcut = "execution(* com.project.service.*.*(..))", throwing = "error")
+//    public void afterThrowingService(JoinPoint joinPoint, Throwable error) {
+//        loggerInfoAfterThrowing(joinPoint, error);
+//    }
 
-    @AfterThrowing(pointcut = "execution(* com.project.service.*.*(..))", throwing = "error")
-    public void afterThrowingService(JoinPoint joinPoint, Throwable error) {
-        loggerInfoAfterThrowing(joinPoint, error);
-    }
-
-    @AfterThrowing(pointcut = "execution(* com.project.controller.*.*(..))", throwing = "error")
+    @AfterThrowing(pointcut = "execution(* com.project.*.*.*(..))", throwing = "error")
     public void afterThrowingController(JoinPoint joinPoint, Throwable error) {
         loggerInfoAfterThrowing(joinPoint, error);
     }

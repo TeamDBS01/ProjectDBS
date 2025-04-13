@@ -28,10 +28,10 @@ class ReviewServiceImplSpyTest {
 
     private static final float RATING = 4.5f;
     private static final String COMMENT = "Great Book";
-    private static final long USER_ID = 12L;
+    private static final long USER_ID = 24L;
     private static final String BOOK_ID = "ISBN-1212";
-    private static final String USER_NAME = "Sabarish";
-    private static final String BOOK_TITLE = "Guide to Java";
+    private static final String USER_NAME = "daya";
+    private static final String BOOK_TITLE = "The Great Programmer's Guide";
     private static long SIZE;
     @Autowired
     private ReviewRepository reviewRepository;

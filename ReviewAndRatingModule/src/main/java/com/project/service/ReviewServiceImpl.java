@@ -1,6 +1,7 @@
 package com.project.service;
 
 
+import com.project.dto.BookDTO;
 import com.project.dto.ReviewDTO;
 import com.project.dto.UserDTO;
 import com.project.enums.Role;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -87,7 +89,9 @@ public class ReviewServiceImpl implements ReviewService {
             throw new BookNotFoundException(STR."Book with ID: \{bookId} Not Found");
 //        }
         review = reviewRepository.save(review);
-        return mapper.map(review, ReviewDTO.class);
+        ReviewDTO reviewDTO = mapper.map(review, ReviewDTO.class);
+        reviewDTO.setUserName(responseUser.getBody().getName());
+        return reviewDTO;
     }
 
     /**
@@ -205,6 +209,8 @@ public class ReviewServiceImpl implements ReviewService {
         for (Review review1 : reviewList) {
             ReviewDTO reviewDTO = mapper.map(review1, ReviewDTO.class);
             reviewDTO.setUserName(userClient.getUserById(reviewDTO.getUserId()).getBody().getName());
+            BookDTO map = (BookDTO) bookClient.getBookById(reviewDTO.getBookId()).getBody();
+            reviewDTO.setBookTitle(map.getTitle());
             reviewDTOList.add(reviewDTO);
         }
         return reviewDTOList;
@@ -227,6 +233,8 @@ public class ReviewServiceImpl implements ReviewService {
         for (Review review1 : reviewList) {
             ReviewDTO reviewDTO = mapper.map(review1, ReviewDTO.class);
             reviewDTO.setUserName(userClient.getUserById(reviewDTO.getUserId()).getBody().getName());
+            BookDTO map =(BookDTO) bookClient.getBookById(reviewDTO.getBookId()).getBody();
+            reviewDTO.setBookTitle(map.getTitle());
             reviewDTOList.add(reviewDTO);
         }
         return reviewDTOList;
