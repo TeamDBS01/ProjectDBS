@@ -20,6 +20,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -33,8 +34,8 @@ class ReviewServiceImplTest {
 
     private static final float RATING = 4.5f;
     private static final String COMMENT = "Great Book";
-    private static final long USER_ID = 2;
-    private static final String BOOK_ID = "ISBN-GRT2BK";
+    private static final long USER_ID = 11;
+    private static final String BOOK_ID = "ISBN-1212";
     private static final String USER_NAME = "Sabarish";
     private static final String BOOK_TITLE = "Guide to Java";
     @Mock
@@ -454,12 +455,13 @@ class ReviewServiceImplTest {
     @Test
     @DisplayName("RetrieveAllReviewsByUserId-Positive")
     void test_retrieveAllReviewsByUserId_positive() throws ServiceUnavailableException {
-        Review review2 = new Review(3f, "Good Content", 2L, "ISBN-3080");
-        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", 2L, "ISBN-3080", USER_NAME, BOOK_TITLE);
+        Review review2 = new Review(3f, "Good Content", USER_ID, BOOK_ID);
+        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", USER_ID, BOOK_ID, USER_NAME, BOOK_TITLE);
         when(reviewRepository.findByUserId(USER_ID)).thenReturn(List.of(review, review2));
         when(mapper.map(review, ReviewDTO.class)).thenReturn(reviewDTO);
         when(mapper.map(review2, ReviewDTO.class)).thenReturn(reviewDTO2);
         when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(any())).thenReturn(ResponseEntity.ok(bookDTO));
         List<ReviewDTO> actual = null;
         List<ReviewDTO> expected = List.of(reviewDTO, reviewDTO2);
         try {
@@ -486,12 +488,14 @@ class ReviewServiceImplTest {
     @Test
     @DisplayName("RetrieveAllReviewsByBookId-Positive")
     void test_retrieveAllReviewsByBookId_positive() throws ServiceUnavailableException {
-        Review review2 = new Review(3f, "Good Content", 2L, "ISBN-3080");
-        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", 2L, "ISBN-3080", USER_NAME, BOOK_TITLE);
+        Review review2 = new Review(3f, "Good Content", USER_ID, BOOK_ID);
+        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", USER_ID, BOOK_ID, USER_NAME, BOOK_TITLE);
         when(reviewRepository.findByBookId(BOOK_ID)).thenReturn(List.of(review, review2));
         when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(any())).thenReturn(ResponseEntity.ok(bookDTO));
         when(mapper.map(review, ReviewDTO.class)).thenReturn(reviewDTO);
         when(mapper.map(review2, ReviewDTO.class)).thenReturn(reviewDTO2);
+
         List<ReviewDTO> actual = null;
         List<ReviewDTO> expected = List.of(reviewDTO, reviewDTO2);
         try {
