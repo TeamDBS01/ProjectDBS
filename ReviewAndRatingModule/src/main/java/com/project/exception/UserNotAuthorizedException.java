@@ -9,7 +9,7 @@ public class UserNotAuthorizedException extends Exception {
 	 * If user is Not Admin and Not review creator.
 	 */
 	@Serial
-	private static final long serialVersionUID = 6L;
+	private static final long serialVersionUID = 5L;
 	private final String message;
 	
 	public UserNotAuthorizedException(String message) {

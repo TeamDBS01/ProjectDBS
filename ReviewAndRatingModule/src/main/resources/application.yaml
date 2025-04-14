@@ -1,11 +1,13 @@
+# Main application configuration file for review-service.
+# Configures server, data source, JPA, Eureka, Resilience4J, Endpoints and SpringDoc settings.
 server:
     port: 8089
 
 spring:
     application:
-        name: review-service
+        name: Review-Service
     datasource:
-        driver: com.mysql.cj.jdbc.Driver
+        driverClassName: com.mysql.cj.jdbc.Driver
         url: jdbc:mysql://localhost:3306/ReviewDB?createDatabaseIfNotExist=true
         username: root
         password: root
@@ -14,8 +16,32 @@ spring:
         hibernate:
             ddl-auto: update
         show-sql: true
+    boot:
+        admin:
+            client:
+                url: http://localhost:8761/admin
+                enabled: true
+                instance:
+                    service-url: http://localhost:8089
+    cloud:
+        openfeign:
+            circuitbreaker:
+                enabled: true
 
-#eureka.instance.nonSecurePort=90
+resilience4j:
+    circuitbreaker:
+        configs:
+            default:
+                registerHealthIndicator: true
+        instances:
+            HttpBinClient_getBinWithDelayInSeconds_int:
+                minimumNumberOfCalls: 10
+                failureRateThreshold: 50
+    timelimiter:
+        configs:
+            default:
+                timeoutDuration: 20s
+
 eureka:
     instance:
         hostname: ${vcap.application.uris[0]:localhost}
@@ -29,6 +55,12 @@ springdoc:
         enabled: true
     swagger-ui:
         enabled: true
-#        serviceUrl:
-#            defaultZone: http://localhost:8761/eureka/
-#        enabled: false
+
+management:
+    info:
+        env:
+            enabled: true
+    endpoints:
+        web:
+            exposure:
+                include: "*"

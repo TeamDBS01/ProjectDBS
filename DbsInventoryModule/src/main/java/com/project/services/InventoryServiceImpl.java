@@ -1,10 +1,10 @@
 package com.project.services;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
+import com.project.dto.InventoryDTO;
 import com.project.exception.*;
+import com.project.models.Inventory;
+import com.project.repositories.InventoryRepository;
+import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -12,11 +12,9 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import com.project.dto.InventoryDTO;
-import com.project.models.Inventory;
-import com.project.repositories.InventoryRepository;
-
-import jakarta.transaction.Transactional;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 /**
  * Implementation of InventoryService for managing inventory operations.
  */

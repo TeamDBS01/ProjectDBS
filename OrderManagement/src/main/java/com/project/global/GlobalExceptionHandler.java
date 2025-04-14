@@ -50,4 +50,6 @@ public class GlobalExceptionHandler {
                 .badRequest()
                 .body("Exception occurred inside API " + e);
     }
+
+
 }

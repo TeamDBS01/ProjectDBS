@@ -1,4 +1,4 @@
-package com.project.EurekaServer;
+package com.project;
 
 import de.codecentric.boot.admin.server.config.EnableAdminServer;
 import org.springframework.boot.SpringApplication;
