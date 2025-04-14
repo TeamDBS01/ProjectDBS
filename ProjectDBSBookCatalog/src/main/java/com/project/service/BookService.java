@@ -8,16 +8,17 @@ import java.util.List;
 
 
 public interface BookService {
-	 BookDTO getBookById(String bookId) throws BookResourceNotFoundException;
-	 List<BookDTO> getBooksByCategory(String categoryName) throws BookResourceNotFoundException;
-	 List<BookDTO> getBooksByAuthor(String authorName) throws BookResourceNotFoundException;
-	 List<BookDTO> filter(String...criteria) throws BookResourceNotFoundException;
-	 List<BookDTO> getAllBooks(int page, int size) throws BookResourceNotFoundException;
+	BookDTO getBookById(String bookId) throws BookResourceNotFoundException;
+	BookDTO getBookByTitle(String title) throws BookResourceNotFoundException;
+	List<BookDTO> getBooksByTitle(String title) throws BookResourceNotFoundException;
+	List<BookDTO> getBooksByCategory(String categoryName) throws BookResourceNotFoundException;
+	List<BookDTO> getBooksByAuthor(String authorName) throws BookResourceNotFoundException;
+	List<BookDTO> filter(String author, String category) throws BookResourceNotFoundException;
+	List<BookDTO> getAllBooks(int page, int size) throws BookResourceNotFoundException;
 
 	boolean addBook(BookDTO bookDTO) throws BookResourceNotFoundException, BookAlreadyExistsException;
 	boolean deleteBookById(String bookID) throws BookResourceNotFoundException;
 	boolean deleteBookByTitle(String bookTitle) throws BookResourceNotFoundException;
 	boolean updateBookById(String bookID, BookDTO bookDTO) throws BookResourceNotFoundException;
-
 
 }

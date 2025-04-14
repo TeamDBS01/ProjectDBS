@@ -20,6 +20,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +32,12 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceImplTest {
 
+    private static final float RATING = 4.5f;
+    private static final String COMMENT = "Great Book";
+    private static final long USER_ID = 11;
+    private static final String BOOK_ID = "ISBN-1212";
+    private static final String USER_NAME = "Sabarish";
+    private static final String BOOK_TITLE = "Guide to Java";
     @Mock
     private ReviewRepository reviewRepository;
     @Mock
@@ -41,20 +48,15 @@ class ReviewServiceImplTest {
     private BookClient bookClient;
     @InjectMocks
     private ReviewServiceImpl reviewService;
-
     private Review review;
     private ReviewDTO reviewDTO;
     private UserDTO userDTO;
     private BookDTO bookDTO;
-    private static final float RATING = 4.5f;
-    private static final String COMMENT = "Great Book";
-    private static final long USER_ID = 2;
-    private static final String BOOK_ID = "ISBN-GRT2BK";
 
     @BeforeEach
     void setup() {
         review = new Review(1L, RATING, COMMENT, USER_ID, BOOK_ID);
-        reviewDTO = new ReviewDTO(1L, RATING, COMMENT, USER_ID, BOOK_ID);
+        reviewDTO = new ReviewDTO(1L, RATING, COMMENT, USER_ID, BOOK_ID, USER_NAME, BOOK_TITLE);
         userDTO = new UserDTO(12L, "name", "mail", "pass", Role.CUSTOMER);
         bookDTO = new BookDTO("ISBN-1212", "title", 2000, 9L, 8, 7);
     }
@@ -144,7 +146,7 @@ class ReviewServiceImplTest {
         try {
             actual = reviewService.updateReview(USER_ID, reviewDTO);
         } catch (UserNotFoundException | UserNotAuthorizedException | IDMismatchException | BookNotFoundException e) {
-             fail(STR."Error thrown in updateReview: \{e}");
+            fail(STR."Error thrown in updateReview: \{e}");
         }
         verify(userClient).getUserById(USER_ID);
         verify(bookClient).getBookById(any());
@@ -248,7 +250,8 @@ class ReviewServiceImplTest {
     @DisplayName("UpdateReview-Negative-BookNotFound")
     void test_updateReview_negative_bookNotFound() throws ServiceUnavailableException {
         when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
-        when(bookClient.getBookById(any())).thenAnswer(invocation -> new ResponseEntity<>(new BookDTO(), HttpStatus.NO_CONTENT));        assertThrows(
+        when(bookClient.getBookById(any())).thenAnswer(invocation -> new ResponseEntity<>(new BookDTO(), HttpStatus.NO_CONTENT));
+        assertThrows(
                 BookNotFoundException.class,
                 () -> reviewService.updateReview(USER_ID, reviewDTO),
                 "Error not thrown in UpdateReview for Book Not Found");
@@ -373,35 +376,39 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("RetrieveAllReviews-Positive-WithOneReview")
-    void test_retrieveAllReviews_positive_withOneReview() {
+    void test_retrieveAllReviews_positive_withOneReview() throws ServiceUnavailableException {
         when(reviewRepository.findAll()).thenAnswer((invocation -> List.of(review)));
         when(mapper.map(any(), any())).thenAnswer((invocation -> reviewDTO));
+        when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
         try {
             List<ReviewDTO> actual = reviewService.retrieveAllReviews();
             verify(reviewRepository).findAll();
             verify(mapper).map(review, ReviewDTO.class);
+            verify(userClient).getUserById(any());
             assertEquals(1, actual.size());
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveAll \{e.getMessage()}");
         }
     }
 
     @Test
     @DisplayName("RetrieveAllReviews-Positive-WithMultipleReviews")
-    void test_retrieveAllReviews_positive_withMultipleReviews() {
+    void test_retrieveAllReviews_positive_withMultipleReviews() throws ServiceUnavailableException {
         Review review1 = new Review(0.1f, "Worst Book", 4, "ISBN-NTGD");
-        ReviewDTO reviewDTO1 = new ReviewDTO(0L, 0.1f, "Worst Book", 4L, "ISBN-NTGD");
+        ReviewDTO reviewDTO1 = new ReviewDTO(0L, 0.1f, "Worst Book", 4L, "ISBN-NTGD", USER_NAME, BOOK_TITLE);
         when(reviewRepository.findAll()).thenAnswer((invocation -> List.of(review, review1)));
         when(mapper.map(review, ReviewDTO.class)).thenAnswer((invocation -> reviewDTO));
         when(mapper.map(review1, ReviewDTO.class)).thenAnswer((invocation -> reviewDTO1));
+        when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
         List<ReviewDTO> actual = null, expected = List.of(reviewDTO, reviewDTO1);
         try {
             actual = reviewService.retrieveAllReviews();
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveAll \{e.getMessage()}");
         }
         verify(reviewRepository).findAll();
         verify(mapper).map(review, ReviewDTO.class);
+        verify(userClient, times(2)).getUserById(any());
         assertEquals(expected, actual);
     }
 
@@ -418,17 +425,19 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("RetrieveReviewById-Positive")
-    void test_retrieveReviewById_positive() {
+    void test_retrieveReviewById_positive() throws ServiceUnavailableException {
         when(reviewRepository.findById(any())).thenReturn(Optional.of(review));
         when(mapper.map(review, ReviewDTO.class)).thenReturn(reviewDTO);
+        when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
         ReviewDTO actual = null;
         try {
             actual = reviewService.retrieveReviewById(review.getReviewId());
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveById \{e.getMessage()}");
         }
         verify(reviewRepository).findById(any());
         verify(mapper).map(review, ReviewDTO.class);
+        verify(userClient).getUserById(any());
         assertEquals(reviewDTO, actual);
     }
 
@@ -445,21 +454,24 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("RetrieveAllReviewsByUserId-Positive")
-    void test_retrieveAllReviewsByUserId_positive() {
-        Review review2 = new Review(3f, "Good Content", 2L, "ISBN-3080");
-        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", 2L, "ISBN-3080");
+    void test_retrieveAllReviewsByUserId_positive() throws ServiceUnavailableException {
+        Review review2 = new Review(3f, "Good Content", USER_ID, BOOK_ID);
+        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", USER_ID, BOOK_ID, USER_NAME, BOOK_TITLE);
         when(reviewRepository.findByUserId(USER_ID)).thenReturn(List.of(review, review2));
         when(mapper.map(review, ReviewDTO.class)).thenReturn(reviewDTO);
         when(mapper.map(review2, ReviewDTO.class)).thenReturn(reviewDTO2);
+        when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(any())).thenReturn(ResponseEntity.ok(bookDTO));
         List<ReviewDTO> actual = null;
         List<ReviewDTO> expected = List.of(reviewDTO, reviewDTO2);
         try {
             actual = reviewService.retrieveAllReviewsByUserId(review.getUserId());
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveById \{e.getMessage()}");
         }
         verify(reviewRepository).findByUserId(USER_ID);
         verify(mapper, times(2)).map(any(), any());
+        verify(userClient, times(2)).getUserById(any());
         assertEquals(expected, actual);
     }
 
@@ -475,21 +487,25 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("RetrieveAllReviewsByBookId-Positive")
-    void test_retrieveAllReviewsByBookId_positive() {
-        Review review2 = new Review(3f, "Good Content", 2L, "ISBN-3080");
-        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", 2L, "ISBN-3080");
+    void test_retrieveAllReviewsByBookId_positive() throws ServiceUnavailableException {
+        Review review2 = new Review(3f, "Good Content", USER_ID, BOOK_ID);
+        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", USER_ID, BOOK_ID, USER_NAME, BOOK_TITLE);
         when(reviewRepository.findByBookId(BOOK_ID)).thenReturn(List.of(review, review2));
+        when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(any())).thenReturn(ResponseEntity.ok(bookDTO));
         when(mapper.map(review, ReviewDTO.class)).thenReturn(reviewDTO);
         when(mapper.map(review2, ReviewDTO.class)).thenReturn(reviewDTO2);
+
         List<ReviewDTO> actual = null;
         List<ReviewDTO> expected = List.of(reviewDTO, reviewDTO2);
         try {
             actual = reviewService.retrieveAllReviewsByBookId(review.getBookId());
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveById \{e.getMessage()}");
         }
         verify(reviewRepository).findByBookId(BOOK_ID);
         verify(mapper, times(2)).map(any(), any());
+        verify(userClient, times(2)).getUserById(USER_ID);
         assertEquals(expected, actual);
     }
 
@@ -501,5 +517,15 @@ class ReviewServiceImplTest {
                 () -> reviewService.retrieveAllReviewsByBookId(BOOK_ID),
                 "Error not thrown in RetrieveAllReviewsByBookId");
         verify(reviewRepository).findByBookId(BOOK_ID);
+    }
+
+    @Test
+    @DisplayName("RetrieveAverageRating-Positive")
+    void test_retrieveAverageRating_postive() {
+        when(reviewRepository.findByBookId(any())).thenReturn(List.of(review));
+        float expected = review.getRating();
+        float actual = reviewService.retrieveAverageRating(BOOK_ID);
+        assertEquals(expected, actual);
+        verify(reviewRepository).findByBookId(any());
     }
 }

@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -39,18 +40,20 @@ class ReviewControllerImplTest {
     private static final String COMMENT = "Best book!";
     private static final long USER_ID = 12L;
     private static final String BOOK_ID = "ISBN-4002";
+    private static final String USER_NAME = "Sabarish";
+    private static final String BOOK_TITLE = "Guide to Java";
 
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
-        reviewDTO = new ReviewDTO(REVIEW_ID, RATING, COMMENT, USER_ID, BOOK_ID);
+        reviewDTO = new ReviewDTO(REVIEW_ID, RATING, COMMENT, USER_ID, BOOK_ID, USER_NAME, BOOK_TITLE);
         mockMvc = MockMvcBuilders.standaloneSetup(reviewController).build();
     }
 
     @Test
     @DisplayName("GetReviewById-Positive")
-    void test_getReviewById_positive() throws ReviewNotFoundException {
+    void test_getReviewById_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         when(reviewService.retrieveReviewById(REVIEW_ID)).thenReturn(reviewDTO);
         ResponseEntity<ReviewDTO> response = reviewController.getReviewById(REVIEW_ID);
         assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -70,7 +73,7 @@ class ReviewControllerImplTest {
 
     @Test
     @DisplayName("GetAllReviews-Positive")
-    void test_getAllReviews_positive() throws ReviewNotFoundException {
+    void test_getAllReviews_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         when(reviewService.retrieveAllReviews()).thenReturn(reviewList);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviews();
@@ -100,8 +103,18 @@ class ReviewControllerImplTest {
 //    }
 
     @Test
+    @DisplayName("GetAverageByBookId-Positive")
+    void test_getAverageByBookId_positive(){
+        when(reviewService.retrieveAverageRating(any())).thenReturn(RATING);
+        ResponseEntity<Float> response = reviewController.getAverageByBookId(BOOK_ID);
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(RATING, response.getBody());
+        verify(reviewService).retrieveAverageRating(any());
+    }
+
+    @Test
     @DisplayName("GetAllReviewsByUserId-Positive")
-    void test_getAllReviewsByUserId_positive() throws ReviewNotFoundException {
+    void test_getAllReviewsByUserId_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         when(reviewService.retrieveAllReviewsByUserId(USER_ID)).thenReturn(reviewList);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviewsByUserId(USER_ID);
@@ -132,7 +145,7 @@ class ReviewControllerImplTest {
 
     @Test
     @DisplayName("GetAllReviewsByBookId-Positive")
-    void test_getAllReviewsByBookId_positive() throws ReviewNotFoundException {
+    void test_getAllReviewsByBookId_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         List<ReviewDTO> reviewList = List.of(reviewDTO);
         when(reviewService.retrieveAllReviewsByBookId(BOOK_ID)).thenReturn(reviewList);
         ResponseEntity<List<ReviewDTO>> response = reviewController.getAllReviewsByBookId(BOOK_ID);
@@ -624,9 +637,9 @@ class ReviewControllerImplTest {
     void test_updateReview_uri_positive() {
         try {
             when(reviewService.updateReview(USER_ID, reviewDTO)).thenReturn(reviewDTO);
-            mockMvc.perform(patch("/dbs/review/update/{userId}", USER_ID)
+            mockMvc.perform(put("/dbs/review/update/{userId}", USER_ID)
                             .contentType("application/json")
-                            .content("{\"reviewId\":2,\"rating\":5.0,\"comment\":\"Best book!\",\"userId\":12,\"bookId\":\"ISBN-4002\"}"))
+                            .content("{\"reviewId\":2,\"rating\":5.0,\"comment\":\"Best book!\",\"userId\":12,\"bookId\":\"ISBN-4002\",\"userName\":\"Sabarish\",\"bookTitle\":\"Guide to Java\"}"))
                     .andExpect(status().isOk())
                     .andReturn();
         } catch (Exception e) {
@@ -689,5 +702,19 @@ class ReviewControllerImplTest {
 //            fail(STR."Error thrown: \{e.toString()}");
 //        }
 //    }
+
+    @Test
+    @DisplayName("GetAverageByBookId-Uri-Positive")
+    void test_getAverageByBookId_uri_positive(){
+        when(reviewService.retrieveAverageRating(any())).thenReturn(RATING);
+        try {
+            mockMvc.perform(get("/dbs/review/book/average/{bookId}", BOOK_ID))
+                    .andExpect(status().isOk())
+                    .andReturn();
+        } catch (Exception e) {
+            fail(STR."Error thrown:- \{e}");
+        }
+        verify(reviewService).retrieveAverageRating(any());
+    }
 
 }

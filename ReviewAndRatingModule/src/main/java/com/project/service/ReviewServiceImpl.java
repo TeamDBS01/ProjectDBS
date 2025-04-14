@@ -1,6 +1,7 @@
 package com.project.service;
 
 
+import com.project.dto.BookDTO;
 import com.project.dto.ReviewDTO;
 import com.project.dto.UserDTO;
 import com.project.enums.Role;
@@ -15,6 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -86,7 +89,9 @@ public class ReviewServiceImpl implements ReviewService {
             throw new BookNotFoundException(STR."Book with ID: \{bookId} Not Found");
 //        }
         review = reviewRepository.save(review);
-        return mapper.map(review, ReviewDTO.class);
+        ReviewDTO reviewDTO = mapper.map(review, ReviewDTO.class);
+        reviewDTO.setUserName(responseUser.getBody().getName());
+        return reviewDTO;
     }
 
     /**
@@ -157,6 +162,15 @@ public class ReviewServiceImpl implements ReviewService {
         return true;
     }
 
+    @Override
+    public float retrieveAverageRating(String bookId) {
+        List<Review> reviewDTOList = reviewRepository.findByBookId(bookId);
+        return (float) reviewDTOList.stream()
+                .mapToDouble(Review::getRating)
+                .average()
+                .orElse(0);
+    }
+
     /**
      * Retrieves all reviews.
      *
@@ -164,14 +178,18 @@ public class ReviewServiceImpl implements ReviewService {
      * @throws ReviewNotFoundException if no reviews are found
      */
     @Override
-    public List<ReviewDTO> retrieveAllReviews() throws ReviewNotFoundException {
+    public List<ReviewDTO> retrieveAllReviews() throws ReviewNotFoundException, ServiceUnavailableException {
         List<Review> reviewList = reviewRepository.findAll();
         if (reviewList.isEmpty()) {
             throw new ReviewNotFoundException("No Reviews Found!");
         }
-        return reviewList.stream()
-                .map(review -> mapper.map(review, ReviewDTO.class))
-                .toList();
+        List<ReviewDTO> reviewDTOList = new ArrayList<>();
+        for (Review review1 : reviewList) {
+            ReviewDTO reviewDTO = mapper.map(review1, ReviewDTO.class);
+            reviewDTO.setUserName(userClient.getUserById(reviewDTO.getUserId()).getBody().getName());
+            reviewDTOList.add(reviewDTO);
+        }
+        return reviewDTOList;
     }
 
     /**
@@ -182,14 +200,20 @@ public class ReviewServiceImpl implements ReviewService {
      * @throws ReviewNotFoundException if no reviews are found for the user
      */
     @Override
-    public List<ReviewDTO> retrieveAllReviewsByUserId(long userId) throws ReviewNotFoundException {
+    public List<ReviewDTO> retrieveAllReviewsByUserId(long userId) throws ReviewNotFoundException, ServiceUnavailableException {
         List<Review> reviewList = reviewRepository.findByUserId(userId);
         if (reviewList.isEmpty()) {
             throw new ReviewNotFoundException(STR."No Reviews with User ID: \{userId} Found!");
         }
-        return reviewList.stream()
-                .map((review) -> mapper.map(review, ReviewDTO.class))
-                .toList();
+        List<ReviewDTO> reviewDTOList = new ArrayList<>();
+        for (Review review1 : reviewList) {
+            ReviewDTO reviewDTO = mapper.map(review1, ReviewDTO.class);
+            reviewDTO.setUserName(userClient.getUserById(reviewDTO.getUserId()).getBody().getName());
+            BookDTO map = (BookDTO) bookClient.getBookById(reviewDTO.getBookId()).getBody();
+            reviewDTO.setBookTitle(map.getTitle());
+            reviewDTOList.add(reviewDTO);
+        }
+        return reviewDTOList;
     }
 
     /**
@@ -200,14 +224,20 @@ public class ReviewServiceImpl implements ReviewService {
      * @throws ReviewNotFoundException if no reviews are found for the book
      */
     @Override
-    public List<ReviewDTO> retrieveAllReviewsByBookId(String bookId) throws ReviewNotFoundException {
+    public List<ReviewDTO> retrieveAllReviewsByBookId(String bookId) throws ReviewNotFoundException, ServiceUnavailableException {
         List<Review> reviewList = reviewRepository.findByBookId(bookId);
         if (reviewList.isEmpty()) {
             throw new ReviewNotFoundException(STR."No Reviews with Book ID: \{bookId} Found!");
         }
-        return reviewList.stream()
-                .map((review) -> mapper.map(review, ReviewDTO.class))
-                .toList();
+        List<ReviewDTO> reviewDTOList = new ArrayList<>();
+        for (Review review1 : reviewList) {
+            ReviewDTO reviewDTO = mapper.map(review1, ReviewDTO.class);
+            reviewDTO.setUserName(userClient.getUserById(reviewDTO.getUserId()).getBody().getName());
+            BookDTO map =(BookDTO) bookClient.getBookById(reviewDTO.getBookId()).getBody();
+            reviewDTO.setBookTitle(map.getTitle());
+            reviewDTOList.add(reviewDTO);
+        }
+        return reviewDTOList;
     }
 
     /**
@@ -218,11 +248,13 @@ public class ReviewServiceImpl implements ReviewService {
      * @throws ReviewNotFoundException if the review is not found
      */
     @Override
-    public ReviewDTO retrieveReviewById(long reviewId) throws ReviewNotFoundException {
+    public ReviewDTO retrieveReviewById(long reviewId) throws ReviewNotFoundException, ServiceUnavailableException {
         Optional<Review> review = reviewRepository.findById(reviewId);
         if (review.isEmpty()) {
             throw new ReviewNotFoundException(STR."Review with ID: \{reviewId} Not Found");
         }
-        return mapper.map(review.get(), ReviewDTO.class);
+        ReviewDTO reviewDTO = mapper.map(review.get(), ReviewDTO.class);
+        reviewDTO.setUserName(userClient.getUserById(reviewId).getBody().getName());
+        return reviewDTO;
     }
 }

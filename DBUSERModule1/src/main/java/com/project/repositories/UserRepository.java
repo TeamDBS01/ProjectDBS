@@ -1,7 +1,8 @@
 package com.project.repositories;
 
-import com.project.models.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+
+import com.project.models.User;
 
 import java.util.Optional;
 

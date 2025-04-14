@@ -26,6 +26,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceImplSpyTest {
 
+    private static final float RATING = 4.5f;
+    private static final String COMMENT = "Great Book";
+    private static final long USER_ID = 24L;
+    private static final String BOOK_ID = "ISBN-1212";
+    private static final String USER_NAME = "daya";
+    private static final String BOOK_TITLE = "The Great Programmer's Guide";
+    private static long SIZE;
     @Autowired
     private ReviewRepository reviewRepository;
     @Autowired
@@ -34,22 +41,15 @@ class ReviewServiceImplSpyTest {
     private UserClient userClient;
     @Autowired
     private BookClient bookClient;
-
     private ReviewServiceImpl reviewService;
-
     private Review review;
     private ReviewDTO reviewDTO;
-    private static long SIZE;
-    private static final float RATING = 4.5f;
-    private static final String COMMENT = "Great Book";
-    private static final long USER_ID = 12L;
-    private static final String BOOK_ID = "ISBN-1212";
 
     @BeforeEach
     void setup() {
         reviewService = new ReviewServiceImpl(reviewRepository, userClient, bookClient, mapper);
         review = new Review(RATING, COMMENT, USER_ID, BOOK_ID);
-        reviewDTO = new ReviewDTO(1L, RATING, COMMENT, USER_ID, BOOK_ID);
+        reviewDTO = new ReviewDTO(1L, RATING, COMMENT, USER_ID, BOOK_ID, USER_NAME, BOOK_TITLE);
         SIZE = reviewRepository.count();
     }
 
@@ -96,7 +96,7 @@ class ReviewServiceImplSpyTest {
             actual = reviewService.updateReview(USER_ID, reviewDTO);
         } catch (UserNotFoundException | UserNotAuthorizedException | IDMismatchException | BookNotFoundException |
                  ServiceUnavailableException e) {
-             fail(STR."Error thrown in updateReview: \{e}");
+            fail(STR."Error thrown in updateReview: \{e}");
         }
         assertEquals(reviewDTO, actual);
     }
@@ -248,7 +248,7 @@ class ReviewServiceImplSpyTest {
         try {
             List<ReviewDTO> actual = reviewService.retrieveAllReviews();
             assertEquals(1, actual.size());
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveAll \{e.getMessage()}");
         }
     }
@@ -258,13 +258,13 @@ class ReviewServiceImplSpyTest {
     void test_retrieveAllReviews_positive_withMultipleReviews() {
         reviewRepository.deleteAll();
         Review review1 = new Review(0.1f, "Worst Book", 4, "ISBN-NTGD");
-        ReviewDTO reviewDTO1 = new ReviewDTO(0L, 0.1f, "Worst Book", 4L, "ISBN-NTGD");
+        ReviewDTO reviewDTO1 = new ReviewDTO(0L, 0.1f, "Worst Book", 4L, "ISBN-NTGD", USER_NAME, BOOK_TITLE);
         reviewDTO.setReviewId(reviewRepository.save(review).getReviewId());
         reviewDTO1.setReviewId(reviewRepository.save(review1).getReviewId());
         List<ReviewDTO> actual = null, expected = List.of(reviewDTO, reviewDTO1);
         try {
             actual = reviewService.retrieveAllReviews();
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveAll \{e.getMessage()}");
         }
         assertEquals(expected, actual);
@@ -288,7 +288,7 @@ class ReviewServiceImplSpyTest {
         reviewDTO.setReviewId(reviewId);
         try {
             actual = reviewService.retrieveReviewById(reviewId);
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveById \{e.getMessage()}");
         }
         assertEquals(reviewDTO, actual);
@@ -309,14 +309,14 @@ class ReviewServiceImplSpyTest {
     void test_retrieveAllReviewsByUserId_positive() {
         reviewRepository.deleteAll();
         Review review2 = new Review(3f, "Good Content", USER_ID, "ISBN-3080");
-        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", USER_ID, "ISBN-3080");
+        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", USER_ID, "ISBN-3080", USER_NAME, BOOK_TITLE);
         List<ReviewDTO> actual = null;
         List<ReviewDTO> expected = List.of(reviewDTO, reviewDTO2);
         reviewDTO.setReviewId(reviewRepository.save(review).getReviewId());
         reviewDTO2.setReviewId(reviewRepository.save(review2).getReviewId());
         try {
             actual = reviewService.retrieveAllReviewsByUserId(review.getUserId());
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveById \{e.getMessage()}");
         }
         assertEquals(expected, actual);
@@ -336,14 +336,14 @@ class ReviewServiceImplSpyTest {
     void test_retrieveAllReviewsByBookId_positive() {
         reviewRepository.deleteAll();
         Review review2 = new Review(3f, "Good Content", 11L, BOOK_ID);
-        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", 11L, BOOK_ID);
+        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", 11L, BOOK_ID, USER_NAME, BOOK_TITLE);
         List<ReviewDTO> actual = null;
         List<ReviewDTO> expected = List.of(reviewDTO, reviewDTO2);
         reviewDTO.setReviewId(reviewRepository.save(review).getReviewId());
         reviewDTO2.setReviewId(reviewRepository.save(review2).getReviewId());
         try {
             actual = reviewService.retrieveAllReviewsByBookId(review.getBookId());
-        } catch (ReviewNotFoundException e) {
+        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveById \{e.getMessage()}");
         }
         assertEquals(expected, actual);
@@ -356,5 +356,15 @@ class ReviewServiceImplSpyTest {
         assertThrows(ReviewNotFoundException.class,
                 () -> reviewService.retrieveAllReviewsByBookId(BOOK_ID),
                 "Error not thrown in RetrieveAllReviewsByBookId");
+    }
+
+    @Test
+    @DisplayName("RetrieveAverageRating-Positive")
+    void test_retrieveAverageRating_positive() {
+        reviewRepository.deleteAll();
+        reviewRepository.save(review);
+        float actual = reviewService.retrieveAverageRating(BOOK_ID);
+        float expected = review.getRating();
+        assertEquals(expected, actual);
     }
 }

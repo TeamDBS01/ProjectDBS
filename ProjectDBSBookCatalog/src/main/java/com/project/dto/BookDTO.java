@@ -28,4 +28,14 @@ public class BookDTO {
 
 	@Positive(message ="{com.project.BookDTO.categoryID.positive}")
 	private int categoryID;
+
+	private byte[] coverImage;
+
+	private String base64img;
+
+	private String authorName;
+
+	private String categoryName;
+
+	private String description;
 }
