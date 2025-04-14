@@ -175,8 +175,8 @@ class InventoryControllerTestCase {
     }
 
     @Test
-    @DisplayName("Place Order - Positive Case")
-    public void testPlaceOrder_Positive() throws Exception {
+    @DisplayName("Can Place Order - Positive Case")
+    public void testCanPlaceOrder_Positive() throws Exception {
         mockMvc.perform(post("/dbs/inventory/order")
                         .param("bookID", "B001")
                         .param("quantity", "5"))
@@ -185,9 +185,9 @@ class InventoryControllerTestCase {
     }
 
     @Test
-    @DisplayName("Place Order - Out of Stock Case")
-    public void testPlaceOrder_OutOfStock() throws Exception {
-        doThrow(new OutOfStockException("Out of stock")).when(inventoryServiceimpl).placeOrder("B001", 5);
+    @DisplayName("Can Place Order - Out of Stock Case")
+    public void testCanPlaceOrder_OutOfStock() throws Exception {
+        doThrow(new OutOfStockException("Out of stock")).when(inventoryServiceimpl).canPlaceOrder("B001", 5);
         when(inventoryServiceimpl.getNoOfBooks("B001")).thenReturn(2);
 
         mockMvc.perform(post("/dbs/inventory/order")
@@ -198,9 +198,9 @@ class InventoryControllerTestCase {
     }
 
     @Test
-    @DisplayName("Place Order - Book Not Found Case")
-    public void testPlaceOrder_BookNotFound() throws Exception {
-        doThrow(new BookNotFoundException("Book not found")).when(inventoryServiceimpl).placeOrder("B001", 5);
+    @DisplayName("Can Place Order - Book Not Found Case")
+    public void testCanPlaceOrder_BookNotFound() throws Exception {
+        doThrow(new BookNotFoundException("Book not found")).when(inventoryServiceimpl).canPlaceOrder("B001", 5);
 
         mockMvc.perform(post("/dbs/inventory/order")
                         .param("bookID", "B001")

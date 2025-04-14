@@ -8,6 +8,8 @@ import java.util.List;
  * Service interface for managing inventory operations.
  */
 public interface InventoryService {
+
+    int getNoOfPages();
     /**
      * Displays the entire inventory with pagination.
      *
@@ -56,7 +58,7 @@ public interface InventoryService {
      * @param bookID the ID of the book.
      * @param quantity the quantity to order.
      */
-    void placeOrder(String bookID, int quantity);
+    void canPlaceOrder(String bookID, int quantity);
 
     /**
      * Retrieves the quantity of a specific book by its ID.
