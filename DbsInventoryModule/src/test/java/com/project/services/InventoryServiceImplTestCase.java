@@ -34,7 +34,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.mail.MailException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-import org.springframework.test.util.ReflectionTestUtils;
 
 @ExtendWith(SpringExtension.class)
 @ExtendWith(MockitoExtension.class)
@@ -257,21 +256,21 @@ class InventoryServiceImplTestCase {
 
     @Test
     @DisplayName("Place Order - Positive Case")
-    void testPlaceOrder_Positive() throws BookNotFoundException {
+    void testCanPlaceOrder_Positive() throws BookNotFoundException {
         String bookID = "B1001";
         int quantityToOrder = 5;
         inventory.setBook_Id(bookID);
         inventory.setQuantity(100);
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.of(inventory));
 
-        inventoryServiceImpl.placeOrder(bookID, quantityToOrder);
+        inventoryServiceImpl.canPlaceOrder(bookID, quantityToOrder);
 
-        assertDoesNotThrow(() -> inventoryServiceImpl.placeOrder("B1001", 10));
+        assertDoesNotThrow(() -> inventoryServiceImpl.canPlaceOrder("B1001", 10));
     }
 
     @Test
     @DisplayName("Place Order - Out of Stock Case")
-    void testPlaceOrder_OutOfStock() {
+    void testCanPlaceOrder_OutOfStock() {
         String bookID = "B1001";
         int quantityToOrder = 15;
         inventory.setBook_Id(bookID);
@@ -279,19 +278,19 @@ class InventoryServiceImplTestCase {
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.of(inventory));
 
         assertThrows(OutOfStockException.class, () -> {
-            inventoryServiceImpl.placeOrder(bookID, quantityToOrder);
+            inventoryServiceImpl.canPlaceOrder(bookID, quantityToOrder);
         });
     }
 
     @Test
     @DisplayName("Place Order - Book Not Found Case")
-    void testPlaceOrder_BookNotFound() {
+    void testCanPlaceOrder_BookNotFound() {
         String bookID = "B1001";
         int quantityToOrder = 5;
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.empty());
 
         assertThrows(BookNotFoundException.class, () -> {
-            inventoryServiceImpl.placeOrder(bookID, quantityToOrder);
+            inventoryServiceImpl.canPlaceOrder(bookID, quantityToOrder);
         });
     }
 

@@ -16,8 +16,12 @@ import org.springframework.web.bind.annotation.*;
  * Interface for managing inventory operations.
  */
 @RequestMapping("/dbs/inventory")
+@CrossOrigin(origins = "http://localhost:4200")
 public interface InventoryController {
 
+
+    @GetMapping("pages")
+    public int pages();
     /**
      * Displays the entire inventory with pagination.
      *
@@ -75,7 +79,7 @@ public interface InventoryController {
      * @throws OutOfStockException if the book is out of stock.
      */
     @PostMapping("/order")
-    ResponseEntity<?> placeOrder(@RequestParam @NotBlank(message = "Book ID cannot be blank") String bookID,
+    ResponseEntity<?> canPlaceOrder(@RequestParam @NotBlank(message = "Book ID cannot be blank") String bookID,
                                  @RequestParam @Min(value = 1, message = "Quantity must be at least 1") int quantity) throws BookNotFoundException, OutOfStockException;
     /**
      * Updates the inventory after an order is placed.

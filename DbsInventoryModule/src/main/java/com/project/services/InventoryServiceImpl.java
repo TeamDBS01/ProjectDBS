@@ -45,6 +45,13 @@ public class InventoryServiceImpl implements InventoryService {
     public InventoryServiceImpl(){
     }
 
+    @Override
+    public int getNoOfPages() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Inventory> inventoryPage = inventoryRepository.findAll(pageable);
+        return inventoryPage.getTotalPages();
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -157,7 +164,7 @@ public class InventoryServiceImpl implements InventoryService {
      * {@inheritDoc}
      */
     @Override
-    public void placeOrder(String bookID, int quantity) throws BookNotFoundException, OutOfStockException {
+    public void canPlaceOrder(String bookID, int quantity) throws BookNotFoundException, OutOfStockException {
         try {
             Optional<Inventory> optionalInventory = inventoryRepository.findByBookId(bookID);
             if (optionalInventory.isPresent()) {
