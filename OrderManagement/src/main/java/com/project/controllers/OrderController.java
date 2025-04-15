@@ -412,4 +412,19 @@ public class OrderController {
 		}
 	}
 
+	/**
+	 * Retrieves all orders from the system. This endpoint is typically for administrative use.
+	 *
+	 * @return ResponseEntity containing a list of all orders.
+	 */
+	@Operation(summary = "Get all orders", description = "Retrieves a list of all orders in the system.")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "Successfully retrieved all orders")
+	})
+	@GetMapping("/admin/all")
+	public ResponseEntity<List<OrderDTO>> getAllOrders() {
+		List<OrderDTO> allOrders = orderService.getAllOrders();
+		return new ResponseEntity<>(allOrders, HttpStatus.OK);
+	}
+
 }
