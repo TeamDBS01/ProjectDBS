@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -363,8 +364,8 @@ class ReviewServiceImplSpyTest {
     void test_retrieveAverageRating_positive() {
         reviewRepository.deleteAll();
         reviewRepository.save(review);
-        float actual = reviewService.retrieveAverageRating(BOOK_ID);
-        float expected = review.getRating();
+        List<Float> expected = new ArrayList<>(List.of(review.getRating(), 1f));
+        List<Float> actual = reviewService.retrieveAverageRating(BOOK_ID);
         assertEquals(expected, actual);
     }
 }

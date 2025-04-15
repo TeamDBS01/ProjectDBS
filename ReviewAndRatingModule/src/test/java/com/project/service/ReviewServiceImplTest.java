@@ -20,6 +20,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
@@ -380,11 +381,13 @@ class ReviewServiceImplTest {
         when(reviewRepository.findAll()).thenAnswer((invocation -> List.of(review)));
         when(mapper.map(any(), any())).thenAnswer((invocation -> reviewDTO));
         when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(any())).thenReturn(ResponseEntity.ok(bookDTO));
         try {
             List<ReviewDTO> actual = reviewService.retrieveAllReviews();
             verify(reviewRepository).findAll();
             verify(mapper).map(review, ReviewDTO.class);
             verify(userClient).getUserById(any());
+            verify(bookClient).getBookById(any());
             assertEquals(1, actual.size());
         } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveAll \{e.getMessage()}");
@@ -400,6 +403,7 @@ class ReviewServiceImplTest {
         when(mapper.map(review, ReviewDTO.class)).thenAnswer((invocation -> reviewDTO));
         when(mapper.map(review1, ReviewDTO.class)).thenAnswer((invocation -> reviewDTO1));
         when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(any())).thenReturn(ResponseEntity.ok(bookDTO));
         List<ReviewDTO> actual = null, expected = List.of(reviewDTO, reviewDTO1);
         try {
             actual = reviewService.retrieveAllReviews();
@@ -409,6 +413,7 @@ class ReviewServiceImplTest {
         verify(reviewRepository).findAll();
         verify(mapper).map(review, ReviewDTO.class);
         verify(userClient, times(2)).getUserById(any());
+        verify(bookClient, times(2)).getBookById(any());
         assertEquals(expected, actual);
     }
 
@@ -523,8 +528,8 @@ class ReviewServiceImplTest {
     @DisplayName("RetrieveAverageRating-Positive")
     void test_retrieveAverageRating_postive() {
         when(reviewRepository.findByBookId(any())).thenReturn(List.of(review));
-        float expected = review.getRating();
-        float actual = reviewService.retrieveAverageRating(BOOK_ID);
+        List<Float> expected = new ArrayList<>(List.of(review.getRating(), 1f));
+        List<Float> actual = reviewService.retrieveAverageRating(BOOK_ID);
         assertEquals(expected, actual);
         verify(reviewRepository).findByBookId(any());
     }

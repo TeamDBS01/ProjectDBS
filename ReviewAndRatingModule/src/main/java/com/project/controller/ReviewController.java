@@ -58,7 +58,7 @@ public interface ReviewController {
             @ApiResponse(responseCode = "200", description = "Average Rating found by Book Id"),
 //            @ApiResponse(responseCode = "404", description = "No Reviews found for given Book Id")
     })
-    ResponseEntity<Float> getAverageByBookId(@Size(min = 3, max = 20, message = "{com.project.dto.ReviewDTO.bookid.size}") @PathVariable String bookId) throws ReviewNotFoundException, ServiceUnavailableException;
+    ResponseEntity<List<Float>> getAverageByBookId(@Size(min = 3, max = 20, message = "{com.project.dto.ReviewDTO.bookid.size}") @PathVariable String bookId) throws ReviewNotFoundException, ServiceUnavailableException;
 
     @Operation(description = "Add Operation for a Review with rating, comment, userId, and bookId")
     @ApiResponses(value = {
