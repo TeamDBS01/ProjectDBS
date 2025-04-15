@@ -45,6 +45,9 @@ public class UserService {
     private final UserDetailsRepository userDetailsRepository;
 
     private static final String USER_DETAILS_NOT_FOUND = "User details not found";
+    private static final String INCORRECT_OLD_PASSWORD = "Incorrect old password";
+    private static final String PASSWORD_CHANGE_SUCCESS = "Password changed successfully";
+    private static final String PASSWORD_ENCODING_FAILED = "Password encoding failed.";
 
 
     private static final String USER_NOT_FOUND = "User not found";
@@ -383,6 +386,45 @@ public class UserService {
         }
         return userDTO;
     }
+
+
+    public UserDTO changePassword(Long userId, String oldPassword, String newPassword) {
+        UserDTO response = new UserDTO();
+
+        try {
+            Optional<User> userOptional = usersRepository.findById(userId);
+
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+                String encodedOldPassword = encodePassword(oldPassword);
+
+                if (encodedOldPassword != null && encodedOldPassword.equals(user.getPassword())) {
+                    String encodedNewPassword = encodePassword(newPassword);
+                    if (encodedNewPassword == null) {
+                        response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                        response.setMessage(PASSWORD_ENCODING_FAILED);
+                        return response;
+                    }
+                    user.setPassword(encodedNewPassword);
+                    usersRepository.save(user);
+                    response.setStatusCode(HttpStatus.OK.value());
+                    response.setMessage(PASSWORD_CHANGE_SUCCESS);
+                } else {
+                    response.setStatusCode(HttpStatus.UNAUTHORIZED.value());
+                    response.setMessage(INCORRECT_OLD_PASSWORD);
+                }
+            } else {
+                response.setStatusCode(HttpStatus.NOT_FOUND.value());
+                response.setMessage(USER_NOT_FOUND);
+            }
+        } catch (Exception e) {
+            response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            response.setMessage("Error occurred while changing password: " + e.getMessage());
+        }
+
+        return response;
+    }
+
 
     //service code for userCredit
     public ResponseEntity<UserCreditDTO> debitCredits(Long userId, Double amount) {

@@ -130,6 +130,31 @@ public class UserController {
         return "Role information handled by Gateway";
     }
 
+    @Operation(summary = "Change user password", description = "Allows a user to change their password by providing the old and new passwords.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Password changed successfully"),
+            @ApiResponse(responseCode = "401", description = "Incorrect old password"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PutMapping("/{userId}/change-password")
+    public ResponseEntity<UserDTO> changePassword(
+            @PathVariable Long userId,
+            @RequestParam String oldPassword,
+            @RequestParam String newPassword) {
+        UserDTO response = usersService.changePassword(userId, oldPassword, newPassword);
+
+        if (response.getStatusCode() == HttpStatus.OK.value()) {
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else if (response.getStatusCode() == HttpStatus.UNAUTHORIZED.value()) {
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        } else if (response.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        } else {
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     //endpoints for usercredit
     @PutMapping("/debit-credits/{userId}/{amount}")
     public ResponseEntity<UserCreditDTO> debitCredits(@PathVariable Long userId, @PathVariable Double amount) {
