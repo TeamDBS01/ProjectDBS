@@ -111,9 +111,9 @@ class ReviewControllerImplSpyTest {
     @Test
     @DisplayName("GetAverageByBookId-Positive")
     void test_getAverageByBookId_positive() {
-        ResponseEntity<Float> response = reviewController.getAverageByBookId(BOOK_ID);
+        ResponseEntity<List<Float>> response = reviewController.getAverageByBookId(BOOK_ID);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(3.5f, response.getBody());
+        assertEquals(List.of(3.5f, 1f), response.getBody());
     }
 
     @Test

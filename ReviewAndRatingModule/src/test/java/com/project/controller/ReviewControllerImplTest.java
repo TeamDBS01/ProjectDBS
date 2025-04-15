@@ -105,10 +105,11 @@ class ReviewControllerImplTest {
     @Test
     @DisplayName("GetAverageByBookId-Positive")
     void test_getAverageByBookId_positive(){
-        when(reviewService.retrieveAverageRating(any())).thenReturn(RATING);
-        ResponseEntity<Float> response = reviewController.getAverageByBookId(BOOK_ID);
+        List<Float> expected = List.of(RATING, 1f);
+        when(reviewService.retrieveAverageRating(any())).thenReturn(expected);
+        ResponseEntity<List<Float>> response = reviewController.getAverageByBookId(BOOK_ID);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(RATING, response.getBody());
+        assertEquals(expected, response.getBody());
         verify(reviewService).retrieveAverageRating(any());
     }
 
@@ -706,7 +707,7 @@ class ReviewControllerImplTest {
     @Test
     @DisplayName("GetAverageByBookId-Uri-Positive")
     void test_getAverageByBookId_uri_positive(){
-        when(reviewService.retrieveAverageRating(any())).thenReturn(RATING);
+        when(reviewService.retrieveAverageRating(any())).thenReturn(List.of(RATING, 1f));
         try {
             mockMvc.perform(get("/dbs/review/book/average/{bookId}", BOOK_ID))
                     .andExpect(status().isOk())

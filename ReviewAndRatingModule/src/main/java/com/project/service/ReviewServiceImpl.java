@@ -163,12 +163,15 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
-    public float retrieveAverageRating(String bookId) {
-        List<Review> reviewDTOList = reviewRepository.findByBookId(bookId);
-        return (float) reviewDTOList.stream()
+    public List<Float> retrieveAverageRating(String bookId) {
+        List<Review> reviewList = reviewRepository.findByBookId(bookId);
+        List<Float> avgTotal = new ArrayList<>();
+        avgTotal.add((float) reviewList.stream()
                 .mapToDouble(Review::getRating)
                 .average()
-                .orElse(0);
+                .orElse(0));
+        avgTotal.add((float)reviewList.size());
+        return avgTotal;
     }
 
     /**
@@ -187,6 +190,7 @@ public class ReviewServiceImpl implements ReviewService {
         for (Review review1 : reviewList) {
             ReviewDTO reviewDTO = mapper.map(review1, ReviewDTO.class);
             reviewDTO.setUserName(userClient.getUserById(reviewDTO.getUserId()).getBody().getName());
+            reviewDTO.setBookTitle(bookClient.getBookById(reviewDTO.getBookId()).getBody().getTitle());
             reviewDTOList.add(reviewDTO);
         }
         return reviewDTOList;
