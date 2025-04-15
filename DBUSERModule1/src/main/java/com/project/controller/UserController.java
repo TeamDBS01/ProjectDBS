@@ -1,6 +1,7 @@
 package com.project.controller;
 import com.project.dto.UserCreditDTO;
 import com.project.dto.UserDTO;
+import com.project.dto.UserDetailsDTO;
 import com.project.models.User;
 import com.project.services.UserService;
 import jakarta.validation.Valid;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.HttpHeaders;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("/dbs/user")
 @RestController
@@ -85,7 +87,7 @@ public class UserController {
     })
     @GetMapping("/get-user/{userId}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long userId){
-        // The Gateway will ensure the user is authenticated and has the ADMIN role
+
         return ResponseEntity.ok(usersService.getUserByID(userId));
     }
 
@@ -144,5 +146,33 @@ public class UserController {
     public ResponseEntity<UserCreditDTO> addCredits(@PathVariable Long userId, @PathVariable Double amount) {
 
         return usersService.addCredits(userId, amount);
+    }
+
+    //user-details
+
+    @PostMapping(value = "/{userId}/details", consumes = {"multipart/form-data"})
+    public ResponseEntity<UserDetailsDTO> createUserDetails(
+            @PathVariable Long userId,
+            @RequestPart("name") String name,
+            @RequestPart("phoneNumber") String phoneNumber,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+        UserDetailsDTO result = usersService.createUserDetails(userId, name, phoneNumber, profileImage);
+        return new ResponseEntity<>(result, HttpStatus.valueOf(result.getStatusCode()));
+    }
+
+    @PutMapping(value = "/{userId}/details", consumes = {"multipart/form-data"})
+    public ResponseEntity<UserDetailsDTO> updateUserDetails(
+            @PathVariable Long userId,
+            @RequestPart("name") String name,
+            @RequestPart("phoneNumber") String phoneNumber,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+        UserDetailsDTO result = usersService.updateUserDetails(userId, name, phoneNumber, profileImage);
+        return new ResponseEntity<>(result, HttpStatus.valueOf(result.getStatusCode()));
+    }
+
+    @GetMapping("/{userId}/details")
+    public ResponseEntity<UserDetailsDTO> getUserDetailsByUserId(@PathVariable Long userId) {
+        UserDetailsDTO result = usersService.getUserDetailsByUserId(userId);
+        return new ResponseEntity<>(result, HttpStatus.valueOf(result.getStatusCode()));
     }
 }
