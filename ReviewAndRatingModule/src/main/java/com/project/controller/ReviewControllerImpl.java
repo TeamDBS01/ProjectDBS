@@ -39,11 +39,6 @@ public class ReviewControllerImpl implements ReviewController {
      *
      * @return ResponseEntity containing the status OK.
      */
-//    @Override
-//    @GetMapping("/ok")
-//    public ResponseEntity<Boolean> getOk() {
-//        return ResponseEntity.ok(true);
-//    }
 
     /**
      * Retrieves a review by its ID.
@@ -141,7 +136,7 @@ public class ReviewControllerImpl implements ReviewController {
 
     @Override
     @GetMapping("/book/average/{bookId}")
-    public ResponseEntity<Float> getAverageByBookId(@PathVariable String bookId) {
+    public ResponseEntity<List<Float>> getAverageByBookId(@PathVariable String bookId) {
         return ResponseEntity.ok(reviewService.retrieveAverageRating(bookId));
     }
 
