@@ -30,7 +30,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RestController
 @RequestMapping("/dbs/books")
 @Validated
-//@CrossOrigin(origins = "http://localhost:4200")
 public class BookController {
 
     @Autowired
@@ -213,10 +212,11 @@ public class BookController {
             if (isAdded) {
                 return new ResponseEntity<>("Book added successfully", HttpStatus.CREATED);
             } else {
-                return new ResponseEntity<>("Failed to add book", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>("Failed to add book", HttpStatus.CONFLICT);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>("An unexpected error occurred", HttpStatus.BAD_REQUEST);
+            e.printStackTrace();
+            return new ResponseEntity<>("An unexpected error occurred", HttpStatus.EXPECTATION_FAILED);
         }
     }
 
@@ -235,7 +235,7 @@ public class BookController {
     public ResponseEntity<String> deleteBookById(@PathVariable String bookID) {
         try {
             bookServiceImpl.deleteBookById(bookID);
-            return new ResponseEntity<>(DELETED, HttpStatus.OK);
+            return new ResponseEntity<>("Book Deleted", HttpStatus.OK);
         } catch (BookResourceNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }

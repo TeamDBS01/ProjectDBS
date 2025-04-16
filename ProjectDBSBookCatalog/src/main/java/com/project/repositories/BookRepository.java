@@ -1,7 +1,7 @@
 package com.project.repositories;
 
-import com.project.models.Author;
 import com.project.models.Book;
+import jakarta.validation.constraints.Positive;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -101,6 +101,21 @@ public interface BookRepository extends JpaRepository<Book, String> {
 
 	@Query("SELECT c.categoryName FROM Category c WHERE c.categoryID = :categoryID")
 	Optional<String> findCategoryNameById(@Param("categoryID") int categoryID);
+
+	@Query("SELECT a.authorID FROM Author a WHERE a.authorName = :authorName")
+	Integer findAuthorIDByName(@Param("authorName") String authorName);
+
+	@Query("SELECT c.categoryID FROM Category c WHERE c.categoryName = :categoryName")
+	Integer findCategoryIDByName(@Param("categoryName") String categoryName);
+
+
+	@Query(value="INSERT INTO Author (author_name) VALUES (:authorName)", nativeQuery = true)
+	@Modifying
+	int insertNewAuthor(@Param("authorName") String authorName);
+
+	@Query(value="INSERT INTO Category (category_name) VALUES (:categoryName)", nativeQuery = true)
+	@Modifying
+	int insertNewCategory(@Param("categoryName") String categoryName);
 
 	@Query("SELECT DISTINCT a.authorName FROM Author a")
 	List<String> findDistinctAuthors();
