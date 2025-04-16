@@ -1,7 +1,5 @@
 package com.project.controller;
-import com.project.dto.UserCreditDTO;
-import com.project.dto.UserDTO;
-import com.project.dto.UserDetailsDTO;
+import com.project.dto.*;
 import com.project.models.User;
 import com.project.services.UserService;
 import jakarta.validation.Valid;
@@ -199,5 +197,16 @@ public class UserController {
     public ResponseEntity<UserDetailsDTO> getUserDetailsByUserId(@PathVariable Long userId) {
         UserDetailsDTO result = usersService.getUserDetailsByUserId(userId);
         return new ResponseEntity<>(result, HttpStatus.valueOf(result.getStatusCode()));
+    }
+
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordRequestDTO forgotPasswordRequestDTO) {
+        return usersService.processForgotPasswordRequest(forgotPasswordRequestDTO);
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO) {
+        return usersService.resetPassword(resetPasswordRequestDTO);
     }
 }
