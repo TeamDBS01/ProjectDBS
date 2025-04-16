@@ -101,4 +101,12 @@ public interface BookRepository extends JpaRepository<Book, String> {
 
 	@Query("SELECT c.categoryName FROM Category c WHERE c.categoryID = :categoryID")
 	Optional<String> findCategoryNameById(@Param("categoryID") int categoryID);
+
+	@Query("SELECT DISTINCT a.authorName FROM Author a")
+	List<String> findDistinctAuthors();
+
+	@Query("SELECT DISTINCT c.categoryName from Category c")
+	List<String> findDistinctCategories();
+
+
 }

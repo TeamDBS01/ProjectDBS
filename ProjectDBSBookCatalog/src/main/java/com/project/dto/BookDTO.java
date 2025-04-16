@@ -31,6 +31,8 @@ public class BookDTO {
 
 	private byte[] coverImage;
 
+	private byte[] sampleChapter;
+
 	private String base64img;
 
 	private String authorName;
