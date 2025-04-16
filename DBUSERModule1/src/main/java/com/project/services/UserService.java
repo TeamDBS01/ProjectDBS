@@ -1,13 +1,14 @@
 package com.project.services;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+
 import com.project.dto.UserCreditDTO;
 import com.project.dto.UserDTO;
+import com.project.dto.UserDetailsDTO;
 import com.project.models.Role;
 import com.project.models.User;
 import com.project.repositories.UserCreditRepository;
+import com.project.repositories.UserDetailsRepository;
 import com.project.repositories.UserRepository;
 
 import org.springframework.stereotype.Service;
@@ -18,15 +19,21 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import java.security.Key;
-import java.util.Date;
-import java.util.Map;
+
 import io.jsonwebtoken.Claims;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
-import java.util.ArrayList;
 import com.project.models.UserCredit;
+
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Optional;
+import com.project.models.UserDetails;
+import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class UserService {
@@ -35,6 +42,14 @@ public class UserService {
 
     private UserCreditRepository userCreditRepository;
 
+    private final UserDetailsRepository userDetailsRepository;
+
+    private static final String USER_DETAILS_NOT_FOUND = "User details not found";
+    private static final String INCORRECT_OLD_PASSWORD = "Incorrect old password";
+    private static final String PASSWORD_CHANGE_SUCCESS = "Password changed successfully";
+    private static final String PASSWORD_ENCODING_FAILED = "Password encoding failed.";
+
+
     private static final String USER_NOT_FOUND = "User not found";
 
 //    private final Key secretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256); // Keep the same key as Gateway
@@ -42,9 +57,10 @@ public class UserService {
     private final byte[] secretKeyBytes = "9rxnn8Qd700nlHOxDqsfnEAmwRAuPHzi".getBytes(StandardCharsets.UTF_8);
     private final Key secretKey = Keys.hmacShaKeyFor(secretKeyBytes);
 
-    public UserService(UserRepository usersRepository,UserCreditRepository userCreditRepository) {
+    public UserService(UserRepository usersRepository,UserCreditRepository userCreditRepository , UserDetailsRepository userDetailsRepository) {
         this.usersRepository = usersRepository;
         this.userCreditRepository = userCreditRepository;
+        this.userDetailsRepository = userDetailsRepository;
     }
 
     public String encodePassword(String password) {
@@ -79,7 +95,7 @@ public class UserService {
                 .setClaims(claims)
                 .setSubject(user.getEmail()) // Use email as subject
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 * 10)) // 10 hours
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60 )) // 1 hours
                 .signWith(secretKey)
                 .compact();
     }
@@ -122,10 +138,8 @@ public class UserService {
 
         try {
             String email = refreshTokenRequest.getEmail();
-            usersRepository.findByEmail(email).orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
-            // In a real refresh token scenario, you'd likely have a separate refresh token and logic
-            // For simplicity, we're just generating a new access token based on the email.
             Optional<User> userOptional = usersRepository.findByEmail(email);
+
             if (userOptional.isPresent()) {
                 response.setStatusCode(200);
                 response.setMessage("Successfully refreshed the token");
@@ -141,8 +155,38 @@ public class UserService {
             response.setStatusCode(500);
             response.setMessage(e.getMessage());
         }
+
         return response;
     }
+
+
+//    public UserDTO refreshToken(UserDTO refreshTokenRequest) {
+//        UserDTO response = new UserDTO();
+//
+//        try {
+//            String email = refreshTokenRequest.getEmail();
+//            usersRepository.findByEmail(email).orElseThrow(() -> new RuntimeException(USER_NOT_FOUND));
+//            // In a real refresh token scenario, you'd likely have a separate refresh token and logic
+//            // For simplicity, we're just generating a new access token based on the email.
+//            Optional<User> userOptional = usersRepository.findByEmail(email);
+//            if (userOptional.isPresent()) {
+//                response.setStatusCode(200);
+//                response.setMessage("Successfully refreshed the token");
+//                response.setToken(generateJwtToken(userOptional.get()));
+//            } else {
+//                response.setStatusCode(404);
+//                response.setMessage(USER_NOT_FOUND);
+//            }
+//        } catch (RuntimeException e) {
+//            response.setStatusCode(404);
+//            response.setMessage(e.getMessage());
+//        } catch (Exception e) {
+//            response.setStatusCode(500);
+//            response.setMessage(e.getMessage());
+//        }
+//        return response;
+//    }
+
 
     public UserDTO register(UserDTO registrationRequest) {
         UserDTO resp = new UserDTO();
@@ -343,6 +387,45 @@ public class UserService {
         return userDTO;
     }
 
+
+    public UserDTO changePassword(Long userId, String oldPassword, String newPassword) {
+        UserDTO response = new UserDTO();
+
+        try {
+            Optional<User> userOptional = usersRepository.findById(userId);
+
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+                String encodedOldPassword = encodePassword(oldPassword);
+
+                if (encodedOldPassword != null && encodedOldPassword.equals(user.getPassword())) {
+                    String encodedNewPassword = encodePassword(newPassword);
+                    if (encodedNewPassword == null) {
+                        response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                        response.setMessage(PASSWORD_ENCODING_FAILED);
+                        return response;
+                    }
+                    user.setPassword(encodedNewPassword);
+                    usersRepository.save(user);
+                    response.setStatusCode(HttpStatus.OK.value());
+                    response.setMessage(PASSWORD_CHANGE_SUCCESS);
+                } else {
+                    response.setStatusCode(HttpStatus.UNAUTHORIZED.value());
+                    response.setMessage(INCORRECT_OLD_PASSWORD);
+                }
+            } else {
+                response.setStatusCode(HttpStatus.NOT_FOUND.value());
+                response.setMessage(USER_NOT_FOUND);
+            }
+        } catch (Exception e) {
+            response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            response.setMessage("Error occurred while changing password: " + e.getMessage());
+        }
+
+        return response;
+    }
+
+
     //service code for userCredit
     public ResponseEntity<UserCreditDTO> debitCredits(Long userId, Double amount) {
         UserCredit userCredit = userCreditRepository.findByUserId(userId);
@@ -375,4 +458,117 @@ public class UserService {
         userCreditRepository.save(userCredit);
         return ResponseEntity.ok(new UserCreditDTO(userId, userCredit.getCredits()));
     }
+
+
+    //user-details
+
+    public UserDetailsDTO createUserDetails(Long userId, String name, String phoneNumber, MultipartFile profileImage) {
+        UserDetailsDTO response = new UserDetailsDTO();
+        try {
+            if (!usersRepository.existsById(userId)) {
+                response.setStatusCode(HttpStatus.NOT_FOUND.value());
+                response.setMessage(USER_NOT_FOUND);
+                return response;
+            }
+            if (userDetailsRepository.existsByUserId(userId)) {
+                response.setStatusCode(HttpStatus.CONFLICT.value());
+                response.setMessage("User details already exist for this user.");
+                return response;
+            }
+
+            String base64Image = null;
+            if (profileImage != null && !profileImage.isEmpty()) {
+                base64Image = encodeImageToBase64(profileImage);
+                if (base64Image == null) {
+                    response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                    response.setMessage("Error encoding profile image.");
+                    return response;
+                }
+            }
+
+            UserDetails userDetails = new UserDetails();
+            userDetails.setUserId(userId);
+            userDetails.setName(name);
+            userDetails.setPhoneNumber(phoneNumber);
+            userDetails.setProfileImage(base64Image);
+
+            UserDetails savedUserDetails = userDetailsRepository.save(userDetails);
+            response.setId(savedUserDetails.getId());
+            response.setUserId(savedUserDetails.getUserId());
+            response.setName(savedUserDetails.getName());
+            response.setPhoneNumber(savedUserDetails.getPhoneNumber());
+            response.setProfileImage(savedUserDetails.getProfileImage());
+            response.setStatusCode(HttpStatus.CREATED.value());
+            response.setMessage("User details created successfully.");
+
+        } catch (Exception e) {
+            response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+            response.setMessage("Error creating user details: " + e.getMessage());
+            response.setError(e.getMessage());
+        }
+        return response;
+    }
+
+    public UserDetailsDTO updateUserDetails(Long userId, String name, String phoneNumber, MultipartFile profileImage) {
+        UserDetailsDTO response = new UserDetailsDTO();
+        Optional<UserDetails> existingUserDetailsOptional = userDetailsRepository.findByUserId(userId);
+        if (existingUserDetailsOptional.isPresent()) {
+            UserDetails existingUserDetails = existingUserDetailsOptional.get();
+            existingUserDetails.setName(name);
+            existingUserDetails.setPhoneNumber(phoneNumber);
+
+            if (profileImage != null && !profileImage.isEmpty()) {
+                String base64Image = encodeImageToBase64(profileImage);
+                if (base64Image == null) {
+                    response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+                    response.setMessage("Error encoding profile image.");
+                    return response;
+                }
+                existingUserDetails.setProfileImage(base64Image);
+            }
+
+            UserDetails updatedUserDetails = userDetailsRepository.save(existingUserDetails);
+            response.setId(updatedUserDetails.getId());
+            response.setUserId(updatedUserDetails.getUserId());
+            response.setName(updatedUserDetails.getName());
+            response.setPhoneNumber(updatedUserDetails.getPhoneNumber());
+            response.setProfileImage(updatedUserDetails.getProfileImage());
+            response.setStatusCode(HttpStatus.OK.value());
+            response.setMessage("User details updated successfully.");
+        } else {
+            response.setStatusCode(HttpStatus.NOT_FOUND.value());
+            response.setMessage(USER_DETAILS_NOT_FOUND);
+        }
+        return response;
+    }
+
+    private String encodeImageToBase64(MultipartFile file) {
+        try {
+            byte[] imageBytes = file.getBytes();
+            return Base64.getEncoder().encodeToString(imageBytes);
+        } catch (Exception e) {
+            // Handle the exception appropriately (e.g., log it)
+            return null;
+        }
+    }
+
+    public UserDetailsDTO getUserDetailsByUserId(Long userId) {
+        UserDetailsDTO response = new UserDetailsDTO();
+        Optional<UserDetails> userDetailsOptional = userDetailsRepository.findByUserId(userId);
+        if (userDetailsOptional.isPresent()) {
+            UserDetails userDetails = userDetailsOptional.get();
+            response.setId(userDetails.getId());
+            response.setUserId(userDetails.getUserId());
+            response.setName(userDetails.getName());
+            response.setPhoneNumber(userDetails.getPhoneNumber());
+            response.setProfileImage(userDetails.getProfileImage());
+            response.setStatusCode(HttpStatus.OK.value());
+            response.setMessage("User details found.");
+        } else {
+            response.setStatusCode(HttpStatus.NOT_FOUND.value());
+            response.setMessage(USER_DETAILS_NOT_FOUND);
+        }
+        return response;
+    }
+
 }

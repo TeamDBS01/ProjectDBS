@@ -1,9 +1,11 @@
 package com.project.controller;
 import com.project.dto.UserCreditDTO;
 import com.project.dto.UserDTO;
+import com.project.dto.UserDetailsDTO;
 import com.project.models.User;
 import com.project.services.UserService;
 import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.HttpHeaders;
+import org.springframework.web.multipart.MultipartFile;
 
 @RequestMapping("/dbs/user")
 @RestController
@@ -31,7 +34,13 @@ public class UserController {
     })
     @PostMapping("/auth/register")
     public ResponseEntity<UserDTO> register(@Valid  @RequestBody UserDTO reg){
-        return ResponseEntity.ok(usersService.register(reg));
+//        return ResponseEntity.ok(usersService.register(reg));
+        UserDTO userDTO = usersService.register(reg);
+        if(userDTO.getName()!=null){
+            return new ResponseEntity<>(userDTO,HttpStatus.ACCEPTED);
+        } else{
+            return new ResponseEntity<>(userDTO,HttpStatus.FORBIDDEN);
+        }
     }
 
     @Operation(summary = "Login a user", description = "Logs in a user with the provided credentials.")
@@ -40,8 +49,14 @@ public class UserController {
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     @PostMapping("/auth/login")
-    public ResponseEntity<UserDTO> login(@RequestBody UserDTO req){
-        return ResponseEntity.ok(usersService.login(req));
+    public ResponseEntity<?> login(@RequestBody UserDTO req){
+        UserDTO userDTO = usersService.login(req);
+        if(userDTO.getName()!=null){
+            return new ResponseEntity<>(userDTO,HttpStatus.ACCEPTED);
+        } else{
+            return new ResponseEntity<>(userDTO,HttpStatus.FORBIDDEN);
+        }
+//        return ResponseEntity.ok(usersService.login(req));
     }
 
     @Operation(summary = "Refresh authentication token", description = "Refreshes the authentication token for the user.")
@@ -72,7 +87,7 @@ public class UserController {
     })
     @GetMapping("/get-user/{userId}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long userId){
-        // The Gateway will ensure the user is authenticated and has the ADMIN role
+
         return ResponseEntity.ok(usersService.getUserByID(userId));
     }
 
@@ -115,6 +130,31 @@ public class UserController {
         return "Role information handled by Gateway";
     }
 
+    @Operation(summary = "Change user password", description = "Allows a user to change their password by providing the old and new passwords.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Password changed successfully"),
+            @ApiResponse(responseCode = "401", description = "Incorrect old password"),
+            @ApiResponse(responseCode = "404", description = "User not found"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PutMapping("/{userId}/change-password")
+    public ResponseEntity<UserDTO> changePassword(
+            @PathVariable Long userId,
+            @RequestParam String oldPassword,
+            @RequestParam String newPassword) {
+        UserDTO response = usersService.changePassword(userId, oldPassword, newPassword);
+
+        if (response.getStatusCode() == HttpStatus.OK.value()) {
+            return new ResponseEntity<>(response, HttpStatus.OK);
+        } else if (response.getStatusCode() == HttpStatus.UNAUTHORIZED.value()) {
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        } else if (response.getStatusCode() == HttpStatus.NOT_FOUND.value()) {
+            return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+        } else {
+            return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
     //endpoints for usercredit
     @PutMapping("/debit-credits/{userId}/{amount}")
     public ResponseEntity<UserCreditDTO> debitCredits(@PathVariable Long userId, @PathVariable Double amount) {
@@ -131,5 +171,33 @@ public class UserController {
     public ResponseEntity<UserCreditDTO> addCredits(@PathVariable Long userId, @PathVariable Double amount) {
 
         return usersService.addCredits(userId, amount);
+    }
+
+    //user-details
+
+    @PostMapping(value = "/{userId}/details", consumes = {"multipart/form-data"})
+    public ResponseEntity<UserDetailsDTO> createUserDetails(
+            @PathVariable Long userId,
+            @RequestPart("name") String name,
+            @RequestPart("phoneNumber") String phoneNumber,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+        UserDetailsDTO result = usersService.createUserDetails(userId, name, phoneNumber, profileImage);
+        return new ResponseEntity<>(result, HttpStatus.valueOf(result.getStatusCode()));
+    }
+
+    @PutMapping(value = "/{userId}/details", consumes = {"multipart/form-data"})
+    public ResponseEntity<UserDetailsDTO> updateUserDetails(
+            @PathVariable Long userId,
+            @RequestPart("name") String name,
+            @RequestPart("phoneNumber") String phoneNumber,
+            @RequestPart(value = "profileImage", required = false) MultipartFile profileImage) {
+        UserDetailsDTO result = usersService.updateUserDetails(userId, name, phoneNumber, profileImage);
+        return new ResponseEntity<>(result, HttpStatus.valueOf(result.getStatusCode()));
+    }
+
+    @GetMapping("/{userId}/details")
+    public ResponseEntity<UserDetailsDTO> getUserDetailsByUserId(@PathVariable Long userId) {
+        UserDetailsDTO result = usersService.getUserDetailsByUserId(userId);
+        return new ResponseEntity<>(result, HttpStatus.valueOf(result.getStatusCode()));
     }
 }
