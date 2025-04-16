@@ -31,7 +31,12 @@ public class Book {
 	@Column(name="cover_img")
 	private byte[] coverImage;
 
+	@Column(name="description")
 	private String description;
+
+	@Lob
+	@Column(name="sample_chapter")
+	private byte[] sampleChapter;
 
 	public Book(String bookID, String title, double price, int authorID, int categoryID, String description) {
 		this.bookID = bookID;
