@@ -5,6 +5,7 @@ import com.project.exception.*;
 import com.project.feign.BookClient;
 import com.project.feign.UserClient;
 import com.project.models.Review;
+import com.project.repositories.ReviewDeleteRepository;
 import com.project.repositories.ReviewRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -37,6 +38,8 @@ class ReviewServiceImplSpyTest {
     @Autowired
     private ReviewRepository reviewRepository;
     @Autowired
+    private ReviewDeleteRepository reviewDeleteRepository;
+    @Autowired
     private ModelMapper mapper;
     @Autowired
     private UserClient userClient;
@@ -48,7 +51,7 @@ class ReviewServiceImplSpyTest {
 
     @BeforeEach
     void setup() {
-        reviewService = new ReviewServiceImpl(reviewRepository, userClient, bookClient, mapper);
+        reviewService = new ReviewServiceImpl(reviewRepository, reviewDeleteRepository, userClient, bookClient, mapper);
         review = new Review(RATING, COMMENT, USER_ID, BOOK_ID);
         reviewDTO = new ReviewDTO(1L, RATING, COMMENT, USER_ID, BOOK_ID, USER_NAME, BOOK_TITLE);
         SIZE = reviewRepository.count();

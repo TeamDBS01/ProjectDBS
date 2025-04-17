@@ -14,5 +14,6 @@ public interface ReviewService {
 	ReviewDTO addReview(float rating, String comment, long userId, String bookId) throws UserNotFoundException, BookNotFoundException, ServiceUnavailableException;
 	ReviewDTO updateReview(long userId, ReviewDTO reviewDTO) throws UserNotAuthorizedException, UserNotFoundException, IDMismatchException, BookNotFoundException, ServiceUnavailableException;
 	boolean deleteReview(long userId, long reviewId) throws ReviewNotFoundException, UserNotFoundException, UserNotAuthorizedException, ServiceUnavailableException;
+	boolean addToReviewDelete(long reviewId, String comment);
 	List<Float> retrieveAverageRating(String bookId);
 }
