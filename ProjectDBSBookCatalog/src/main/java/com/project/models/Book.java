@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.http.util.ByteArrayBuffer;
 
 
 @Data
@@ -37,6 +38,7 @@ public class Book {
 	@Lob
 	@Column(name="sample_chapter")
 	private byte[] sampleChapter;
+
 
 	public Book(String bookID, String title, double price, int authorID, int categoryID, String description) {
 		this.bookID = bookID;

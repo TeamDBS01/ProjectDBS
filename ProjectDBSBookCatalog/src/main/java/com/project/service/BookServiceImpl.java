@@ -90,6 +90,12 @@ public class BookServiceImpl implements BookService {
         return bookDTOs;
     }
 
+    @Override
+    public int getNoOfPages(){
+        Pageable pageable=PageRequest.of(0,3);
+        Page<Book> bookPage=bookRepository.findAll(pageable);
+        return bookPage.getTotalPages();
+    }
     /**
      * Retrieves a book by its ID.
      *
@@ -360,7 +366,7 @@ public class BookServiceImpl implements BookService {
         Optional<Book> optionalOfBook = bookRepository.findById(bookID);
         if (optionalOfBook.isPresent()) {
             bookRepository.deleteById(bookID);
-            inventoryInterface.deleteBookFromInventory(bookID);
+            //inventoryInterface.deleteBookFromInventory(bookID);
             return true;
         } else {
             throw new BookResourceNotFoundException(BOOK_NOT_FOUND_MESSAGE);

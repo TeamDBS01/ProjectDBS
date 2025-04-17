@@ -19,6 +19,7 @@ public interface BookService {
 	List<String> getAllCategories();
 	 List<BookDTO> filter(String author, String category) throws BookResourceNotFoundException;
 	 List<BookDTO> getAllBooks(int page, int size) throws BookResourceNotFoundException;
+	int getNoOfPages();
 
 	boolean addBook(BookDTO bookDTO) throws BookResourceNotFoundException, BookAlreadyExistsException;
 	boolean deleteBookById(String bookID) throws BookResourceNotFoundException;

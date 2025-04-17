@@ -27,6 +27,8 @@ public interface BookRepository extends JpaRepository<Book, String> {
 	 * @return a page of books
 	 */
 	Page<Book> findAll(Pageable pageable);
+
+
 	/**
 	 * Retrieves books by category name.
 	 *

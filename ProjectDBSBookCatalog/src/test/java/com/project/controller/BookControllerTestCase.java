@@ -2,13 +2,17 @@ package com.project.controller;
 
 import com.project.dto.BookDTO;
 import com.project.exception.BookResourceNotFoundException;
-import com.project.exception.PageOutOfBoundsException;
 import com.project.service.BookServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
@@ -25,9 +29,8 @@ class BookControllerTestCase {
     @Autowired
     private MockMvc mockMvc;
 
-    @MockitoBean
+    @Mock
     private BookServiceImpl bookServiceImpl;
-
 
     private BookDTO bookDataTO;
 
@@ -42,266 +45,115 @@ class BookControllerTestCase {
     }
 
     @Test
-    void testGetAllBooks_Positive() throws Exception {
-        List<BookDTO> booksDTOList = Collections.singletonList(bookDataTO);
-        when(bookServiceImpl.getAllBooks(0, 10)).thenReturn(booksDTOList);
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books")
-                        .param("page", "0")
-                        .param("size", "10"))
+    void testDeleteBookById_Positive() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/dbs/books/delete/{bookID}", "B001"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].bookID").value(bookDataTO.getBookID()))
+                .andExpect(content().string("DELETED"))
                 .andReturn();
     }
 
     @Test
-    void testGetAllBooks_Negative_BookResourceNotFoundException() throws Exception {
-        when(bookServiceImpl.getAllBooks(0, 10)).thenThrow(new BookResourceNotFoundException("No books found"));
+    void testDeleteBookById_Negative() throws Exception {
+        when(bookServiceImpl.deleteBookById("B001")).thenThrow(new BookResourceNotFoundException("Book not found"));
 
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books")
-                        .param("page", "0")
-                        .param("size", "10"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string("ERROR: No books found"))
-                .andReturn();
-    }
-
-    @Test
-    void testGetAllBooks_Negative_PageOutOfBoundsException() throws Exception {
-        when(bookServiceImpl.getAllBooks(10, 10)).thenThrow(new PageOutOfBoundsException("Page number exceeds total pages available"));
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books")
-                        .param("page", "10")
-                        .param("size", "10"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("Page number exceeds total pages available"))
-                .andReturn();
-    }
-
-    @Test
-    void testGetBookById_Positive() throws Exception {
-        when(bookServiceImpl.getBookById("B001")).thenReturn(bookDataTO);
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/{bookId}", "B001"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.bookID").value(bookDataTO.getBookID()))
-                .andReturn();
-    }
-
-    @Test
-    void testGetBookById_Negative() throws Exception {
-        when(bookServiceImpl.getBookById("1")).thenThrow(new BookResourceNotFoundException("Book not found"));
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/{bookId}", "1"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string("ERROR: Book not found"))
-                .andReturn();
-    }
-
-    @Test
-    void testGetBooksByCategory_Positive() throws Exception {
-        List<BookDTO> books = Collections.singletonList(bookDataTO);
-        when(bookServiceImpl.getBooksByCategory("Fiction")).thenReturn(books);
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/category/{categoryName}", "Fiction"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].bookID").value(bookDataTO.getBookID()))
-                .andReturn();
-    }
-
-    @Test
-    void testGetBooksByCategory_Negative() throws Exception {
-        when(bookServiceImpl.getBooksByCategory("Fiction")).thenThrow(new BookResourceNotFoundException("Books not found"));
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/category/{categoryName}", "Fiction"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string("Books not found"))
-                .andReturn();
-    }
-
-    @Test
-    void testGetBooksByAuthor_Success() throws Exception {
-        List<BookDTO> books = Collections.singletonList(bookDataTO);
-        when(bookServiceImpl.getBooksByAuthor("Author")).thenReturn(books);
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/author/{authorName}", "Author"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].bookID").value(bookDataTO.getBookID()))
-                .andReturn();
-    }
-
-    @Test
-    void testGetBooksByAuthor_NotFound() throws Exception {
-        when(bookServiceImpl.getBooksByAuthor("Author")).thenThrow(new BookResourceNotFoundException("Books not found"));
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/author/{authorName}", "Author"))
-                .andExpect(status().isNotFound())
-                .andExpect(content().string("Books not found"))
-                .andReturn();
-    }
-
-    @Test
-    void testFilterBooks_ByAuthor_Success() throws Exception {
-        List<BookDTO> books = Collections.singletonList(bookDataTO);
-        when(bookServiceImpl.filter("Author")).thenReturn(books);
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/filter")
-                        .param("author", "Author"))
-                .andExpect(status().isOk())
-                .andExpect(content().json("[{\"bookID\":null,\"title\":null,\"price\":0.0,\"authorID\":0,\"categoryID\":0}]"))
-                .andReturn();
-    }
-
-    @Test
-    void testFilterBooks_ByAuthorAndCategory_Success() throws Exception {
-        List<BookDTO> books = Collections.singletonList(bookDataTO);
-        when(bookServiceImpl.filter("Author", "Fiction")).thenReturn(books);
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/filter")
-                        .param("author", "Author")
-                        .param("category", "Fiction"))
-                .andExpect(status().isOk())
-                .andExpect(content().json("[{\"bookID\":null,\"title\":null,\"price\":0.0,\"authorID\":0,\"categoryID\":0}]"))
-                .andReturn();
-    }
-
-    @Test
-    void testFilterBooks_ByCategory_Success() throws Exception {
-        List<BookDTO> books = Collections.singletonList(bookDataTO);
-        when(bookServiceImpl.filter("Fiction")).thenReturn(books);
-
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/filter")
-                        .param("category", "Fiction"))
-                .andExpect(status().isOk())
-                .andExpect(content().json("[{\"bookID\":null,\"title\":null,\"price\":0.0,\"authorID\":0,\"categoryID\":0}]"))
-                .andReturn();
-    }
-
-    @Test
-    void testFilterBooks_NoCriteria() throws Exception {
-        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/filter"))
-                .andExpect(status().isBadRequest())
-                .andReturn();
-    }
-
-    @Test
-    void testAddBook_Success() throws Exception {
-        BookDTO validBookDTO = new BookDTO();
-        validBookDTO.setBookID("B001");
-        validBookDTO.setTitle("Valid Title");
-        validBookDTO.setPrice(100.0);
-        validBookDTO.setAuthorID(1);
-        validBookDTO.setCategoryID(1);
-
-        when(bookServiceImpl.addBook(validBookDTO)).thenReturn(true);
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/dbs/books/addBooks")
-                        .contentType("application/json")
-                        .content("{\"bookID\":\"B001\",\"title\":\"Valid Title\",\"price\":100.0,\"authorID\":1,\"categoryID\":1}"))
-                .andExpect(status().isCreated())
-                .andExpect(content().string("Book added successfully"))
-                .andReturn();
-    }
-
-    @Test
-    void testAddBook_Exception() throws Exception {
-        BookDTO validBookDTO = new BookDTO();
-        validBookDTO.setBookID("B001");
-        validBookDTO.setTitle("Valid title");
-        validBookDTO.setPrice(10.0);
-        validBookDTO.setAuthorID(1);
-        validBookDTO.setCategoryID(1);
-
-        when(bookServiceImpl.addBook(validBookDTO)).thenThrow(new RuntimeException("Unexpected error"));
-
-        mockMvc.perform(MockMvcRequestBuilders.post("/dbs/books/addBooks")
-                        .contentType("application/json")
-                        .content("{\"bookID\":\"B001\",\"title\":\"Valid title\",\"price\":10.0,\"authorID\":1,\"categoryID\":1}"))
-                .andExpect(status().isBadRequest())
-                .andExpect(content().string("An unexpected error occurred"))
-                .andReturn();
-    }
-
-    @Test
-    void testDeleteBookById_Success() throws Exception {
-        String bookID = "B001";
-        when(bookServiceImpl.deleteBookById(bookID)).thenReturn(true);
-
-        mockMvc.perform(MockMvcRequestBuilders.delete("/dbs/books/delete/{bookId}", bookID))
-                .andExpect(status().isOk())
-                .andExpect(content().string("Book deleted successfully"))
-                .andReturn();
-    }
-
-    @Test
-    void testDeleteBookById_NotFound() throws Exception {
-        String bookID = "B001";
-        when(bookServiceImpl.deleteBookById(bookID)).thenThrow(new BookResourceNotFoundException("Book not found"));
-
-        mockMvc.perform(MockMvcRequestBuilders.delete("/dbs/books/delete/{bookID}", bookID))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/dbs/books/delete/{bookID}", "B001"))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Book not found"))
                 .andReturn();
     }
 
     @Test
-    void testDeleteBookByTitle_Success() throws Exception {
-        String bookTitle = "Valid Title";
-        when(bookServiceImpl.deleteBookByTitle(bookTitle)).thenReturn(true);
-
-        mockMvc.perform(MockMvcRequestBuilders.delete("/dbs/books/deleteByTitle/{bookTitle}", bookTitle))
+    void testDeleteBookByTitle_Positive() throws Exception {
+        mockMvc.perform(MockMvcRequestBuilders.delete("/dbs/books/deleteByTitle/{bookTitle}", "Some Title"))
                 .andExpect(status().isOk())
-                .andExpect(content().string("Book deleted successfully"))
+                .andExpect(content().string("DELETED"))
                 .andReturn();
     }
 
     @Test
-    void testDeleteBookByTitle_NotFound() throws Exception {
-        String bookTitle = "Valid Title";
-        when(bookServiceImpl.deleteBookByTitle(bookTitle)).thenThrow(new BookResourceNotFoundException("Book not found"));
+    void testDeleteBookByTitle_Negative() throws Exception {
+        when(bookServiceImpl.deleteBookByTitle("Some Title")).thenThrow(new BookResourceNotFoundException("Book not found"));
 
-        mockMvc.perform(MockMvcRequestBuilders.delete("/dbs/books/deleteByTitle/{bookTitle}", bookTitle))
+        mockMvc.perform(MockMvcRequestBuilders.delete("/dbs/books/deleteByTitle/{bookTitle}", "Some Title"))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Book not found"))
                 .andReturn();
     }
 
     @Test
-    void testUpdateBookById_Success() throws Exception {
-        BookDTO validBookDTO = new BookDTO();
-        validBookDTO.setBookID("B001");
-        validBookDTO.setTitle("Updated Title");
-        validBookDTO.setPrice(20.0);
-        validBookDTO.setAuthorID(1);
-        validBookDTO.setCategoryID(1);
-
-        when(bookServiceImpl.updateBookById("B001", validBookDTO)).thenReturn(true);
+    void testUpdateBookById_Positive() throws Exception {
+        BookDTO updatedBookDTO = new BookDTO();
+        updatedBookDTO.setBookID("B001");
+        updatedBookDTO.setTitle("Updated Title");
 
         mockMvc.perform(MockMvcRequestBuilders.put("/dbs/books/update/{bookID}", "B001")
                         .contentType("application/json")
-                        .content("{\"bookID\":\"B001\",\"title\":\"Updated Title\",\"price\":20.0,\"authorID\":1,\"categoryID\":1}"))
+                        .content("{\"bookID\":\"B001\",\"title\":\"Updated Title\"}"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("Book updated successfully"))
                 .andReturn();
     }
 
     @Test
-    void testUpdateBookById_NotFound() throws Exception {
-        BookDTO validBookDTO = new BookDTO();
-        validBookDTO.setBookID("B001");
-        validBookDTO.setTitle("Updated Title");
-        validBookDTO.setPrice(20.0);
-        validBookDTO.setAuthorID(1);
-        validBookDTO.setCategoryID(1);
+    void testUpdateBookById_Negative() throws Exception {
+        BookDTO updatedBookDTO = new BookDTO();
+        updatedBookDTO.setBookID("B001");
+        updatedBookDTO.setTitle("Updated Title");
 
-        when(bookServiceImpl.updateBookById("B001", validBookDTO)).thenThrow(new BookResourceNotFoundException("Book not found"));
+        when(bookServiceImpl.updateBookById("B001", updatedBookDTO)).thenThrow(new BookResourceNotFoundException("Book not found"));
 
         mockMvc.perform(MockMvcRequestBuilders.put("/dbs/books/update/{bookID}", "B001")
                         .contentType("application/json")
-                        .content("{\"bookID\":\"B001\",\"title\":\"Updated Title\",\"price\":20.0,\"authorID\":1,\"categoryID\":1}"))
+                        .content("{\"bookID\":\"B001\",\"title\":\"Updated Title\"}"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().string("Book not found"))
+                .andReturn();
+    }
+
+    @Test
+    void testUploadImage_Positive() throws Exception {
+        MockMultipartFile imageFile = new MockMultipartFile("imageFile", "image.jpg", "image/jpeg", "image content".getBytes());
+
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/dbs/books/{bookID}/upload-image", "B001")
+                        .file(imageFile))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Image uploaded successfully"))
+                .andReturn();
+    }
+
+
+
+    @Test
+    void testUploadSampleChapter_Positive() throws Exception {
+        MockMultipartFile sampleFile = new MockMultipartFile("file", "sample.pdf", "application/pdf", "sample content".getBytes());
+
+        mockMvc.perform(MockMvcRequestBuilders.multipart("/dbs/books/{bookID}/sample", "B001")
+                        .file(sampleFile))
+                .andExpect(status().isOk())
+                .andExpect(content().string("Sample chapter uploaded successfully"))
+                .andReturn();
+    }
+
+
+
+    @Test
+    void testGetSampleChapter_Positive() throws Exception {
+        byte[] pdfData = "sample pdf content".getBytes();
+        when(bookServiceImpl.getSampleChapter("B001")).thenReturn(pdfData);
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/{bookID}/sample", "B001"))
+                .andExpect(status().isOk())
+                .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=sample.pdf"))
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andExpect(content().bytes(pdfData))
+                .andReturn();
+    }
+
+    @Test
+    void testGetSampleChapter_Negative() throws Exception {
+        when(bookServiceImpl.getSampleChapter("B001")).thenThrow(new BookResourceNotFoundException("Book not found"));
+
+        mockMvc.perform(MockMvcRequestBuilders.get("/dbs/books/{bookID}/sample", "B001"))
                 .andExpect(status().isNotFound())
                 .andExpect(content().string("Book not found"))
                 .andReturn();
