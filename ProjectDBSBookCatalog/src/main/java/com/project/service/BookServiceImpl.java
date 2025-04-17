@@ -343,6 +343,26 @@ public class BookServiceImpl implements BookService {
         if (bookDTO == null) {
             throw new BookResourceNotFoundException("Book resource cannot be null");
         }
+
+        Integer authorId = bookRepository.findAuthorIDByName(bookDTO.getAuthorName());
+        if (authorId == null) {
+            authorId = bookRepository.insertNewAuthor(bookDTO.getAuthorName());
+            if (authorId == null) {
+                throw new BookResourceNotFoundException("Failed to create and retrieve Author ID for: " + bookDTO.getAuthorName());
+            }
+        }
+        authorId = bookRepository.findAuthorIDByName(bookDTO.getAuthorName());
+        bookDTO.setAuthorID(authorId);
+
+        Integer categoryId = bookRepository.findCategoryIDByName(bookDTO.getCategoryName());
+        if (categoryId == null) { // Using null for clarity
+            categoryId = bookRepository.insertNewCategory(bookDTO.getCategoryName());
+            if (categoryId == null) {
+                throw new BookResourceNotFoundException("Failed to create and retrieve Category ID for: " + bookDTO.getCategoryName());
+            }
+        }
+        categoryId = bookRepository.findCategoryIDByName(bookDTO.getCategoryName());
+        bookDTO.setCategoryID(categoryId);
         Book book = modelMapper.map(bookDTO, Book.class);
 
         if (bookDTO.getBase64img() != null && !bookDTO.getBase64img().isEmpty() && !bookDTO.getBase64img().equals("null")) {

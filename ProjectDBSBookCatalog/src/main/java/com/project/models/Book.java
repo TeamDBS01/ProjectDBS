@@ -29,7 +29,7 @@ public class Book {
 	private int categoryID;
 
 	@Lob
-	@Column(name="cover_img")
+	@Column(name="cover_img", columnDefinition = "LONGBLOB")
 	private byte[] coverImage;
 
 	@Column(name="description")
