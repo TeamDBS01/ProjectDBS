@@ -426,6 +426,10 @@ public class BookServiceImpl implements BookService {
         if (optionalOfBook.isPresent()) {
             Book book = optionalOfBook.get();
             modelMapper.map(bookDTO, book);
+            if (bookDTO.getBase64img() != null && !bookDTO.getBase64img().isEmpty() && !bookDTO.getBase64img().equals("null")) {
+                book.setCoverImage(base64ToByteArray(bookDTO.getBase64img()));
+            }
+            System.out.println(book + " " + bookDTO );
             bookRepository.save(book);
             return true;
         } else {
