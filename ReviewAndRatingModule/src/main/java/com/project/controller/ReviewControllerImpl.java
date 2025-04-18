@@ -256,4 +256,10 @@ public class ReviewControllerImpl implements ReviewController {
 //        }
         return response;
     }
+
+    @Override
+    @PostMapping("/delete")
+    public ResponseEntity<Boolean> addToReviewDelete(@RequestBody ReviewDTO reviewDTO) {
+        return ResponseEntity.ok(reviewService.addToReviewDelete(reviewDTO.getReviewId(), reviewDTO.getReason()));
+    }
 }

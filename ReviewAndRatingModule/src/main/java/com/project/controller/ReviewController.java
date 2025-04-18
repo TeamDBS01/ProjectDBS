@@ -18,13 +18,6 @@ import java.util.List;
 @Tag(description = "Review Rest API", name = "ReviewRestAPIV01")
 public interface ReviewController {
 
-//    @Operation(description = "Get Operation for Returning OK")
-//    @ApiResponses(value = {
-//            @ApiResponse(responseCode = "200", description = "Returns OK")
-//    })
-//    @GetMapping("/ok")
-//    ResponseEntity<Boolean> getOk();
-
     @Operation(description = "Get Operation for Resource Review by Id")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Get the review by Id"),
@@ -98,4 +91,12 @@ public interface ReviewController {
     })
     ResponseEntity<Boolean> deleteReview(@Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId,
                                          @Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId) throws UserNotFoundException, ReviewNotFoundException, UserNotAuthorizedException, ServiceUnavailableException;
+
+    @Operation(description = "Add Operation for a ReviewDelete with reviewID and comment")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Review Delete created"),
+//            @ApiResponse(responseCode = "404", description = "User/Book Not Found - Unable to add Review"),
+//            @ApiResponse(responseCode = "502", description = "Bad gateway - Unable to add Review")
+    })
+    ResponseEntity<Boolean> addToReviewDelete(ReviewDTO reviewDTO);
 }

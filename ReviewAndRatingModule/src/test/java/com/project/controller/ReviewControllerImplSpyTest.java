@@ -7,6 +7,7 @@ import com.project.dto.ReviewDTO;
 import com.project.exception.*;
 import com.project.feign.BookClient;
 import com.project.feign.UserClient;
+import com.project.repositories.ReviewDeleteRepository;
 import com.project.repositories.ReviewRepository;
 import com.project.service.ReviewService;
 import com.project.service.ReviewServiceImpl;
@@ -45,6 +46,8 @@ class ReviewControllerImplSpyTest {
     @Autowired
     private ReviewRepository reviewRepository;
     @Autowired
+    private ReviewDeleteRepository reviewDeleteRepository;
+    @Autowired
     private ModelMapper mapper;
     @Autowired
     private UserClient userClient;
@@ -56,7 +59,7 @@ class ReviewControllerImplSpyTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        ReviewService reviewService = new ReviewServiceImpl(reviewRepository, userClient, bookClient, mapper);
+        ReviewService reviewService = new ReviewServiceImpl(reviewRepository, reviewDeleteRepository, userClient, bookClient, mapper);
         reviewController = new ReviewControllerImpl(Mockito.spy(reviewService));
         mockMvc = MockMvcBuilders.standaloneSetup(reviewController).build();
         reviewDTO = reviewService.addReview(RATING, COMMENT, USER_ID, BOOK_ID);

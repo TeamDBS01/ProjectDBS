@@ -8,6 +8,7 @@ import com.project.exception.*;
 import com.project.feign.BookClient;
 import com.project.feign.UserClient;
 import com.project.models.Review;
+import com.project.repositories.ReviewDeleteRepository;
 import com.project.repositories.ReviewRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -41,6 +42,8 @@ class ReviewServiceImplTest {
     private static final String BOOK_TITLE = "Guide to Java";
     @Mock
     private ReviewRepository reviewRepository;
+    @Mock
+    private ReviewDeleteRepository reviewDeleteRepository;
     @Mock
     private ModelMapper mapper;
     @Mock
@@ -374,6 +377,18 @@ class ReviewServiceImplTest {
                 "Error not thrown in DeleteReview");
         verify(reviewRepository).findById(review.getReviewId());
     }
+
+
+    @Test
+    @DisplayName("DeleteReview-Positive-SameUser")
+    void test_addToReview_positive() {
+        when(reviewDeleteRepository.save(any()));
+        boolean actual = true;
+        reviewService.addToReviewDelete(review.getReviewId(), COMMENT);
+        verify(reviewDeleteRepository).save(any());
+        assertTrue(actual);
+    }
+
 
     @Test
     @DisplayName("RetrieveAllReviews-Positive-WithOneReview")

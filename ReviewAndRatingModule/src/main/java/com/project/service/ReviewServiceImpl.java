@@ -9,6 +9,8 @@ import com.project.exception.*;
 import com.project.feign.BookClient;
 import com.project.feign.UserClient;
 import com.project.models.Review;
+import com.project.models.ReviewDelete;
+import com.project.repositories.ReviewDeleteRepository;
 import com.project.repositories.ReviewRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,7 +19,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,6 +46,7 @@ import java.util.Optional;
 public class ReviewServiceImpl implements ReviewService {
 
     private final ReviewRepository reviewRepository;
+    private final ReviewDeleteRepository reviewDeleteRepository;
     private final UserClient userClient;
     private final BookClient bookClient;
     private final ModelMapper mapper;
@@ -58,8 +60,9 @@ public class ReviewServiceImpl implements ReviewService {
      * @param modelMapper      the model mapper
      */
     @Autowired
-    public ReviewServiceImpl(ReviewRepository reviewRepository, UserClient userClient, BookClient bookClient, ModelMapper modelMapper) {
+    public ReviewServiceImpl(ReviewRepository reviewRepository, ReviewDeleteRepository reviewDeleteRepository, UserClient userClient, BookClient bookClient, ModelMapper modelMapper) {
         this.reviewRepository = reviewRepository;
+        this.reviewDeleteRepository = reviewDeleteRepository;
         this.userClient = userClient;
         this.bookClient = bookClient;
         this.mapper = modelMapper;
@@ -163,14 +166,22 @@ public class ReviewServiceImpl implements ReviewService {
     }
 
     @Override
+    public boolean addToReviewDelete(long reviewId, String reason) {
+        reviewDeleteRepository.save(new ReviewDelete(reviewId, reason));
+        return true;
+    }
+
+    @Override
     public List<Float> retrieveAverageRating(String bookId) {
         List<Review> reviewList = reviewRepository.findByBookId(bookId);
         List<Float> avgTotal = new ArrayList<>();
+        List<Long> reviewDeleteList = reviewDeleteRepository.findAllReviewIds();
         avgTotal.add((float) reviewList.stream()
+                .filter((review -> !reviewDeleteList.contains(review.getReviewId())))
                 .mapToDouble(Review::getRating)
                 .average()
                 .orElse(0));
-        avgTotal.add((float)reviewList.size());
+        avgTotal.add((float) reviewList.size());
         return avgTotal;
     }
 
@@ -187,7 +198,11 @@ public class ReviewServiceImpl implements ReviewService {
             throw new ReviewNotFoundException("No Reviews Found!");
         }
         List<ReviewDTO> reviewDTOList = new ArrayList<>();
+        List<Long> reviewDeleteList = reviewDeleteRepository.findAllReviewIds();
         for (Review review1 : reviewList) {
+            if (reviewDeleteList.contains(review1.getReviewId())) {
+                continue;
+            }
             ReviewDTO reviewDTO = mapper.map(review1, ReviewDTO.class);
             reviewDTO.setUserName(userClient.getUserById(reviewDTO.getUserId()).getBody().getName());
             reviewDTO.setBookTitle(bookClient.getBookById(reviewDTO.getBookId()).getBody().getTitle());
@@ -210,7 +225,11 @@ public class ReviewServiceImpl implements ReviewService {
             throw new ReviewNotFoundException(STR."No Reviews with User ID: \{userId} Found!");
         }
         List<ReviewDTO> reviewDTOList = new ArrayList<>();
+        List<Long> reviewDeleteList = reviewDeleteRepository.findAllReviewIds();
         for (Review review1 : reviewList) {
+            if (reviewDeleteList.contains(review1.getReviewId())) {
+                continue;
+            }
             ReviewDTO reviewDTO = mapper.map(review1, ReviewDTO.class);
             reviewDTO.setUserName(userClient.getUserById(reviewDTO.getUserId()).getBody().getName());
             BookDTO map = (BookDTO) bookClient.getBookById(reviewDTO.getBookId()).getBody();
@@ -234,10 +253,14 @@ public class ReviewServiceImpl implements ReviewService {
             throw new ReviewNotFoundException(STR."No Reviews with Book ID: \{bookId} Found!");
         }
         List<ReviewDTO> reviewDTOList = new ArrayList<>();
+        List<Long> reviewDeleteList = reviewDeleteRepository.findAllReviewIds();
         for (Review review1 : reviewList) {
+            if (reviewDeleteList.contains(review1.getReviewId())) {
+                continue;
+            }
             ReviewDTO reviewDTO = mapper.map(review1, ReviewDTO.class);
             reviewDTO.setUserName(userClient.getUserById(reviewDTO.getUserId()).getBody().getName());
-            BookDTO map =(BookDTO) bookClient.getBookById(reviewDTO.getBookId()).getBody();
+            BookDTO map = (BookDTO) bookClient.getBookById(reviewDTO.getBookId()).getBody();
             reviewDTO.setBookTitle(map.getTitle());
             reviewDTOList.add(reviewDTO);
         }
