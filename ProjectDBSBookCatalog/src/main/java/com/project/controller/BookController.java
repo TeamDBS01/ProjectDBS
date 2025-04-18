@@ -58,7 +58,7 @@ public class BookController {
 
     @GetMapping
     public ResponseEntity<Object> getAllBooks(@RequestParam(defaultValue = "0") int page,
-                                              @RequestParam(defaultValue = "10") int size) {
+                                              @RequestParam(defaultValue = "3") int size) {
         try {
             List<BookDTO> bookList = bookServiceImpl.getAllBooks(page, size);
             return ResponseEntity.ok(bookList);
