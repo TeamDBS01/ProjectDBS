@@ -1,3 +1,68 @@
+#spring:
+#  application:
+#    name: user-service
+#  jpa:
+#    hibernate:
+#      ddl-auto: update
+#    database-platform: org.hibernate.dialect.MySQL8Dialect
+#    show-sql: true
+#  datasource:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/user_db?createDatabaseIfNotExist=true
+#    username: root
+#    password: Root
+#  boot:
+#    admin:
+#      client:
+#        url: http://localhost:8761/admin
+#        enabled: true
+#        instance:
+#          service-url: http://localhost:8086
+#
+#server:
+#  port: 8086
+#
+#eureka:
+#  instance:
+#    hostname: ${vcap.application.uris[0]:localhost}
+#    metadataMap:
+#      instanceId: ${vcap.application.instance_id:${spring.application.name}:${spring.application.instance_id:${server.port}}}
+#    leaseRenewalIntervalInSeconds: 5
+#  client:
+#    region: default
+#    registryFetchIntervalSeconds: 5
+#    serviceUrl:
+#      defaultZone: http://localhost:8761/eureka/
+#    register-with-eureka: true
+#    fetch-registry: true
+#
+#springdoc:
+#  api-docs:
+#    enabled: true
+#  swagger-ui:
+#    enabled: true
+#
+#logging:
+#  level:
+#    org:
+#      springframework: DEBUG
+#
+#management:
+#  info:
+#    env:
+#      enabled: true
+#  endpoints:
+#    web:
+#      exposure:
+#        include: "*"
+#
+#info:
+#  app:
+#    name: User Rest API
+#    version: 1.0.0
+#    description: User Rest API
+#
+
 spring:
   application:
     name: user-service
@@ -18,6 +83,17 @@ spring:
         enabled: true
         instance:
           service-url: http://localhost:8086
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: sathishvarunt@gmail.com
+    password: hcxdsnzzvlygifdj
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: true
+          auth: true
 
 server:
   port: 8086
@@ -62,3 +138,10 @@ info:
     version: 1.0.0
     description: User Rest API
 
+forgot:
+  password:
+    reset:
+      link: http://localhost:4200/reset-password
+    token:
+      expiry:
+        minutes: 30

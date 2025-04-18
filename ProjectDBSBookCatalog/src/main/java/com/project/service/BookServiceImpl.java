@@ -53,6 +53,7 @@ public class BookServiceImpl implements BookService {
 
     /**
      * Retrieves all books from the repository.
+     *
      * @param page
      * @param size
      * @return a list of BookDTO objects
@@ -76,7 +77,7 @@ public class BookServiceImpl implements BookService {
             BookDTO bookDTO = modelMapper.map(book, BookDTO.class);
             String authorName = bookRepository.findAuthorNameByBookTitle(book.getTitle())
                     .orElse("Unknown Author");
-            String categoryName= bookRepository.findCategoryNameByBookTitle(book.getTitle())
+            String categoryName = bookRepository.findCategoryNameByBookTitle(book.getTitle())
                     .orElse("Unknown Category");
             bookDTO.setAuthorName(authorName);
             bookDTO.setCategoryName(categoryName);
@@ -89,6 +90,12 @@ public class BookServiceImpl implements BookService {
         return bookDTOs;
     }
 
+    @Override
+    public int getNoOfPages(){
+        Pageable pageable=PageRequest.of(0,3);
+        Page<Book> bookPage=bookRepository.findAll(pageable);
+        return bookPage.getTotalPages();
+    }
     /**
      * Retrieves a book by its ID.
      *
@@ -99,20 +106,21 @@ public class BookServiceImpl implements BookService {
     public BookDTO getBookById(String bookId) throws BookResourceNotFoundException {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new BookResourceNotFoundException("No book with ID found: " + bookId));
-         BookDTO bookDTO=modelMapper.map(book, BookDTO.class);
+        BookDTO bookDTO = modelMapper.map(book, BookDTO.class);
 
         String authorName = bookRepository.findAuthorNameByBookTitle(book.getTitle())
                 .orElse("Unknown Author");
-        String categoryName= bookRepository.findCategoryNameByBookTitle(book.getTitle())
+        String categoryName = bookRepository.findCategoryNameByBookTitle(book.getTitle())
                 .orElse("Unknown Category");
         bookDTO.setAuthorName(authorName);
         bookDTO.setCategoryName(categoryName);
 
-         if(book.getCoverImage()!=null){
-             bookDTO.setBase64img(Base64.getEncoder().encodeToString(book.getCoverImage()));
-         }
-         return bookDTO;
+        if (book.getCoverImage() != null) {
+            bookDTO.setBase64img(Base64.getEncoder().encodeToString(book.getCoverImage()));
+        }
+        return bookDTO;
     }
+
     @Override
     public BookDTO getBookByTitle(String title) throws BookResourceNotFoundException {
         Book book = bookRepository.findByTitle(title)
@@ -132,6 +140,7 @@ public class BookServiceImpl implements BookService {
 
         return bookDTO;
     }
+
     @Override
     public List<BookDTO> getBooksByTitle(String title) throws BookResourceNotFoundException {
         List<Book> books = bookRepository.findBooksByTitleContaining(title);
@@ -145,7 +154,7 @@ public class BookServiceImpl implements BookService {
             BookDTO bookDTO = modelMapper.map(book, BookDTO.class);
             String authorName = bookRepository.findAuthorNameByBookTitle(book.getTitle())
                     .orElse("Unknown Author");
-            String categoryName= bookRepository.findCategoryNameByBookTitle(book.getTitle())
+            String categoryName = bookRepository.findCategoryNameByBookTitle(book.getTitle())
                     .orElse("Unknown Category");
             bookDTO.setAuthorName(authorName);
             bookDTO.setCategoryName(categoryName);
@@ -158,6 +167,7 @@ public class BookServiceImpl implements BookService {
         return bookDTOs;
     }
 
+
     /**
      * Retrieves books by category.
      *
@@ -165,15 +175,28 @@ public class BookServiceImpl implements BookService {
      * @return a list of BookDTO objects
      * @throws BookResourceNotFoundException if no books are found in the given category
      */
+    @Override
     public List<BookDTO> getBooksByCategory(String categoryName) throws BookResourceNotFoundException {
         List<Book> bookList = bookRepository.getByCategory(categoryName);
 
         if (bookList.isEmpty()) {
-            throw new BookResourceNotFoundException("No books found");
+            throw new BookResourceNotFoundException("No books found in category: " + categoryName);
         }
-        return bookList.stream()
-                .map(book -> modelMapper.map(book, BookDTO.class))
-                .collect(Collectors.toList());
+
+        List<BookDTO> bookDTOs = new ArrayList<>();
+        for (Book book : bookList) {
+            BookDTO bookDTO = modelMapper.map(book, BookDTO.class);
+            String authorName = bookRepository.findAuthorNameByBookTitle(book.getTitle())
+                    .orElse("Unknown Author");
+            bookDTO.setAuthorName(authorName);
+            bookDTO.setCategoryName(categoryName);
+            if (book.getCoverImage() != null) {
+                bookDTO.setBase64img(Base64.getEncoder().encodeToString(book.getCoverImage()));
+            }
+            bookDTOs.add(bookDTO);
+        }
+
+        return bookDTOs;
     }
 
     /**
@@ -183,19 +206,42 @@ public class BookServiceImpl implements BookService {
      * @return a list of BookDTO objects
      * @throws BookResourceNotFoundException if no books are found by the given author
      */
+    @Override
     public List<BookDTO> getBooksByAuthor(String authorName) throws BookResourceNotFoundException {
         List<Book> bookList = bookRepository.getByAuthor(authorName);
+
         if (bookList.isEmpty()) {
-            throw new BookResourceNotFoundException("No books found");
+            throw new BookResourceNotFoundException("No books found by author: " + authorName);
         }
-        return bookList.stream()
-                .map(book -> modelMapper.map(book, BookDTO.class))
-                .collect(Collectors.toList());
+
+        List<BookDTO> bookDTOs = new ArrayList<>();
+        for (Book book : bookList) {
+            BookDTO bookDTO = modelMapper.map(book, BookDTO.class);
+            String categoryName = bookRepository.findCategoryNameByBookTitle(book.getTitle())
+                    .orElse("Unknown Category");
+            bookDTO.setAuthorName(authorName);
+            bookDTO.setCategoryName(categoryName);
+            if (book.getCoverImage() != null) {
+                bookDTO.setBase64img(Base64.getEncoder().encodeToString(book.getCoverImage()));
+            }
+            bookDTOs.add(bookDTO);
+        }
+
+        return bookDTOs;
     }
+
+
+    public List<String> getAllAuthors() {
+        return bookRepository.findDistinctAuthors();
+    }
+
+    public List<String> getAllCategories() {
+        return bookRepository.findDistinctCategories();
+    }
+
 
     /**
      * Filters books based on given criteria.
-     *
      *
      * @return a list of BookDTO objects
      * @throws BookResourceNotFoundException if no books are found for the given criteria
@@ -284,7 +330,9 @@ public class BookServiceImpl implements BookService {
                     return bookDTO;
                 })
                 .collect(Collectors.toList());
-    }    /**
+    }
+
+    /**
      * Adds a new book to the repository.
      *
      * @param bookDTO the book data transfer object
@@ -295,6 +343,26 @@ public class BookServiceImpl implements BookService {
         if (bookDTO == null) {
             throw new BookResourceNotFoundException("Book resource cannot be null");
         }
+
+        Integer authorId = bookRepository.findAuthorIDByName(bookDTO.getAuthorName());
+        if (authorId == null) {
+            authorId = bookRepository.insertNewAuthor(bookDTO.getAuthorName());
+            if (authorId == null) {
+                throw new BookResourceNotFoundException("Failed to create and retrieve Author ID for: " + bookDTO.getAuthorName());
+            }
+        }
+        authorId = bookRepository.findAuthorIDByName(bookDTO.getAuthorName());
+        bookDTO.setAuthorID(authorId);
+
+        Integer categoryId = bookRepository.findCategoryIDByName(bookDTO.getCategoryName());
+        if (categoryId == null) { // Using null for clarity
+            categoryId = bookRepository.insertNewCategory(bookDTO.getCategoryName());
+            if (categoryId == null) {
+                throw new BookResourceNotFoundException("Failed to create and retrieve Category ID for: " + bookDTO.getCategoryName());
+            }
+        }
+        categoryId = bookRepository.findCategoryIDByName(bookDTO.getCategoryName());
+        bookDTO.setCategoryID(categoryId);
         Book book = modelMapper.map(bookDTO, Book.class);
 
         if (bookDTO.getBase64img() != null && !bookDTO.getBase64img().isEmpty() && !bookDTO.getBase64img().equals("null")) {
@@ -308,17 +376,17 @@ public class BookServiceImpl implements BookService {
 
 
     /**
-	 * Deletes a book by its ID.
-	 *
-	 * @param bookID the ID of the book
-	 * @return true if the book is deleted successfully
-	 * @throws BookResourceNotFoundException if no book with the given ID is found
-	 */
+     * Deletes a book by its ID.
+     *
+     * @param bookID the ID of the book
+     * @return true if the book is deleted successfully
+     * @throws BookResourceNotFoundException if no book with the given ID is found
+     */
     public boolean deleteBookById(String bookID) throws BookResourceNotFoundException {
         Optional<Book> optionalOfBook = bookRepository.findById(bookID);
         if (optionalOfBook.isPresent()) {
             bookRepository.deleteById(bookID);
-            inventoryInterface.deleteBookFromInventory(bookID);
+            //inventoryInterface.deleteBookFromInventory(bookID);
             return true;
         } else {
             throw new BookResourceNotFoundException(BOOK_NOT_FOUND_MESSAGE);
@@ -348,7 +416,7 @@ public class BookServiceImpl implements BookService {
     /**
      * Updates a book by its ID.
      *
-     * @param bookID the ID of the book
+     * @param bookID  the ID of the book
      * @param bookDTO the book data transfer object
      * @return true if the book is updated successfully
      * @throws BookResourceNotFoundException if no book with the given ID is found
@@ -365,13 +433,13 @@ public class BookServiceImpl implements BookService {
         }
     }
 
-    public void saveBookImage(String bookID, MultipartFile imageFile) throws IOException{
-        Optional<Book> optionalBook=bookRepository.findById(bookID);
-        if(optionalBook.isPresent()){
-            Book book=optionalBook.get();
+    public void saveBookImage(String bookID, MultipartFile imageFile) throws IOException {
+        Optional<Book> optionalBook = bookRepository.findById(bookID);
+        if (optionalBook.isPresent()) {
+            Book book = optionalBook.get();
             book.setCoverImage(imageFile.getBytes());
             bookRepository.save(book);
-        }else{
+        } else {
             throw new RuntimeException("Book not found");
         }
     }
@@ -393,6 +461,29 @@ public class BookServiceImpl implements BookService {
         } catch (IllegalArgumentException e) {
             System.err.println("Error decoding base64 image (invalid format): " + e.getMessage());
             throw e; // Re-throw the exception to be handled by the caller
+        }
+    }
+
+    @Override
+    public void saveBookSampleChapter(String bookID, MultipartFile sampleChapterFile) throws IOException {
+        Optional<Book> optionalBook = bookRepository.findById(bookID);
+        if (optionalBook.isPresent()) {
+            Book book = optionalBook.get();
+            book.setSampleChapter(sampleChapterFile.getBytes());
+            bookRepository.save(book);
+        } else {
+            throw new IOException("Book not found");
+        }
+    }
+
+
+    @Override
+    public byte[] getSampleChapter(String bookID) throws BookResourceNotFoundException {
+        Optional<Book> optionalBook = bookRepository.findById(bookID);
+        if (optionalBook.isPresent()) {
+            return optionalBook.get().getSampleChapter();
+        } else {
+            throw new BookResourceNotFoundException("Book not found");
         }
     }
 

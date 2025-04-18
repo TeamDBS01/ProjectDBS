@@ -1,5 +1,8 @@
 package com.project.controller;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.List;
 
 import com.project.exception.PageOutOfBoundsException;
@@ -9,7 +12,10 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -21,12 +27,12 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * RestFul Controller exposing endpoints for resource of type Book.
+ *
  * @author Preethi
  */
 @RestController
 @RequestMapping("/dbs/books")
 @Validated
-//@CrossOrigin(origins = "http://localhost:4200")
 public class BookController {
 
     @Autowired
@@ -63,6 +69,11 @@ public class BookController {
         }
     }
 
+    @GetMapping("pages")
+    public int pages(){
+        return bookServiceImpl.getNoOfPages();
+    }
+
     /**
      * @param bookId ID of the book
      * @return ResponseEntity - Entity of type Book
@@ -83,6 +94,7 @@ public class BookController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("ERROR: " + e.getMessage());
         }
     }
+
     @GetMapping("/title/{title}")
     public ResponseEntity<BookDTO> getBookByTitle(@PathVariable String title) {
         try {
@@ -102,6 +114,21 @@ public class BookController {
             return ResponseEntity.notFound().build();
         }
     }
+
+
+    @GetMapping("/authors")
+    public ResponseEntity<List<String>> getAllAuthors() {
+        List<String> authors = bookServiceImpl.getAllAuthors();
+        return new ResponseEntity<>(authors, HttpStatus.OK);
+    }
+
+
+    @GetMapping("/categories")
+    public ResponseEntity<List<String>> getAllCategories() {
+        List<String> categories = bookServiceImpl.getAllCategories();
+        return new ResponseEntity<>(categories, HttpStatus.OK);
+    }
+
 
     /**
      * @param categoryName Name of the category
@@ -193,10 +220,11 @@ public class BookController {
             if (isAdded) {
                 return new ResponseEntity<>("Book added successfully", HttpStatus.CREATED);
             } else {
-                return new ResponseEntity<>("Failed to add book", HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>("Failed to add book", HttpStatus.CONFLICT);
             }
         } catch (Exception e) {
-            return new ResponseEntity<>("An unexpected error occurred", HttpStatus.BAD_REQUEST);
+            e.printStackTrace();
+            return new ResponseEntity<>("An unexpected error occurred", HttpStatus.EXPECTATION_FAILED);
         }
     }
 
@@ -215,7 +243,7 @@ public class BookController {
     public ResponseEntity<String> deleteBookById(@PathVariable String bookID) {
         try {
             bookServiceImpl.deleteBookById(bookID);
-            return new ResponseEntity<>(DELETED, HttpStatus.OK);
+            return new ResponseEntity<>("Book Deleted", HttpStatus.OK);
         } catch (BookResourceNotFoundException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.NOT_FOUND);
         }
@@ -274,12 +302,60 @@ public class BookController {
     }
 
     @PostMapping("/{bookID}/upload-image")
-    public ResponseEntity<String> uploadImage(@PathVariable String bookID, @RequestParam("imageFile") MultipartFile imageFile){
-        try{
+    public ResponseEntity<String> uploadImage(@PathVariable String bookID, @RequestParam("imageFile") MultipartFile imageFile) {
+        try {
             bookServiceImpl.saveBookImage(bookID, imageFile);
             return ResponseEntity.ok("Image uploaded successfully");
-        }catch(Exception e){
+        } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("upload failed");
         }
     }
+
+        @PostMapping("/{bookID}/sample")
+        public ResponseEntity<String> uploadSampleChapter(@PathVariable String bookID, @RequestParam("file") MultipartFile file) {
+            try {
+                bookServiceImpl.saveBookSampleChapter(bookID, file);
+                return ResponseEntity.ok("Sample chapter uploaded successfully");
+            } catch (IOException e) {
+                return ResponseEntity.status(HttpStatus.EXPECTATION_FAILED).body("Error uploading sample chapter");
+            }
+        }
+
+    @GetMapping("/{bookID}/sample")
+    public ResponseEntity<ByteArrayResource> getSampleChapter(@PathVariable String bookID) throws BookResourceNotFoundException {
+        byte[] pdfData = bookServiceImpl.getSampleChapter(bookID);
+        ByteArrayResource resource = new ByteArrayResource(pdfData);
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=sample.pdf");
+        headers.add(HttpHeaders.CONTENT_TYPE, "application/octet-stream");
+//        return ResponseEntity.ok()
+//                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=sample.pdf")
+//                .contentType(MediaType.APPLICATION_PDF)
+//                .body(resource);
+        return new ResponseEntity<>(resource, headers, HttpStatus.OK);
+    }
+
+    @GetMapping("pdf")
+    public ResponseEntity<?> getPdf(){
+        File pdfFile = new File("C:\\Users\\2387997\\Desktop\\Book Sample\\Harry Potter.pdf");
+        byte[] pdfBytes = null;
+
+        try (FileInputStream fis = new FileInputStream(pdfFile)) {
+            pdfBytes = new byte[(int) pdfFile.length()];
+            fis.read(pdfBytes);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        ByteArrayResource resource = new ByteArrayResource(pdfBytes);
+
+        // Set the response headers
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=data.bin");
+        headers.add(HttpHeaders.CONTENT_TYPE, "application/octet-stream");
+
+        // Return the binary data as a ResponseEntity
+        return new ResponseEntity<>(resource, headers, HttpStatus.OK);
+
+    }
+
 }
