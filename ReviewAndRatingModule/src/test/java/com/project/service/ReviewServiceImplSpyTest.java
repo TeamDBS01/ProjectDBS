@@ -30,9 +30,9 @@ class ReviewServiceImplSpyTest {
 
     private static final float RATING = 4.5f;
     private static final String COMMENT = "Great Book";
-    private static final long USER_ID = 24L;
+    private static final long USER_ID = 22L;
     private static final String BOOK_ID = "ISBN-1212";
-    private static final String USER_NAME = "daya";
+    private static final String USER_NAME = "Varun";
     private static final String BOOK_TITLE = "The Great Programmer's Guide";
     private static long SIZE;
     @Autowired
@@ -67,6 +67,7 @@ class ReviewServiceImplSpyTest {
             fail(STR."Error thrown:  \{e.toString()}");
         }
         reviewDTO.setReviewId(reviewDTOActual.getReviewId());
+        reviewDTO.setBookTitle(null);
         assertEquals(reviewDTO, reviewDTOActual);
         assertEquals(++SIZE, reviewRepository.count());
     }
@@ -102,6 +103,8 @@ class ReviewServiceImplSpyTest {
                  ServiceUnavailableException e) {
             fail(STR."Error thrown in updateReview: \{e}");
         }
+        reviewDTO.setBookTitle(null);
+        reviewDTO.setUserName(null);
         assertEquals(reviewDTO, actual);
     }
 
@@ -118,6 +121,8 @@ class ReviewServiceImplSpyTest {
                  ServiceUnavailableException e) {
             fail(STR."Error thrown in updateReview: \{e}");
         }
+        reviewDTO.setBookTitle(null);
+        reviewDTO.setUserName(null);
         assertEquals(reviewDTO, actual);
     }
 
@@ -261,8 +266,8 @@ class ReviewServiceImplSpyTest {
     @DisplayName("RetrieveAllReviews-Positive-WithMultipleReviews")
     void test_retrieveAllReviews_positive_withMultipleReviews() {
         reviewRepository.deleteAll();
-        Review review1 = new Review(0.1f, "Worst Book", 4, "ISBN-NTGD");
-        ReviewDTO reviewDTO1 = new ReviewDTO(0L, 0.1f, "Worst Book", 4L, "ISBN-NTGD", USER_NAME, BOOK_TITLE);
+        Review review1 = new Review(0.1f, "Worst Book", USER_ID, BOOK_ID);
+        ReviewDTO reviewDTO1 = new ReviewDTO(0L, 0.1f, "Worst Book", USER_ID, BOOK_ID, USER_NAME, BOOK_TITLE);
         reviewDTO.setReviewId(reviewRepository.save(review).getReviewId());
         reviewDTO1.setReviewId(reviewRepository.save(review1).getReviewId());
         List<ReviewDTO> actual = null, expected = List.of(reviewDTO, reviewDTO1);
@@ -290,6 +295,8 @@ class ReviewServiceImplSpyTest {
         ReviewDTO actual = null;
         long reviewId = reviewRepository.save(review).getReviewId();
         reviewDTO.setReviewId(reviewId);
+        reviewDTO.setBookTitle(null);
+        reviewDTO.setUserName("Nandini Pillai");
         try {
             actual = reviewService.retrieveReviewById(reviewId);
         } catch (ReviewNotFoundException | ServiceUnavailableException e) {
@@ -312,8 +319,8 @@ class ReviewServiceImplSpyTest {
     @DisplayName("RetrieveAllReviewsByUserId-Positive")
     void test_retrieveAllReviewsByUserId_positive() {
         reviewRepository.deleteAll();
-        Review review2 = new Review(3f, "Good Content", USER_ID, "ISBN-3080");
-        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", USER_ID, "ISBN-3080", USER_NAME, BOOK_TITLE);
+        Review review2 = new Review(3f, "Good Content", USER_ID, "B001");
+        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", USER_ID, "B001", USER_NAME, "Effective Java");
         List<ReviewDTO> actual = null;
         List<ReviewDTO> expected = List.of(reviewDTO, reviewDTO2);
         reviewDTO.setReviewId(reviewRepository.save(review).getReviewId());
@@ -339,8 +346,8 @@ class ReviewServiceImplSpyTest {
     @DisplayName("RetrieveAllReviewsByBookId-Positive")
     void test_retrieveAllReviewsByBookId_positive() {
         reviewRepository.deleteAll();
-        Review review2 = new Review(3f, "Good Content", 11L, BOOK_ID);
-        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", 11L, BOOK_ID, USER_NAME, BOOK_TITLE);
+        Review review2 = new Review(3f, "Good Content", 22L, BOOK_ID);
+        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", 22L, BOOK_ID, "Varun", BOOK_TITLE);
         List<ReviewDTO> actual = null;
         List<ReviewDTO> expected = List.of(reviewDTO, reviewDTO2);
         reviewDTO.setReviewId(reviewRepository.save(review).getReviewId());

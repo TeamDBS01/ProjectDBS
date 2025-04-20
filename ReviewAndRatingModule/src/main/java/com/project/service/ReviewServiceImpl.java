@@ -86,11 +86,8 @@ public class ReviewServiceImpl implements ReviewService {
         if (responseUser.getBody() == null || responseUser.getBody().getUserId() == null) {
             throw new UserNotFoundException(STR."User with ID: \{userId} Not Found");
         }
-//        try {
         if (bookClient.getBookById(bookId).getStatusCode() != HttpStatus.OK)
-//        } catch (FeignException e) {
             throw new BookNotFoundException(STR."Book with ID: \{bookId} Not Found");
-//        }
         review = reviewRepository.save(review);
         ReviewDTO reviewDTO = mapper.map(review, ReviewDTO.class);
         reviewDTO.setUserName(responseUser.getBody().getName());
@@ -232,8 +229,8 @@ public class ReviewServiceImpl implements ReviewService {
             }
             ReviewDTO reviewDTO = mapper.map(review1, ReviewDTO.class);
             reviewDTO.setUserName(userClient.getUserById(reviewDTO.getUserId()).getBody().getName());
-            BookDTO map = (BookDTO) bookClient.getBookById(reviewDTO.getBookId()).getBody();
-            reviewDTO.setBookTitle(map.getTitle());
+            BookDTO bookDTO = bookClient.getBookById(reviewDTO.getBookId()).getBody();
+            reviewDTO.setBookTitle(bookDTO.getTitle());
             reviewDTOList.add(reviewDTO);
         }
         return reviewDTOList;
