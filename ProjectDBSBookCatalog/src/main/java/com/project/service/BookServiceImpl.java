@@ -92,7 +92,7 @@ public class BookServiceImpl implements BookService {
 
     @Override
     public int getNoOfPages(){
-        Pageable pageable=PageRequest.of(0,3);
+        Pageable pageable=PageRequest.of(0,6);
         Page<Book> bookPage=bookRepository.findAll(pageable);
         return bookPage.getTotalPages();
     }
@@ -246,60 +246,7 @@ public class BookServiceImpl implements BookService {
      * @return a list of BookDTO objects
      * @throws BookResourceNotFoundException if no books are found for the given criteria
      */
-//    public List<BookDTO> filter(String... criteria) throws BookResourceNotFoundException {
-//        if (criteria.length == 0) {
-//            throw new IllegalArgumentException("At least one criterion must be provided");
-//        }
-//
-//        List<Book> filteredBooks = new ArrayList<>();
-//
-//        if (criteria.length == 1) {
-//            String criterion = criteria[0];
-//            filteredBooks.addAll(bookRepository.getByAuthor(criterion));
-//            filteredBooks.addAll(bookRepository.getByCategory(criterion));
-//        } else if (criteria.length == 2) {
-//            String author = criteria[0];
-//            String category = criteria[1];
-//            List<Book> booksByAuthor = bookRepository.getByAuthor(author);
-//            filteredBooks = booksByAuthor.stream()
-//                    .filter(book -> bookRepository.getByCategory(category).contains(book))
-//                    .collect(Collectors.toList());
-//        }
-//
-//        if (filteredBooks.isEmpty()) {
-//            throw new BookResourceNotFoundException("No books found for the given criteria");
-//        }
-//
-//        return filteredBooks.stream()
-//                .map(book -> modelMapper.map(book, BookDTO.class))
-//                .collect(Collectors.toList());
-//    }
 
-//    public List<BookDTO> filter(String author, String category) throws BookResourceNotFoundException {
-//        List<Book> filteredBooks = new ArrayList<>();
-//
-//        if (author != null && !author.isEmpty()) {
-//            filteredBooks.addAll(bookRepository.getByAuthor(author));
-//        }
-//
-//        if (category != null && !category.isEmpty()) {
-//            if (!filteredBooks.isEmpty()) {
-//                filteredBooks = filteredBooks.stream()
-//                        .filter(book -> bookRepository.getByCategory(category).contains(book))
-//                        .collect(Collectors.toList());
-//            } else {
-//                filteredBooks.addAll(bookRepository.getByCategory(category));
-//            }
-//        }
-//
-//        if (filteredBooks.isEmpty()) {
-//            throw new BookResourceNotFoundException("No books found for the given criteria");
-//        }
-//
-//        return filteredBooks.stream()
-//                .map(book -> modelMapper.map(book, BookDTO.class))
-//                .collect(Collectors.toList());
-//    }
     public List<BookDTO> filter(String author, String category) throws BookResourceNotFoundException {
         List<Book> filteredBooks = new ArrayList<>();
 
