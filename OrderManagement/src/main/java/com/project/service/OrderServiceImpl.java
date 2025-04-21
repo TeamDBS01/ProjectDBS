@@ -701,6 +701,15 @@ public class OrderServiceImpl implements  OrderService{
 		orderRepository.save(order);
 		clearCart(userId);
 	}
+
+	public List<OrderDTO> getAllOrders() {
+		List<Order> orders = orderRepository.findAll();
+		List<OrderDTO> orderDTOs = new ArrayList<>();
+		for (Order order : orders) {
+			orderDTOs.add(convertToOrderDTO(order));
+		}
+		return orderDTOs;
+	}
 }
 
 

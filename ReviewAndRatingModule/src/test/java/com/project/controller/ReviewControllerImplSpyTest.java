@@ -7,6 +7,8 @@ import com.project.dto.ReviewDTO;
 import com.project.exception.*;
 import com.project.feign.BookClient;
 import com.project.feign.UserClient;
+import com.project.models.Review;
+import com.project.repositories.ReviewDeleteRepository;
 import com.project.repositories.ReviewRepository;
 import com.project.service.ReviewService;
 import com.project.service.ReviewServiceImpl;
@@ -39,11 +41,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ReviewControllerImplSpyTest {
     private static final float RATING = 5f;
     private static final String COMMENT = "Best book!";
-    private static final long USER_ID = 12L;
-    private static final String BOOK_ID = "ISBN-1212";
+    private static final long USER_ID = 22L;
+    private static final String BOOK_ID = "B001";
+    private static final String USER_NAME = "Varun";
+    private static final String BOOK_TITLE = "Effective Java";
     private static long REVIEW_ID;
     @Autowired
     private ReviewRepository reviewRepository;
+    @Autowired
+    private ReviewDeleteRepository reviewDeleteRepository;
     @Autowired
     private ModelMapper mapper;
     @Autowired
@@ -52,14 +58,19 @@ class ReviewControllerImplSpyTest {
     private BookClient bookClient;
     private ReviewControllerImpl reviewController;
     private ReviewDTO reviewDTO;
+    private Review review;
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() throws Exception {
-        ReviewService reviewService = new ReviewServiceImpl(reviewRepository, userClient, bookClient, mapper);
+        reviewRepository.deleteAll();
+        ReviewService reviewService = new ReviewServiceImpl(reviewRepository, reviewDeleteRepository, userClient, bookClient, mapper);
         reviewController = new ReviewControllerImpl(Mockito.spy(reviewService));
         mockMvc = MockMvcBuilders.standaloneSetup(reviewController).build();
+        review = new Review(RATING, COMMENT, USER_ID, BOOK_ID);
         reviewDTO = reviewService.addReview(RATING, COMMENT, USER_ID, BOOK_ID);
+        reviewDTO.setUserName(USER_NAME);
+        reviewDTO.setBookTitle(BOOK_TITLE);
         REVIEW_ID = reviewDTO.getReviewId();
     }
 
@@ -67,6 +78,8 @@ class ReviewControllerImplSpyTest {
     @DisplayName("GetReviewById-Positive")
     void test_getReviewById_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         ResponseEntity<ReviewDTO> response = reviewController.getReviewById(REVIEW_ID);
+        reviewDTO.setBookTitle(null);
+        reviewDTO.setUserName(null);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(reviewDTO, response.getBody());
     }
@@ -111,9 +124,11 @@ class ReviewControllerImplSpyTest {
     @Test
     @DisplayName("GetAverageByBookId-Positive")
     void test_getAverageByBookId_positive() {
-        ResponseEntity<Float> response = reviewController.getAverageByBookId(BOOK_ID);
+        reviewRepository.deleteAll();
+        reviewRepository.save(review);
+        ResponseEntity<List<Float>> response = reviewController.getAverageByBookId(BOOK_ID);
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(3.5f, response.getBody());
+        assertEquals(List.of(RATING, 1f), response.getBody());
     }
 
     @Test
@@ -123,6 +138,7 @@ class ReviewControllerImplSpyTest {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         reviewDTO.setReviewId(response.getBody().getReviewId());
+        reviewDTO.setBookTitle(null);
         assertEquals(reviewDTO, response.getBody());
     }
 
@@ -134,6 +150,7 @@ class ReviewControllerImplSpyTest {
         assertEquals(HttpStatus.CREATED, response.getStatusCode());
         assertNotNull(response.getBody());
         reviewDTO.setReviewId(response.getBody().getReviewId());
+        reviewDTO.setBookTitle(null);
         assertEquals(reviewDTO, response.getBody());
     }
 
@@ -142,6 +159,8 @@ class ReviewControllerImplSpyTest {
     @DisplayName("UpdateReview-Positive")
     void test_updateReview_positive() throws UserNotFoundException, UserNotAuthorizedException, IDMismatchException, BookNotFoundException, ServiceUnavailableException {
         ResponseEntity<ReviewDTO> response = reviewController.updateReview(USER_ID, reviewDTO);
+        reviewDTO.setBookTitle(null);
+        reviewDTO.setUserName(null);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(reviewDTO, response.getBody());
     }
@@ -154,14 +173,6 @@ class ReviewControllerImplSpyTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertTrue(response.hasBody());
     }
-
-//    @Test
-//    @DisplayName("GetOk")
-//    void test_getOk() {
-//        ResponseEntity<Boolean> response = reviewController.getOk();
-//        assertEquals(Boolean.TRUE, response.getBody());
-//        assertEquals(HttpStatus.OK, response.getStatusCode());
-//    }
 
     @Test
     @DisplayName("GetReviewById-Uri-Positive")
@@ -283,7 +294,7 @@ class ReviewControllerImplSpyTest {
         try {
             mockMvc.perform(post("/dbs/review/add")
                             .contentType("application/json")
-                            .content("{\"rating\":5.0,\"comment\":\"Best book!\",\"userId\":12,\"bookId\":\"ISBN-1212\"}"))
+                            .content("{\"rating\":5.0,\"comment\":\"Best book!\",\"userId\":22,\"bookId\":\"ISBN-1212\"}"))
                     .andExpect(status().isCreated())
                     .andReturn();
         } catch (Exception e) {
@@ -298,7 +309,7 @@ class ReviewControllerImplSpyTest {
         try {
             mockMvc.perform(put("/dbs/review/update/{userId}", USER_ID)
                             .contentType("application/json")
-                            .content(STR."{\"reviewId\":\{REVIEW_ID},\"rating\":4.0,\"comment\":\"Good book!\",\"userId\":12,\"bookId\":\"ISBN-1212\"}"))
+                            .content(STR."{\"reviewId\":\{REVIEW_ID},\"rating\":4.0,\"comment\":\"Good book!\",\"userId\":22,\"bookId\":\"\{BOOK_ID}\"}"))
                     .andExpect(status().isOk())
                     .andReturn();
         } catch (Exception e) {
