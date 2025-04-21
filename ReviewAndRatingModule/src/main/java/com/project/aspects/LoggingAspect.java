@@ -13,63 +13,21 @@ import org.springframework.stereotype.Component;
 @Slf4j
 public class LoggingAspect {
 
-    @Before("execution(* com.project.repositories.*.*(..))")
-    public void beforeRepositories(JoinPoint joinPoint) {
-        loggerInfoBefore(joinPoint);
-    }
-
-    @Before("execution(* com.project.service.*.*(..))")
-    public void beforeService(JoinPoint joinPoint) {
-        loggerInfoBefore(joinPoint);
-    }
-
-    @Before("execution(* com.project.controller.*.*(..))")
-    public void beforeController(JoinPoint joinPoint) {
-        loggerInfoBefore(joinPoint);
-    }
-
-    private void loggerInfoBefore(JoinPoint joinPoint) {
+    @Before("execution(* com.project.*.*.*(..))")
+    public void beforeMethod(JoinPoint joinPoint) {
         log.info("Executing method: {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
     }
 
-    @AfterReturning(pointcut = "execution(* com.project.repositories.*.*(..))", returning = "result")
-    public void afterReturningRepositories(JoinPoint joinPoint, Object result) {
-        loggerInfoAfterReturning(joinPoint, result);
-    }
-
-    @AfterReturning(pointcut = "execution(* com.project.service.*.*(..))", returning = "result")
-    public void afterReturningService(JoinPoint joinPoint, Object result) {
-        loggerInfoAfterReturning(joinPoint, result);
-    }
-
-    @AfterReturning(pointcut = "execution(* com.project.controller.*.*(..))", returning = "result")
-    public void afterReturningController(JoinPoint joinPoint, Object result) {
-        loggerInfoAfterReturning(joinPoint, result);
-    }
-
-    private void loggerInfoAfterReturning(JoinPoint joinPoint, Object result) {
+    @AfterReturning(pointcut = "execution(* com.project.*.*.*(..))", returning = "result")
+    public void afterReturningMethod(JoinPoint joinPoint, Object result) {
         log.info("Method executed successfully: {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
         if (result != null && result.toString().length() < 1000) {
             log.info("Method result: {}", result);
         }
     }
 
-    @AfterThrowing(pointcut = "execution(* com.project.repositories.*.*(..))", throwing = "error")
-    public void afterThrowingRepositories(JoinPoint joinPoint, Throwable error) {
-        loggerInfoAfterThrowing(joinPoint, error);
-    }
-
-    @AfterThrowing(pointcut = "execution(* com.project.service.*.*(..))", throwing = "error")
-    public void afterThrowingService(JoinPoint joinPoint, Throwable error) {
-        loggerInfoAfterThrowing(joinPoint, error);
-    }
-
-    @AfterThrowing(pointcut = "execution(* com.project.controller.*.*(..))", throwing = "error")
-    public void afterThrowingController(JoinPoint joinPoint, Throwable error) {
-        loggerInfoAfterThrowing(joinPoint, error);
-    }
-
-    private void loggerInfoAfterThrowing(JoinPoint joinPoint, Throwable error) {
+    @AfterThrowing(pointcut = "execution(* com.project.*.*.*(..))", throwing = "error")
+    public void afterThrowingMethod(JoinPoint joinPoint, Throwable error) {
         log.error("Method execution failed: {}.{}", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName());
         log.error("Error: {}", error.getMessage());
     }

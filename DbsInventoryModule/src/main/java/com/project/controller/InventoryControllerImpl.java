@@ -1,20 +1,27 @@
 package com.project.controller;
 
-import com.project.dto.InventoryDTO;
+import java.util.List;
+
 import com.project.exception.*;
-import com.project.services.InventoryService;
+import com.project.models.Inventory;
+import com.project.repositories.InventoryRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
+import com.project.dto.InventoryDTO;
+import com.project.services.InventoryService;
 
 /** Implementation of InventoryController for managing inventory operations.
  */
@@ -29,6 +36,16 @@ public class InventoryControllerImpl implements InventoryController {
     public InventoryControllerImpl(InventoryService inventoryService){
         this.inventoryService = inventoryService;
     }
+
+
+
+    @Autowired
+    InventoryRepository inventoryRepository;
+
+    public int pages() {
+        return inventoryService.getNoOfPages();
+    }
+
 
     /**
      * {@inheritDoc}
@@ -138,9 +155,9 @@ public class InventoryControllerImpl implements InventoryController {
             @ApiResponse(responseCode = "404", description = "Book not found"),
             @ApiResponse(responseCode = "409", description = "Stock unavailable")
     })
-    public ResponseEntity<String> placeOrder(@RequestParam String bookID, @RequestParam int quantity) {
+    public ResponseEntity<String> canPlaceOrder(@RequestParam String bookID, @RequestParam int quantity) {
         try {
-            inventoryService.placeOrder(bookID, quantity);
+            inventoryService.canPlaceOrder(bookID, quantity);
             return ResponseEntity.ok("Order can be placed");
         } catch (BookNotFoundException e) {
             return ResponseEntity.status(404).body("Book not found");
