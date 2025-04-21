@@ -82,4 +82,8 @@ public interface ReviewController {
             @ApiResponse(responseCode = "201", description = "Review Delete created"),
     })
     ResponseEntity<Boolean> addToReviewDelete(ReviewDTO reviewDTO);
+
+    ResponseEntity<List<ReviewDTO>> getAllReviewsFromReviewDelete() throws ServiceUnavailableException;
+
+    ResponseEntity<Boolean> removeFromReviewDelete(long userId, long reviewDeleteId) throws UserNotFoundException, ReviewNotFoundException, UserNotAuthorizedException, ServiceUnavailableException;
 }

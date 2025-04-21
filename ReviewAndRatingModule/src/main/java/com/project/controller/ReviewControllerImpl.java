@@ -34,12 +34,6 @@ public class ReviewControllerImpl implements ReviewController {
     }
 
     /**
-     * Retrieves success for redirecting.
-     *
-     * @return ResponseEntity containing the status OK.
-     */
-
-    /**
      * Retrieves a review by its ID.
      *
      * @param reviewId The ID of the review to retrieve.
@@ -178,9 +172,22 @@ public class ReviewControllerImpl implements ReviewController {
         return response;
     }
 
+
     @Override
-    @PostMapping("/delete")
+    @GetMapping("/review_delete")
+    public ResponseEntity<List<ReviewDTO>> getAllReviewsFromReviewDelete() throws ServiceUnavailableException {
+        return ResponseEntity.ok(reviewService.retrieveAllReviewDeletes());
+    }
+
+    @Override
+    @PostMapping("/review_delete")
     public ResponseEntity<Boolean> addToReviewDelete(@RequestBody ReviewDTO reviewDTO) {
         return ResponseEntity.ok(reviewService.addToReviewDelete(reviewDTO.getReviewId(), reviewDTO.getReason()));
+    }
+
+    @Override
+    @DeleteMapping("/review_delete/{userId}/{reviewId}")
+    public ResponseEntity<Boolean> removeFromReviewDelete(@PathVariable long userId, @PathVariable long reviewId) throws UserNotFoundException, ReviewNotFoundException, UserNotAuthorizedException, ServiceUnavailableException {
+        return ResponseEntity.ok(reviewService.deleteReviewDelete(userId, reviewId));
     }
 }

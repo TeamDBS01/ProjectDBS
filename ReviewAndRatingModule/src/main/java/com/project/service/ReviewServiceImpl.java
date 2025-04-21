@@ -168,6 +168,36 @@ public class ReviewServiceImpl implements ReviewService {
         return true;
     }
 
+    /**
+     * Deletes a reviewDelete.
+     *
+     * @param userId   the ID of the user requesting the deletion
+     * @param reviewId the ID of the reviewDelete to delete
+     * @return true if the review was deleted successfully
+     * @throws ReviewNotFoundException     if the review is not found
+     * @throws UserNotFoundException       if the user is not found
+     * @throws UserNotAuthorizedException  if the user is not authorized to delete the review
+     * @throws ServiceUnavailableException if user service is unavailable
+     */
+    @Override
+    public boolean deleteReviewDelete(long userId, long reviewId) throws ReviewNotFoundException, ServiceUnavailableException, UserNotFoundException, UserNotAuthorizedException {
+        Optional<ReviewDelete> optionalReviewDelete = reviewDeleteRepository.findByReviewId(reviewId);
+        if (optionalReviewDelete.isEmpty()) {
+            throw new ReviewNotFoundException(STR."Review with ID: \{reviewId} Not found in Review Delete!");
+        }
+        ResponseEntity<UserDTO> responseUser = userClient.getUserById(userId);
+        if (responseUser.getBody() == null || responseUser.getBody().getUserId() == null) {
+            throw new UserNotFoundException(STR."User with ID: \{userId} Not Found");
+        }
+        UserDTO userDTO = responseUser.getBody();
+        if (userDTO.getRole() == Role.ADMIN) {
+            reviewDeleteRepository.deleteByReviewId(reviewId);
+        } else {
+            throw new UserNotAuthorizedException(STR."User \{userDTO.getName()} with ID: \{userDTO.getUserId()} is not an Admin to delete this ReviewDelete");
+        }
+        return true;
+    }
+
     @Override
     public List<Float> retrieveAverageRating(String bookId) {
         List<Review> reviewList = reviewRepository.findByBookId(bookId);
@@ -257,9 +287,28 @@ public class ReviewServiceImpl implements ReviewService {
             }
             ReviewDTO reviewDTO = mapper.map(review1, ReviewDTO.class);
             reviewDTO.setUserName(userClient.getUserById(reviewDTO.getUserId()).getBody().getName());
-            BookDTO map = (BookDTO) bookClient.getBookById(reviewDTO.getBookId()).getBody();
-            reviewDTO.setBookTitle(map.getTitle());
+            BookDTO bookDTO = bookClient.getBookById(reviewDTO.getBookId()).getBody();
+            reviewDTO.setBookTitle(bookDTO.getTitle());
             reviewDTOList.add(reviewDTO);
+        }
+        return reviewDTOList;
+    }
+
+    /**
+     * Retrieves a list of reviews, which are in review delete repository.
+     *
+     * @return the list of reviews as ReviewDTOs
+     */
+    @Override
+    public List<ReviewDTO> retrieveAllReviewDeletes() throws ServiceUnavailableException {
+        List<ReviewDTO> reviewDTOList = new ArrayList<>();
+        List<ReviewDelete> reviewDeleteList = reviewDeleteRepository.findAll();
+        for (ReviewDelete reviewDelete: reviewDeleteList) {
+            try {
+                ReviewDTO reviewDTO = retrieveReviewById(reviewDelete.getReviewId());
+                reviewDTO.setReason(reviewDelete.getReason());
+                reviewDTOList.add(reviewDTO);
+            } catch (ReviewNotFoundException _) {}
         }
         return reviewDTOList;
     }
@@ -278,7 +327,8 @@ public class ReviewServiceImpl implements ReviewService {
             throw new ReviewNotFoundException(STR."Review with ID: \{reviewId} Not Found");
         }
         ReviewDTO reviewDTO = mapper.map(review.get(), ReviewDTO.class);
-        reviewDTO.setUserName(userClient.getUserById(reviewId).getBody().getName());
+        reviewDTO.setUserName(userClient.getUserById(review.get().getUserId()).getBody().getName());
+        reviewDTO.setBookTitle(bookClient.getBookById(review.get().getBookId()).getBody().getTitle());
         return reviewDTO;
     }
 }
