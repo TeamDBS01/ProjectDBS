@@ -27,18 +27,11 @@ import java.util.List;
 public class ReviewControllerImpl implements ReviewController {
 
     private final ReviewService reviewService;
-//    private static final String LOCATION = "/dbs/review/ok";
 
     @Autowired
     public ReviewControllerImpl(ReviewService reviewService) {
         this.reviewService = reviewService;
     }
-
-    /**
-     * Retrieves success for redirecting.
-     *
-     * @return ResponseEntity containing the status OK.
-     */
 
     /**
      * Retrieves a review by its ID.
@@ -50,16 +43,8 @@ public class ReviewControllerImpl implements ReviewController {
     @GetMapping("/{reviewId}")
     public ResponseEntity<ReviewDTO> getReviewById(@Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId) throws ReviewNotFoundException, ServiceUnavailableException {
         ResponseEntity<ReviewDTO> response;
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.add(HttpHeaders.LOCATION, LOCATION);
-//        headers.add.LOCATION, LOCATION);
-//        try {
         ReviewDTO reviewDTO = reviewService.retrieveReviewById(reviewId);
-//        response = new ResponseEntity<>(reviewDTO, headers, HttpStatus.OK);
         response = new ResponseEntity<>(reviewDTO, HttpStatus.OK);
-//        } catch (ReviewNotFoundException e) {
-//            response = new ResponseEntity<>(new ReviewDTO(e.toString()), headers, HttpStatus.NOT_FOUND);
-//        }
         return response;
     }
 
@@ -72,17 +57,8 @@ public class ReviewControllerImpl implements ReviewController {
     @GetMapping("/all")
     public ResponseEntity<List<ReviewDTO>> getAllReviews() throws ReviewNotFoundException, ServiceUnavailableException {
         ResponseEntity<List<ReviewDTO>> response;
-//        try {
         List<ReviewDTO> reviewDTOList = reviewService.retrieveAllReviews();
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.add(HttpHeaders.LOCATION, LOCATION);
-//        response = new ResponseEntity<>(reviewDTOList, headers, HttpStatus.OK);
         response = new ResponseEntity<>(reviewDTOList, HttpStatus.OK);
-//        } catch (ReviewNotFoundException e) {
-//            response = new ResponseEntity<>(List.of(new ReviewDTO("No Reviews Found!")), HttpStatus.NOT_FOUND);
-//        } catch (Exception e) {
-//            response = new ResponseEntity<>(List.of(new ReviewDTO("No Reviews Found!")), HttpStatus.BAD_REQUEST);
-//        }
         return response;
     }
 
@@ -96,17 +72,8 @@ public class ReviewControllerImpl implements ReviewController {
     @GetMapping("/user/{userId}")
     public ResponseEntity<List<ReviewDTO>> getAllReviewsByUserId(@Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId) throws ReviewNotFoundException, ServiceUnavailableException {
         ResponseEntity<List<ReviewDTO>> response;
-//        try {
         List<ReviewDTO> reviewDTOList = reviewService.retrieveAllReviewsByUserId(userId);
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.add(HttpHeaders.LOCATION, LOCATION);
-//        response = new ResponseEntity<>(reviewDTOList, headers, HttpStatus.OK);
         response = new ResponseEntity<>(reviewDTOList, HttpStatus.OK);
-//        } catch (ReviewNotFoundException e) {
-//            response = new ResponseEntity<>(List.of(new ReviewDTO(STR."No Reviews with User ID: \{userId} Found!")), HttpStatus.NOT_FOUND);
-//        } catch (Exception e) {
-//            response = new ResponseEntity<>(List.of(new ReviewDTO("No Reviews Found!")), HttpStatus.BAD_REQUEST);
-//        }
         return response;
     }
 
@@ -120,17 +87,8 @@ public class ReviewControllerImpl implements ReviewController {
     @GetMapping("/book/{bookId}")
     public ResponseEntity<List<ReviewDTO>> getAllReviewsByBookId(@Size(min = 3, max = 20, message = "{com.project.dto.ReviewDTO.bookid.size}") @PathVariable String bookId) throws ReviewNotFoundException, ServiceUnavailableException {
         ResponseEntity<List<ReviewDTO>> response;
-//        try {
         List<ReviewDTO> reviewDTOList = reviewService.retrieveAllReviewsByBookId(bookId);
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.add(HttpHeaders.LOCATION, LOCATION);
-//        response = new ResponseEntity<>(reviewDTOList, headers, HttpStatus.OK);
         response = new ResponseEntity<>(reviewDTOList, HttpStatus.OK);
-//        } catch (ReviewNotFoundException e) {
-//            response = new ResponseEntity<>(List.of(new ReviewDTO(STR."No Reviews with Book ID: \{bookId} Found!")), HttpStatus.NOT_FOUND);
-//        } catch (Exception e) {
-//            response = new ResponseEntity<>(List.of(new ReviewDTO("No Reviews Found!")), HttpStatus.BAD_REQUEST);
-//        }
         return response;
     }
 
@@ -159,14 +117,8 @@ public class ReviewControllerImpl implements ReviewController {
             @Size(min = 3, max = 20, message = "{com.project.dto.ReviewDTO.bookid.size}") @RequestParam String bookId) throws UserNotFoundException, BookNotFoundException, ServiceUnavailableException {
         ResponseEntity<ReviewDTO> response;
         ReviewDTO reviewDTO = null;
-//        try {
         reviewDTO = reviewService.addReview(rating, comment, userId, bookId);
         response = new ResponseEntity<>(reviewDTO, HttpStatus.CREATED);
-//        } catch (UserNotFoundException | BookNotFoundException e) {
-//            response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.NOT_FOUND);
-//        } catch (Exception e) {
-//            response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.BAD_GATEWAY);
-//        }
         return response;
     }
 
@@ -180,14 +132,8 @@ public class ReviewControllerImpl implements ReviewController {
     @PostMapping("/add")
     public ResponseEntity<ReviewDTO> addReview(@Valid @RequestBody ReviewDTO reviewDTO) throws UserNotFoundException, BookNotFoundException, ServiceUnavailableException {
         ResponseEntity<ReviewDTO> response;
-//        try {
         reviewDTO = reviewService.addReview(reviewDTO.getRating(), reviewDTO.getComment(), reviewDTO.getUserId(), reviewDTO.getBookId());
         response = new ResponseEntity<>(reviewDTO, HttpStatus.CREATED);
-//        } catch (UserNotFoundException | BookNotFoundException e) {
-//            response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.NOT_FOUND);
-//        } catch (Exception e) {
-//            response = new ResponseEntity<>(new ReviewDTO(e.getMessage()), HttpStatus.BAD_GATEWAY);
-//        }
         return response;
     }
 
@@ -204,24 +150,8 @@ public class ReviewControllerImpl implements ReviewController {
             @Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId,
             @Valid @RequestBody ReviewDTO reviewDTO) throws ServiceUnavailableException, UserNotFoundException, UserNotAuthorizedException, IDMismatchException, BookNotFoundException {
         ResponseEntity<ReviewDTO> response;
-//        try {
         reviewDTO = reviewService.updateReview(userId, reviewDTO);
         response = new ResponseEntity<>(reviewDTO, HttpStatus.OK);
-//        } catch (UserNotAuthorizedException | UserNotFoundException | IDMismatchException | BookNotFoundException |
-//                 IllegalArgumentException e) {
-//            response = switch (e) {
-//                case UserNotAuthorizedException ex ->
-//                        new ResponseEntity<>(new ReviewDTO(STR."Exception: \{ex.getClass().getSimpleName()}, Message: \{ex.getMessage()}"), HttpStatus.UNAUTHORIZED);
-//                case UserNotFoundException ex ->
-//                        new ResponseEntity<>(new ReviewDTO(STR."Exception: \{ex.getClass().getSimpleName()}, Message: \{ex.getMessage()}"), HttpStatus.NOT_FOUND);
-//                case BookNotFoundException ex ->
-//                        new ResponseEntity<>(new ReviewDTO(STR."Exception: \{ex.getClass().getSimpleName()}, Message: \{ex.getMessage()}"), HttpStatus.NOT_FOUND);
-//                case IDMismatchException ex ->
-//                        new ResponseEntity<>(new ReviewDTO(STR."Exception: \{ex.getClass().getSimpleName()}, Message: \{ex.getMessage()}"), HttpStatus.NOT_ACCEPTABLE);
-//                default ->
-//                        new ResponseEntity<>(new ReviewDTO(STR."Exception: \{e.getClass().getSimpleName()}, Message: \{e.getMessage()}"), HttpStatus.BAD_REQUEST);
-//            };
-//        }
         return response;
     }
 
@@ -238,28 +168,26 @@ public class ReviewControllerImpl implements ReviewController {
             @Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId,
             @Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId) throws UserNotFoundException, ReviewNotFoundException, UserNotAuthorizedException, ServiceUnavailableException {
         ResponseEntity<Boolean> response = new ResponseEntity<>(true, HttpStatus.OK);
-//        try {
         reviewService.deleteReview(userId, reviewId);
-//        if (!reviewService.deleteReview(userId, reviewId)) {
-//            response = new ResponseEntity<>(false, HttpStatus.NOT_MODIFIED);
-//        }
-//        } catch (ReviewNotFoundException | UserNotAuthorizedException | UserNotFoundException |
-//                 IllegalArgumentException e) {
-//            response = switch (e) {
-//                case ReviewNotFoundException ex -> new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
-//                case UserNotFoundException ex -> new ResponseEntity<>(false, HttpStatus.NOT_FOUND);
-//                case UserNotAuthorizedException ex -> new ResponseEntity<>(false, HttpStatus.UNAUTHORIZED);
-//                default -> new ResponseEntity<>(false, HttpStatus.BAD_REQUEST);
-//            };
-//        } catch (Exception e) {
-//            response = new ResponseEntity<>(false, HttpStatus.NOT_MODIFIED);
-//        }
         return response;
     }
 
+
     @Override
-    @PostMapping("/delete")
+    @GetMapping("/review_delete")
+    public ResponseEntity<List<ReviewDTO>> getAllReviewsFromReviewDelete() throws ServiceUnavailableException {
+        return ResponseEntity.ok(reviewService.retrieveAllReviewDeletes());
+    }
+
+    @Override
+    @PostMapping("/review_delete")
     public ResponseEntity<Boolean> addToReviewDelete(@RequestBody ReviewDTO reviewDTO) {
         return ResponseEntity.ok(reviewService.addToReviewDelete(reviewDTO.getReviewId(), reviewDTO.getReason()));
+    }
+
+    @Override
+    @DeleteMapping("/review_delete/{userId}/{reviewId}")
+    public ResponseEntity<Boolean> removeFromReviewDelete(@PathVariable long userId, @PathVariable long reviewId) throws UserNotFoundException, ReviewNotFoundException, UserNotAuthorizedException, ServiceUnavailableException {
+        return ResponseEntity.ok(reviewService.deleteReviewDelete(userId, reviewId));
     }
 }
