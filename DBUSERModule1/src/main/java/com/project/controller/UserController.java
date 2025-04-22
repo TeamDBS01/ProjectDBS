@@ -200,12 +200,12 @@ public class UserController {
     }
 
 
-    @PostMapping("/forgot-password")
+    @PostMapping("/auth/forgot-password")
     public ResponseEntity<String> forgotPassword(@RequestBody ForgotPasswordRequestDTO forgotPasswordRequestDTO) {
         return usersService.processForgotPasswordRequest(forgotPasswordRequestDTO);
     }
 
-    @PostMapping("/reset-password")
+    @PostMapping("/auth/reset-password")
     public ResponseEntity<String> resetPassword(@RequestBody ResetPasswordRequestDTO resetPasswordRequestDTO) {
         return usersService.resetPassword(resetPasswordRequestDTO);
     }

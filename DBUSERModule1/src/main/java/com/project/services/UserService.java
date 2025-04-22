@@ -48,6 +48,12 @@ import java.io.IOException;
 import com.maxmind.geoip2.DatabaseReader;
 import com.maxmind.geoip2.model.CityResponse;
 import com.maxmind.geoip2.record.Location;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 public class UserService {
@@ -355,15 +361,7 @@ public class UserService {
         UserDTO userDTO = new UserDTO();
 
         try {
-            // The Gateway will have already verified the token and the user's identity
-            // You can extract user identifier (e.g., email or userId) from headers
-            // set by the Gateway if needed. For simplicity, we'll assume the Gateway
-            // ensures the request is for the authenticated user's profile.
 
-            // For example, the Gateway might set a header "X-Authenticated-User-Email"
-
-            // In this simplified scenario, we'll just extract the email from the token
-            // that was passed (Gateway already validated it).
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(secretKey)
                     .build()
@@ -667,38 +665,72 @@ public class UserService {
         mailSender.send(message);
     }
 
-//    private String getLocationInfo() {
-//        try {
-//            String ipAddress = getClientIpAddress();
-//            if (ipAddress != null && !ipAddress.equals("0:0:0:0:0:0:0:1") && !ipAddress.equals("127.0.0.1")) {
-//
-//                InetAddress inetAddress = InetAddress.getByName(ipAddress);
-//                return "IP Address: " + ipAddress + " (Approximate location based on IP)";
+
+//private String getLocationInfo() {
+//    try {
+//        String ipAddress = getClientIpAddress();
+//        if (ipAddress != null && !ipAddress.equals("0:0:0:0:0:0:0:1") && !ipAddress.equals("127.0.0.1")) {
+//            InetAddress ip = InetAddress.getByName(ipAddress);
+//            CityResponse response = databaseReader.city(ip);
+//            if (response != null && response.getCity() != null && response.getCity().getName() != null) {
+//                return response.getCity().getName();
 //            } else {
-//                return "localhost";
+//                return "Could not determine specific location.";
 //            }
-//        } catch (UnknownHostException e) {
-//            return "Could not determine location.";
+//        } else {
+//            return "localhost";
 //        }
+//    } catch (Exception e) {
+//        return "Error determining location.";
 //    }
-private String getLocationInfo() {
-    try {
-        String ipAddress = getClientIpAddress();
-        if (ipAddress != null && !ipAddress.equals("0:0:0:0:0:0:0:1") && !ipAddress.equals("127.0.0.1")) {
-            InetAddress ip = InetAddress.getByName(ipAddress);
-            CityResponse response = databaseReader.city(ip);
-            if (response != null && response.getCity() != null && response.getCity().getName() != null) {
-                return response.getCity().getName();
+//}
+//
+//    private String getClientIpAddress() {
+//        HttpServletRequest currentRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
+//        String ip = currentRequest.getHeader("X-Forwarded-For");
+//        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+//            ip = currentRequest.getHeader("Proxy-Client-IP");
+//        }
+//        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+//            ip = currentRequest.getHeader("WL-Proxy-Client-IP");
+//        }
+//        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+//            ip = currentRequest.getRemoteAddr();
+//        }
+//        return ip;
+//    }
+
+    private String getLocationInfo() {
+        try {
+            String ipAddress = getClientIpAddress();
+            if (ipAddress != null && !ipAddress.equals("0:0:0:0:0:0:0:1") && !ipAddress.equals("127.0.0.1")) {
+                // Use a free IP geolocation API
+                String apiUrl = "http://ip-api.com/json/" + ipAddress;
+                HttpClient client = HttpClient.newHttpClient();
+                HttpRequest request = HttpRequest.newBuilder()
+                        .uri(URI.create(apiUrl))
+                        .build();
+                HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+                if (response.statusCode() == 200) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    JsonNode root = mapper.readTree(response.body());
+                    String city = root.path("city").asText();
+                    if (!city.isEmpty()) {
+                        return city;
+                    } else {
+                        return "Could not determine specific location via API.";
+                    }
+                } else {
+                    return "Error fetching location from API: " + response.statusCode();
+                }
             } else {
-                return "Could not determine specific location.";
+                return "PUNE IN(Local Host)";
             }
-        } else {
-            return "localhost";
+        } catch (IOException | InterruptedException e) {
+            return "Error determining location via API: " + e.getMessage();
         }
-    } catch (Exception e) {
-        return "Error determining location.";
     }
-}
 
     private String getClientIpAddress() {
         HttpServletRequest currentRequest = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
