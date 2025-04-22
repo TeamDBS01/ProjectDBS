@@ -162,6 +162,13 @@ public class ReviewServiceImpl implements ReviewService {
         return true;
     }
 
+    /**
+     * Adds a review to reviewDelete.
+     *
+     * @param reviewId the ID of the review to delete
+     * @param reason   the reason for adding review to the review_delete table
+     * @return true if the review_delete was added to table review_delete successfully
+     */
     @Override
     public boolean addToReviewDelete(long reviewId, String reason) {
         reviewDeleteRepository.save(new ReviewDelete(reviewId, reason));
@@ -198,6 +205,12 @@ public class ReviewServiceImpl implements ReviewService {
         return true;
     }
 
+    /**
+     * Calculates average rating of a book with its ID.
+     *
+     * @param bookId   the ID of the book for which average needs to be calculated
+     * @return the average rating of that book with its count
+     */
     @Override
     public List<Float> retrieveAverageRating(String bookId) {
         List<Review> reviewList = reviewRepository.findByBookId(bookId);

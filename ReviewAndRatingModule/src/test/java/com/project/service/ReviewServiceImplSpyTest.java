@@ -295,8 +295,8 @@ class ReviewServiceImplSpyTest {
         ReviewDTO actual = null;
         long reviewId = reviewRepository.save(review).getReviewId();
         reviewDTO.setReviewId(reviewId);
-        reviewDTO.setBookTitle(null);
-        reviewDTO.setUserName("Nandini Pillai");
+        reviewDTO.setBookTitle("The Great Programmer's Guide");
+        reviewDTO.setUserName("Varun");
         try {
             actual = reviewService.retrieveReviewById(reviewId);
         } catch (ReviewNotFoundException | ServiceUnavailableException e) {
