@@ -78,8 +78,8 @@ class ReviewControllerImplSpyTest {
     @DisplayName("GetReviewById-Positive")
     void test_getReviewById_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         ResponseEntity<ReviewDTO> response = reviewController.getReviewById(REVIEW_ID);
-        reviewDTO.setBookTitle(null);
-        reviewDTO.setUserName(null);
+        reviewDTO.setBookTitle("Effective Java");
+        reviewDTO.setUserName("Varun");
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(reviewDTO, response.getBody());
     }
