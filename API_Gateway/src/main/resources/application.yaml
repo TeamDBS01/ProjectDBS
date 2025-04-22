@@ -32,10 +32,19 @@ spring:
           uri: lb://BOOK-SERVICE
           predicates:
             - Path=/dbs/books/**
-        - id: user-service
+        - id: user-service-login
           uri: lb://USER-SERVICE
           predicates:
-            - Path=/dbs/user/**
+              - Path=/dbs/user/auth/**
+        - id: user-service-protected
+          uri: lb://USER-SERVICE
+          predicates:
+              - Path=/dbs/user/**
+          filters:
+           - name: AuthenticationFilter
+           - name: AuthorizationFilter
+             args:
+               roles: CUSTOMER,ADMIN
         - id: order-service
           uri: lb://ORDER-SERVICE
           predicates:

@@ -11,7 +11,7 @@ import java.security.Key;
 @Component
 public class JwtUtil {
 
-    // IMPORTANT: This MUST be the same secret key used in your user-service
+
     private final byte[] secretKeyBytes = "9rxnn8Qd700nlHOxDqsfnEAmwRAuPHzi".getBytes(StandardCharsets.UTF_8);
     private final Key secretKey = Keys.hmacShaKeyFor(secretKeyBytes);
 
