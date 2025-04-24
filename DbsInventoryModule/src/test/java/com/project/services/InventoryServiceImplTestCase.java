@@ -1,12 +1,16 @@
 package com.project.services;
 
-import com.project.dto.InventoryDTO;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
 import com.project.exception.BookAlreadyExistsException;
-import com.project.exception.BookNotFoundException;
 import com.project.exception.InsufficientInventoryException;
-import com.project.exception.OutOfStockException;
-import com.project.models.Inventory;
-import com.project.repositories.InventoryRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -17,6 +21,12 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+
+import com.project.dto.InventoryDTO;
+import com.project.exception.BookNotFoundException;
+import com.project.exception.OutOfStockException;
+import com.project.models.Inventory;
+import com.project.repositories.InventoryRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -24,15 +34,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.mail.MailException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(SpringExtension.class)
 @ExtendWith(MockitoExtension.class)
@@ -255,21 +256,21 @@ class InventoryServiceImplTestCase {
 
     @Test
     @DisplayName("Place Order - Positive Case")
-    void testPlaceOrder_Positive() throws BookNotFoundException {
+    void testCanPlaceOrder_Positive() throws BookNotFoundException {
         String bookID = "B1001";
         int quantityToOrder = 5;
         inventory.setBook_Id(bookID);
         inventory.setQuantity(100);
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.of(inventory));
 
-        inventoryServiceImpl.placeOrder(bookID, quantityToOrder);
+        inventoryServiceImpl.canPlaceOrder(bookID, quantityToOrder);
 
-        assertDoesNotThrow(() -> inventoryServiceImpl.placeOrder("B1001", 10));
+        assertDoesNotThrow(() -> inventoryServiceImpl.canPlaceOrder("B1001", 10));
     }
 
     @Test
     @DisplayName("Place Order - Out of Stock Case")
-    void testPlaceOrder_OutOfStock() {
+    void testCanPlaceOrder_OutOfStock() {
         String bookID = "B1001";
         int quantityToOrder = 15;
         inventory.setBook_Id(bookID);
@@ -277,19 +278,19 @@ class InventoryServiceImplTestCase {
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.of(inventory));
 
         assertThrows(OutOfStockException.class, () -> {
-            inventoryServiceImpl.placeOrder(bookID, quantityToOrder);
+            inventoryServiceImpl.canPlaceOrder(bookID, quantityToOrder);
         });
     }
 
     @Test
     @DisplayName("Place Order - Book Not Found Case")
-    void testPlaceOrder_BookNotFound() {
+    void testCanPlaceOrder_BookNotFound() {
         String bookID = "B1001";
         int quantityToOrder = 5;
         when(inventoryRepository.findByBookId(bookID)).thenReturn(Optional.empty());
 
         assertThrows(BookNotFoundException.class, () -> {
-            inventoryServiceImpl.placeOrder(bookID, quantityToOrder);
+            inventoryServiceImpl.canPlaceOrder(bookID, quantityToOrder);
         });
     }
 

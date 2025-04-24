@@ -10,9 +10,12 @@ public interface ReviewService {
 	List<ReviewDTO> retrieveAllReviews() throws ReviewNotFoundException, ServiceUnavailableException;
 	List<ReviewDTO> retrieveAllReviewsByUserId(long userId) throws ReviewNotFoundException, ServiceUnavailableException;
 	List<ReviewDTO> retrieveAllReviewsByBookId(String bookId) throws ReviewNotFoundException, ServiceUnavailableException;
+	List<ReviewDTO> retrieveAllReviewDeletes() throws ServiceUnavailableException;
 	ReviewDTO retrieveReviewById(long reviewId) throws ReviewNotFoundException, ServiceUnavailableException;
 	ReviewDTO addReview(float rating, String comment, long userId, String bookId) throws UserNotFoundException, BookNotFoundException, ServiceUnavailableException;
 	ReviewDTO updateReview(long userId, ReviewDTO reviewDTO) throws UserNotAuthorizedException, UserNotFoundException, IDMismatchException, BookNotFoundException, ServiceUnavailableException;
 	boolean deleteReview(long userId, long reviewId) throws ReviewNotFoundException, UserNotFoundException, UserNotAuthorizedException, ServiceUnavailableException;
-	float retrieveAverageRating(String bookId) throws ReviewNotFoundException, ServiceUnavailableException;
+	boolean addToReviewDelete(long reviewId, String reason);
+	boolean deleteReviewDelete(long userId, long reviewDeleteId) throws ReviewNotFoundException, ServiceUnavailableException, UserNotFoundException, UserNotAuthorizedException;
+	List<Float> retrieveAverageRating(String bookId);
 }

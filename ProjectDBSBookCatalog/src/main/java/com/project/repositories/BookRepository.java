@@ -1,6 +1,5 @@
 package com.project.repositories;
 
-import com.project.models.Author;
 import com.project.models.Book;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -10,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.util.annotation.NonNullApi;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +26,10 @@ public interface BookRepository extends JpaRepository<Book, String> {
 	 * @param pageable the pagination information
 	 * @return a page of books
 	 */
+
 	Page<Book> findAll(Pageable pageable);
+
+
 	/**
 	 * Retrieves books by category name.
 	 *
@@ -101,4 +104,27 @@ public interface BookRepository extends JpaRepository<Book, String> {
 
 	@Query("SELECT c.categoryName FROM Category c WHERE c.categoryID = :categoryID")
 	Optional<String> findCategoryNameById(@Param("categoryID") int categoryID);
+
+	@Query("SELECT a.authorID FROM Author a WHERE a.authorName = :authorName")
+	Integer findAuthorIDByName(@Param("authorName") String authorName);
+
+	@Query("SELECT c.categoryID FROM Category c WHERE c.categoryName = :categoryName")
+	Integer findCategoryIDByName(@Param("categoryName") String categoryName);
+
+
+	@Query(value="INSERT INTO Author (author_name) VALUES (:authorName)", nativeQuery = true)
+	@Modifying
+	int insertNewAuthor(@Param("authorName") String authorName);
+
+	@Query(value="INSERT INTO Category (category_name) VALUES (:categoryName)", nativeQuery = true)
+	@Modifying
+	int insertNewCategory(@Param("categoryName") String categoryName);
+
+	@Query("SELECT DISTINCT a.authorName FROM Author a")
+	List<String> findDistinctAuthors();
+
+	@Query("SELECT DISTINCT c.categoryName from Category c")
+	List<String> findDistinctCategories();
+
+
 }

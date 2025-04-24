@@ -28,15 +28,24 @@ public class Book {
 	private int categoryID;
 
 	@Lob
-	@Column(name="cover_img")
+	@Column(name="cover_img", columnDefinition = "LONGBLOB")
 	private byte[] coverImage;
 
-	public Book(String bookID, String title, double price, int authorID, int categoryID) {
+	@Column(name="description")
+	private String description;
+
+	@Lob
+	@Column(name="sample_chapter")
+	private byte[] sampleChapter;
+
+
+	public Book(String bookID, String title, double price, int authorID, int categoryID, String description) {
 		this.bookID = bookID;
 		this.title = title;
 		this.price = price;
 		this.authorID = authorID;
 		this.categoryID = categoryID;
+		this.description=description;
 	}
 }
 

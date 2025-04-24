@@ -23,17 +23,21 @@ public class BookDTO {
 	@Positive(message ="{com.project.BookDTO.price.positive}")
 	private double price;
 
-    @Positive(message ="{com.project.BookDTO.authorID.positive}")
+//    @Positive(message ="{com.project.BookDTO.authorID.positive}")
 	private int authorID;
 
-	@Positive(message ="{com.project.BookDTO.categoryID.positive}")
+//	@Positive(message ="{com.project.BookDTO.categoryID.positive}")
 	private int categoryID;
 
 	private byte[] coverImage;
+
+	private byte[] sampleChapter;
 
 	private String base64img;
 
 	private String authorName;
 
 	private String categoryName;
+
+	private String description;
 }

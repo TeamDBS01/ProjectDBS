@@ -35,6 +35,6 @@ public class Inventory {
      * The ID of the book.
      * Cannot be null.
      */
-    @Column(name = "book_Id", nullable = false)
+    @Column(name = "book_Id", nullable = false, unique = true)
     private String book_Id;
 }

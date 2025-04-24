@@ -8,6 +8,8 @@ import com.project.exception.*;
 import com.project.feign.BookClient;
 import com.project.feign.UserClient;
 import com.project.models.Review;
+import com.project.models.ReviewDelete;
+import com.project.repositories.ReviewDeleteRepository;
 import com.project.repositories.ReviewRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -20,6 +22,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,8 +34,17 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceImplTest {
 
+    private static final float RATING = 4.5f;
+    private static final String COMMENT = "Great Book";
+    private static final long USER_ID = 11L;
+    private static final String BOOK_ID = "ISBN-1212";
+    private static final String USER_NAME = "Sabarish";
+    private static final String BOOK_TITLE = "Guide to Java";
+    private static final String REASON = "Spam";
     @Mock
     private ReviewRepository reviewRepository;
+    @Mock
+    private ReviewDeleteRepository reviewDeleteRepository;
     @Mock
     private ModelMapper mapper;
     @Mock
@@ -41,20 +53,15 @@ class ReviewServiceImplTest {
     private BookClient bookClient;
     @InjectMocks
     private ReviewServiceImpl reviewService;
-
     private Review review;
     private ReviewDTO reviewDTO;
     private UserDTO userDTO;
     private BookDTO bookDTO;
-    private static final float RATING = 4.5f;
-    private static final String COMMENT = "Great Book";
-    private static final long USER_ID = 2;
-    private static final String BOOK_ID = "ISBN-GRT2BK";
 
     @BeforeEach
     void setup() {
         review = new Review(1L, RATING, COMMENT, USER_ID, BOOK_ID);
-        reviewDTO = new ReviewDTO(1L, RATING, COMMENT, USER_ID, BOOK_ID);
+        reviewDTO = new ReviewDTO(1L, RATING, COMMENT, USER_ID, BOOK_ID, USER_NAME, BOOK_TITLE);
         userDTO = new UserDTO(12L, "name", "mail", "pass", Role.CUSTOMER);
         bookDTO = new BookDTO("ISBN-1212", "title", 2000, 9L, 8, 7);
     }
@@ -144,7 +151,7 @@ class ReviewServiceImplTest {
         try {
             actual = reviewService.updateReview(USER_ID, reviewDTO);
         } catch (UserNotFoundException | UserNotAuthorizedException | IDMismatchException | BookNotFoundException e) {
-             fail(STR."Error thrown in updateReview: \{e}");
+            fail(STR."Error thrown in updateReview: \{e}");
         }
         verify(userClient).getUserById(USER_ID);
         verify(bookClient).getBookById(any());
@@ -248,7 +255,8 @@ class ReviewServiceImplTest {
     @DisplayName("UpdateReview-Negative-BookNotFound")
     void test_updateReview_negative_bookNotFound() throws ServiceUnavailableException {
         when(userClient.getUserById(USER_ID)).thenReturn(new ResponseEntity<>(userDTO, HttpStatus.OK));
-        when(bookClient.getBookById(any())).thenAnswer(invocation -> new ResponseEntity<>(new BookDTO(), HttpStatus.NO_CONTENT));        assertThrows(
+        when(bookClient.getBookById(any())).thenAnswer(invocation -> new ResponseEntity<>(new BookDTO(), HttpStatus.NO_CONTENT));
+        assertThrows(
                 BookNotFoundException.class,
                 () -> reviewService.updateReview(USER_ID, reviewDTO),
                 "Error not thrown in UpdateReview for Book Not Found");
@@ -371,15 +379,31 @@ class ReviewServiceImplTest {
         verify(reviewRepository).findById(review.getReviewId());
     }
 
+
+    @Test
+    @DisplayName("DeleteReview-Positive-SameUser")
+    void test_addToReview_positive() {
+        when(reviewDeleteRepository.save(any())).thenReturn(new ReviewDelete());
+        boolean actual = true;
+        reviewService.addToReviewDelete(review.getReviewId(), COMMENT);
+        verify(reviewDeleteRepository).save(any());
+        assertTrue(actual);
+    }
+
+
     @Test
     @DisplayName("RetrieveAllReviews-Positive-WithOneReview")
-    void test_retrieveAllReviews_positive_withOneReview() {
+    void test_retrieveAllReviews_positive_withOneReview() throws ServiceUnavailableException {
         when(reviewRepository.findAll()).thenAnswer((invocation -> List.of(review)));
         when(mapper.map(any(), any())).thenAnswer((invocation -> reviewDTO));
+        when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(any())).thenReturn(ResponseEntity.ok(bookDTO));
         try {
             List<ReviewDTO> actual = reviewService.retrieveAllReviews();
             verify(reviewRepository).findAll();
             verify(mapper).map(review, ReviewDTO.class);
+            verify(userClient).getUserById(any());
+            verify(bookClient).getBookById(any());
             assertEquals(1, actual.size());
         } catch (ReviewNotFoundException | ServiceUnavailableException e) {
             fail(STR."Error thrown in RetrieveAll \{e.getMessage()}");
@@ -388,12 +412,14 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("RetrieveAllReviews-Positive-WithMultipleReviews")
-    void test_retrieveAllReviews_positive_withMultipleReviews() {
+    void test_retrieveAllReviews_positive_withMultipleReviews() throws ServiceUnavailableException {
         Review review1 = new Review(0.1f, "Worst Book", 4, "ISBN-NTGD");
-        ReviewDTO reviewDTO1 = new ReviewDTO(0L, 0.1f, "Worst Book", 4L, "ISBN-NTGD");
+        ReviewDTO reviewDTO1 = new ReviewDTO(0L, 0.1f, "Worst Book", 4L, "ISBN-NTGD", USER_NAME, BOOK_TITLE);
         when(reviewRepository.findAll()).thenAnswer((invocation -> List.of(review, review1)));
         when(mapper.map(review, ReviewDTO.class)).thenAnswer((invocation -> reviewDTO));
         when(mapper.map(review1, ReviewDTO.class)).thenAnswer((invocation -> reviewDTO1));
+        when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(any())).thenReturn(ResponseEntity.ok(bookDTO));
         List<ReviewDTO> actual = null, expected = List.of(reviewDTO, reviewDTO1);
         try {
             actual = reviewService.retrieveAllReviews();
@@ -402,6 +428,8 @@ class ReviewServiceImplTest {
         }
         verify(reviewRepository).findAll();
         verify(mapper).map(review, ReviewDTO.class);
+        verify(userClient, times(2)).getUserById(any());
+        verify(bookClient, times(2)).getBookById(any());
         assertEquals(expected, actual);
     }
 
@@ -418,17 +446,21 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("RetrieveReviewById-Positive")
-    void test_retrieveReviewById_positive() {
+    void test_retrieveReviewById_positive() throws ServiceUnavailableException {
         when(reviewRepository.findById(any())).thenReturn(Optional.of(review));
         when(mapper.map(review, ReviewDTO.class)).thenReturn(reviewDTO);
+        when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(any())).thenReturn(ResponseEntity.ok(bookDTO));
         ReviewDTO actual = null;
         try {
             actual = reviewService.retrieveReviewById(review.getReviewId());
-        } catch (ReviewNotFoundException | ServiceUnavailableException e) {
+        } catch (ReviewNotFoundException e) {
             fail(STR."Error thrown in RetrieveById \{e.getMessage()}");
         }
         verify(reviewRepository).findById(any());
         verify(mapper).map(review, ReviewDTO.class);
+        verify(userClient).getUserById(any());
+        verify(bookClient).getBookById(any());
         assertEquals(reviewDTO, actual);
     }
 
@@ -445,12 +477,14 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("RetrieveAllReviewsByUserId-Positive")
-    void test_retrieveAllReviewsByUserId_positive() {
-        Review review2 = new Review(3f, "Good Content", 2L, "ISBN-3080");
-        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", 2L, "ISBN-3080");
+    void test_retrieveAllReviewsByUserId_positive() throws ServiceUnavailableException {
+        Review review2 = new Review(3f, "Good Content", USER_ID, BOOK_ID);
+        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", USER_ID, BOOK_ID, USER_NAME, BOOK_TITLE);
         when(reviewRepository.findByUserId(USER_ID)).thenReturn(List.of(review, review2));
         when(mapper.map(review, ReviewDTO.class)).thenReturn(reviewDTO);
         when(mapper.map(review2, ReviewDTO.class)).thenReturn(reviewDTO2);
+        when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(any())).thenReturn(ResponseEntity.ok(bookDTO));
         List<ReviewDTO> actual = null;
         List<ReviewDTO> expected = List.of(reviewDTO, reviewDTO2);
         try {
@@ -460,6 +494,7 @@ class ReviewServiceImplTest {
         }
         verify(reviewRepository).findByUserId(USER_ID);
         verify(mapper, times(2)).map(any(), any());
+        verify(userClient, times(2)).getUserById(any());
         assertEquals(expected, actual);
     }
 
@@ -475,12 +510,15 @@ class ReviewServiceImplTest {
 
     @Test
     @DisplayName("RetrieveAllReviewsByBookId-Positive")
-    void test_retrieveAllReviewsByBookId_positive() {
-        Review review2 = new Review(3f, "Good Content", 2L, "ISBN-3080");
-        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", 2L, "ISBN-3080");
+    void test_retrieveAllReviewsByBookId_positive() throws ServiceUnavailableException {
+        Review review2 = new Review(3f, "Good Content", USER_ID, BOOK_ID);
+        ReviewDTO reviewDTO2 = new ReviewDTO(review2.getReviewId(), 3f, "Good Content", USER_ID, BOOK_ID, USER_NAME, BOOK_TITLE);
         when(reviewRepository.findByBookId(BOOK_ID)).thenReturn(List.of(review, review2));
+        when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(any())).thenReturn(ResponseEntity.ok(bookDTO));
         when(mapper.map(review, ReviewDTO.class)).thenReturn(reviewDTO);
         when(mapper.map(review2, ReviewDTO.class)).thenReturn(reviewDTO2);
+
         List<ReviewDTO> actual = null;
         List<ReviewDTO> expected = List.of(reviewDTO, reviewDTO2);
         try {
@@ -490,6 +528,7 @@ class ReviewServiceImplTest {
         }
         verify(reviewRepository).findByBookId(BOOK_ID);
         verify(mapper, times(2)).map(any(), any());
+        verify(userClient, times(2)).getUserById(USER_ID);
         assertEquals(expected, actual);
     }
 
@@ -502,4 +541,102 @@ class ReviewServiceImplTest {
                 "Error not thrown in RetrieveAllReviewsByBookId");
         verify(reviewRepository).findByBookId(BOOK_ID);
     }
+
+    @Test
+    @DisplayName("RetrieveAverageRating-Positive")
+    void test_retrieveAverageRating_postive() {
+        when(reviewRepository.findByBookId(any())).thenReturn(List.of(review));
+        List<Float> expected = new ArrayList<>(List.of(review.getRating(), 1f));
+        List<Float> actual = reviewService.retrieveAverageRating(BOOK_ID);
+        assertEquals(expected, actual);
+        verify(reviewRepository).findByBookId(any());
+    }
+
+    @Test
+    @DisplayName("AddToReviewDelete-Positive")
+    void test_addToReviewDelete_positive() {
+        when(reviewDeleteRepository.save(any(ReviewDelete.class))).thenReturn(new ReviewDelete());
+
+        boolean result = reviewService.addToReviewDelete(1L, "Reason");
+
+        verify(reviewDeleteRepository).save(any(ReviewDelete.class));
+        assertTrue(result);
+    }
+    @Test
+    @DisplayName("RetrieveAllReviewDeletes-Positive")
+    void test_retrieveAllReviewDeletes_positive() throws ServiceUnavailableException {
+        ReviewDelete reviewDelete = new ReviewDelete(1L, REASON);
+        when(reviewDeleteRepository.findAll()).thenReturn(List.of(reviewDelete));
+
+        when(reviewRepository.findById(any())).thenReturn(Optional.of(review));
+        when(mapper.map(review, ReviewDTO.class)).thenReturn(reviewDTO);
+        when(userClient.getUserById(any())).thenReturn(ResponseEntity.ok(userDTO));
+        when(bookClient.getBookById(any())).thenReturn(ResponseEntity.ok(bookDTO));
+
+        List<ReviewDTO> result = reviewService.retrieveAllReviewDeletes();
+
+        verify(reviewDeleteRepository).findAll();
+        assertEquals(1, result.size());
+        assertEquals(reviewDTO, result.getFirst());
+    }
+
+    @Test
+    @DisplayName("RetrieveAllReviewDeletes-Negative")
+    void test_retrieveAllReviewDeletes_negative() throws ServiceUnavailableException {
+        when(reviewDeleteRepository.findAll()).thenReturn(List.of());
+
+        List<ReviewDTO> result = reviewService.retrieveAllReviewDeletes();
+
+        verify(reviewDeleteRepository).findAll();
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("DeleteReviewDelete-Positive")
+    void test_deleteReviewDelete_positive() throws ServiceUnavailableException, UserNotFoundException, ReviewNotFoundException, UserNotAuthorizedException {
+        when(reviewDeleteRepository.findByReviewId(anyLong())).thenReturn(Optional.of(new ReviewDelete()));
+        when(userClient.getUserById(anyLong())).thenReturn(ResponseEntity.ok(new UserDTO(USER_ID, "Name", "mail", "pass", Role.ADMIN)));
+
+        boolean result = reviewService.deleteReviewDelete(USER_ID, 1L);
+
+        verify(reviewDeleteRepository).findByReviewId(anyLong());
+        verify(userClient).getUserById(anyLong());
+        verify(reviewDeleteRepository).deleteByReviewId(anyLong());
+        assertTrue(result);
+    }
+
+    @Test
+    @DisplayName("DeleteReviewDelete-Negative-ReviewNotFound")
+    void test_deleteReviewDelete_negative_reviewNotFound() {
+        when(reviewDeleteRepository.findByReviewId(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(ReviewNotFoundException.class, () -> reviewService.deleteReviewDelete(1L, 1L));
+
+        verify(reviewDeleteRepository).findByReviewId(anyLong());
+    }
+
+    @Test
+    @DisplayName("DeleteReviewDelete-Negative-UserNotFound")
+    void test_deleteReviewDelete_negative_userNotFound() throws ServiceUnavailableException {
+        when(reviewDeleteRepository.findByReviewId(anyLong())).thenReturn(Optional.of(new ReviewDelete()));
+        when(userClient.getUserById(anyLong())).thenReturn(ResponseEntity.ok(null));
+
+        assertThrows(UserNotFoundException.class, () -> reviewService.deleteReviewDelete(1L, 1L));
+
+        verify(reviewDeleteRepository).findByReviewId(anyLong());
+        verify(userClient).getUserById(anyLong());
+    }
+
+    @Test
+    @DisplayName("DeleteReviewDelete-Negative-UserNotAuthorized")
+    void test_deleteReviewDelete_negative_userNotAuthorized() throws ServiceUnavailableException {
+        when(reviewDeleteRepository.findByReviewId(anyLong())).thenReturn(Optional.of(new ReviewDelete()));
+        when(userClient.getUserById(anyLong())).thenReturn(ResponseEntity.ok(new UserDTO(1L, "Name", "mail", "pass", Role.CUSTOMER)));
+
+        assertThrows(UserNotAuthorizedException.class, () -> reviewService.deleteReviewDelete(1L, 1L));
+
+        verify(reviewDeleteRepository).findByReviewId(anyLong());
+        verify(userClient).getUserById(anyLong());
+    }
+
 }
