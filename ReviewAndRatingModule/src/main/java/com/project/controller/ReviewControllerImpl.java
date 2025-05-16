@@ -92,6 +92,13 @@ public class ReviewControllerImpl implements ReviewController {
         return response;
     }
 
+
+    /**
+     * Retrieves average rating of a specific book ID.
+     *
+     * @param bookId The ID of the book whose average rating to retrieve.
+     * @return ResponseEntity containing a list of average rating and number of reviews.
+     */
     @Override
     @GetMapping("/book/average/{bookId}")
     public ResponseEntity<List<Float>> getAverageByBookId(@PathVariable String bookId) {
@@ -109,12 +116,7 @@ public class ReviewControllerImpl implements ReviewController {
      */
     @Override
     @PostMapping("/add/values")
-    public ResponseEntity<ReviewDTO> addReview(
-            @DecimalMin(value = "0.1", message = "{com.project.dto.ReviewDTO.rating.min}")
-            @Max(value = 5, message = "{com.project.dto.ReviewDTO.rating.max}") @RequestParam float rating,
-            @Size(min = 3, max = 2000, message = "{com.project.dto.ReviewDTO.comment.size}") @Pattern(regexp = "^\\D.*", message = "{com.project.dto.ReviewDTO.comment.start}") @RequestParam String comment,
-            @Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @RequestParam long userId,
-            @Size(min = 3, max = 20, message = "{com.project.dto.ReviewDTO.bookid.size}") @RequestParam String bookId) throws UserNotFoundException, BookNotFoundException, ServiceUnavailableException {
+    public ResponseEntity<ReviewDTO> addReview(@DecimalMin(value = "0.1", message = "{com.project.dto.ReviewDTO.rating.min}") @Max(value = 5, message = "{com.project.dto.ReviewDTO.rating.max}") @RequestParam float rating, @Size(min = 3, max = 2000, message = "{com.project.dto.ReviewDTO.comment.size}") @Pattern(regexp = "^\\D.*", message = "{com.project.dto.ReviewDTO.comment.start}") @RequestParam String comment, @Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @RequestParam long userId, @Size(min = 3, max = 20, message = "{com.project.dto.ReviewDTO.bookid.size}") @RequestParam String bookId) throws UserNotFoundException, BookNotFoundException, ServiceUnavailableException {
         ResponseEntity<ReviewDTO> response;
         ReviewDTO reviewDTO = null;
         reviewDTO = reviewService.addReview(rating, comment, userId, bookId);
@@ -146,9 +148,7 @@ public class ReviewControllerImpl implements ReviewController {
      */
     @Override
     @PutMapping("/update/{userId}")
-    public ResponseEntity<ReviewDTO> updateReview(
-            @Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId,
-            @Valid @RequestBody ReviewDTO reviewDTO) throws ServiceUnavailableException, UserNotFoundException, UserNotAuthorizedException, IDMismatchException, BookNotFoundException {
+    public ResponseEntity<ReviewDTO> updateReview(@Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId, @Valid @RequestBody ReviewDTO reviewDTO) throws ServiceUnavailableException, UserNotFoundException, UserNotAuthorizedException, IDMismatchException, BookNotFoundException {
         ResponseEntity<ReviewDTO> response;
         reviewDTO = reviewService.updateReview(userId, reviewDTO);
         response = new ResponseEntity<>(reviewDTO, HttpStatus.OK);
@@ -164,14 +164,19 @@ public class ReviewControllerImpl implements ReviewController {
      */
     @Override
     @DeleteMapping("/delete/{userId}/{reviewId}")
-    public ResponseEntity<Boolean> deleteReview(
-            @Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId,
-            @Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId) throws UserNotFoundException, ReviewNotFoundException, UserNotAuthorizedException, ServiceUnavailableException {
+    public ResponseEntity<Boolean> deleteReview(@Min(value = 1, message = "{com.project.dto.ReviewDTO.userid.min}") @PathVariable long userId, @Min(value = 1, message = "{com.project.dto.ReviewDTO.reviewid.min}") @PathVariable long reviewId) throws UserNotFoundException, ReviewNotFoundException, UserNotAuthorizedException, ServiceUnavailableException {
         ResponseEntity<Boolean> response = new ResponseEntity<>(true, HttpStatus.OK);
         reviewService.deleteReview(userId, reviewId);
         return response;
     }
 
+
+    /**
+     * Retrieves all reviews marked for deletion.
+     *
+     * @return ResponseEntity containing a list of ReviewDTO objects.
+     * @throws ServiceUnavailableException if the service is unavailable.
+     */
 
     @Override
     @GetMapping("/review_delete")
@@ -179,11 +184,32 @@ public class ReviewControllerImpl implements ReviewController {
         return ResponseEntity.ok(reviewService.retrieveAllReviewDeletes());
     }
 
+
+    /**
+     * Adds a review to the delete list.
+     *
+     * @param reviewDTO The ReviewDTO object containing review details.
+     * @return ResponseEntity containing a boolean indicating success.
+     */
+
     @Override
     @PostMapping("/review_delete")
     public ResponseEntity<Boolean> addToReviewDelete(@RequestBody ReviewDTO reviewDTO) {
         return ResponseEntity.ok(reviewService.addToReviewDelete(reviewDTO.getReviewId(), reviewDTO.getReason()));
     }
+
+
+    /**
+     * Removes a review from the delete list.
+     *
+     * @param userId The ID of the user.
+     * @param reviewId The ID of the review.
+     * @return ResponseEntity containing a boolean indicating success.
+     * @throws UserNotFoundException if the user is not found.
+     * @throws ReviewNotFoundException if the review is not found.
+     * @throws UserNotAuthorizedException if the user is not authorized.
+     * @throws ServiceUnavailableException if the service is unavailable.
+     */
 
     @Override
     @DeleteMapping("/review_delete/{userId}/{reviewId}")

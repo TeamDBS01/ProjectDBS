@@ -78,8 +78,8 @@ class ReviewControllerImplSpyTest {
     @DisplayName("GetReviewById-Positive")
     void test_getReviewById_positive() throws ReviewNotFoundException, ServiceUnavailableException {
         ResponseEntity<ReviewDTO> response = reviewController.getReviewById(REVIEW_ID);
-        reviewDTO.setBookTitle("Effective Java");
-        reviewDTO.setUserName("Varun");
+        reviewDTO.setBookTitle(BOOK_TITLE);
+        reviewDTO.setUserName(USER_NAME);
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(reviewDTO, response.getBody());
     }
@@ -197,7 +197,7 @@ class ReviewControllerImplSpyTest {
 
             String jsonData = mvcResult.getResponse().getContentAsString();
             String actual = JsonPath.parse(jsonData).read("comment");
-            assertEquals("Best book!", actual);
+            assertEquals(COMMENT, actual);
         } catch (Exception e) {
             fail(STR."Exception thrown \{e.toString()}");
         }

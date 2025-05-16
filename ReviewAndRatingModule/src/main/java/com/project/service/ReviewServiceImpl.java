@@ -264,19 +264,7 @@ public class ReviewServiceImpl implements ReviewService {
         if (reviewList.isEmpty()) {
             throw new ReviewNotFoundException(STR."No Reviews with User ID: \{userId} Found!");
         }
-        List<ReviewDTO> reviewDTOList = new ArrayList<>();
-        List<Long> reviewDeleteList = reviewDeleteRepository.findAllReviewIds();
-        for (Review review1 : reviewList) {
-            if (reviewDeleteList.contains(review1.getReviewId())) {
-                continue;
-            }
-            ReviewDTO reviewDTO = mapper.map(review1, ReviewDTO.class);
-            reviewDTO.setUserName(userClient.getUserById(reviewDTO.getUserId()).getBody().getName());
-            BookDTO bookDTO = bookClient.getBookById(reviewDTO.getBookId()).getBody();
-            reviewDTO.setBookTitle(bookDTO.getTitle());
-            reviewDTOList.add(reviewDTO);
-        }
-        return reviewDTOList;
+        return getReviewDTOS(reviewList);
     }
 
     /**
@@ -292,6 +280,10 @@ public class ReviewServiceImpl implements ReviewService {
         if (reviewList.isEmpty()) {
             throw new ReviewNotFoundException(STR."No Reviews with Book ID: \{bookId} Found!");
         }
+        return getReviewDTOS(reviewList);
+    }
+
+    private List<ReviewDTO> getReviewDTOS(List<Review> reviewList) throws ServiceUnavailableException {
         List<ReviewDTO> reviewDTOList = new ArrayList<>();
         List<Long> reviewDeleteList = reviewDeleteRepository.findAllReviewIds();
         for (Review review1 : reviewList) {

@@ -108,7 +108,6 @@ class ReviewServiceImplSpyTest {
         assertEquals(reviewDTO, actual);
     }
 
-
     @Test
     @DisplayName("UpdateReview-Positive-Admin")
     void test_updateReview_positive_admin() {
@@ -169,7 +168,6 @@ class ReviewServiceImplSpyTest {
                 () -> reviewService.updateReview(USER_ID, reviewDTO),
                 "Error not thrown in UpdateReview for Book ID Mismatch");
     }
-
 
     @Test
     @DisplayName("UpdateReview-Negative-BookNotFound")
@@ -295,8 +293,8 @@ class ReviewServiceImplSpyTest {
         ReviewDTO actual = null;
         long reviewId = reviewRepository.save(review).getReviewId();
         reviewDTO.setReviewId(reviewId);
-        reviewDTO.setBookTitle("The Great Programmer's Guide");
-        reviewDTO.setUserName("Varun");
+        reviewDTO.setBookTitle(BOOK_TITLE);
+        reviewDTO.setUserName(USER_NAME);
         try {
             actual = reviewService.retrieveReviewById(reviewId);
         } catch (ReviewNotFoundException | ServiceUnavailableException e) {
