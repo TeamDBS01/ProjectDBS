@@ -64,3 +64,9 @@ management:
         web:
             exposure:
                 include: "*"
+
+info:
+    app:
+        name: Review and Rating Module Rest API
+        version: 1.0.0
+        description: Review and Rating Module Rest API
