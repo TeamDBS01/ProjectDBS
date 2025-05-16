@@ -1,0 +1,146 @@
+CREATE TABLE category (
+    category_id INT PRIMARY KEY,
+    category_name VARCHAR(100) NOT NULL
+);
+ 
+INSERT INTO category (category_id, category_name) VALUES
+(1, 'Children'),
+(2, 'Fiction'),
+(3, 'Drama'),
+(4, 'Mystery'),
+(5, 'Guide');
+
+CREATE TABLE author (
+    author_id INT PRIMARY KEY,
+    author_name VARCHAR(100) NOT NULL
+);
+INSERT INTO author (author_id, author_name) VALUES
+(101, 'Joshua Bloch'),
+(102, 'Robert C. Martin'),
+(106, 'J.K. Rowling'),
+(107, 'Harper Lee'),
+(108, 'William Shakespeare'),
+(109, 'Dan Brown'),
+(105, 'Craig Walls');
+ 
+CREATE TABLE book (
+    book_id VARCHAR(10) PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    price DOUBLE NOT NULL,
+    author_id INT,
+    category_id INT,
+    cover_img BLOB,
+    description TEXT,
+    FOREIGN KEY (author_id) REFERENCES author(author_id),
+    FOREIGN KEY (category_id) REFERENCES category(category_id)
+);
+ 
+INSERT INTO book (book_id, title, price, author_id, category_id, cover_img, description) VALUES
+('B001', 'Effective Java', 45.99, 101, 5, NULL, 'A comprehensive guide to best practices in Java programming.'),
+('B002', 'Clean Code', 39.99, 102, 5, NULL, 'A handbook of agile software craftsmanship.'),
+('B003', 'Harry Potter and the Sorcerer\'s Stone', 29.99, 104, 1, NULL, 'A young wizard\'s journey begins.'),
+('B004', 'To Kill a Mockingbird', 34.99, 105, 2, NULL, 'A novel about racial injustice in the Deep South.'),
+('B005', 'Hamlet', 24.99, 106, 3, NULL, 'A tragedy by William Shakespeare.'),
+('B006', 'The Da Vinci Code', 39.99, 107, 4, NULL, 'A mystery thriller novel.'),
+('B007', 'Spring in Action', 44.99, 103, 5, NULL, 'Covers Spring framework fundamentals and advanced topics.'),
+('B008', 'The Cat in The Hat', 19.99, 108, 1, NULL, "A children's book by Dr. Seuss.");
+
+INSERT INTO user_details (id, user_id, name, phone_number, profile_image)
+VALUES
+(1, '22', 'Varun', '1234567890', ''),
+(2, '23', 'Varun', '2345678901', ''),
+(3, '24', 'daya', '3456789012', ''),
+(4, '25', 'daya', '4567890123', ''),
+(5, '26', 'Priya Sharma', '5678901234', ''),
+(6, '27', 'Amit Patel', '6789012345', ''),
+(7, '28', 'Sneha Verma', '7890123456', ''),
+(8, '29', 'Rajesh Kumar', '8901234567', ''),
+(9, '30', 'Deepika Singh', '9012345678', ''),
+(10, '31', 'Kunal Gupta', '0123456789', ''),
+(11, '32', 'Shweta Reddy', '1234509876', ''),
+(12, '33', 'Vikram Joshi', '2345609876', ''),
+(13, '34', 'Anjali Nair', '3456709876', ''),
+(14, '35', 'Suresh Menon', '4567809876', ''),
+(15, '36', 'Gaurav Chauhan', '5678909876', ''),
+(16, '37', 'Nandini Pillai', '6789009876', '');
+
+-- IDs :- 
+varuntest@example.com - password123
+priya.sharma@sample.org - securePass456
+amit.patel@work.net - complexPwd!789
+sneha_verma@email.co.in - mySecretCode
+rajesh.kumar@domain.com - strongPassword
+deepika.singh@service.io - anotherSecure1
+kunal.gupta@online.biz - test12345
+shweta.reddy@provider.net - safeAndSound
+vikram_joshi@mail.org - uniqueString
+anjali.nair@sample.com - passwordPolicy
+suresh.menon@workplace.in - hardToGuess
+meera_desai@email-service.com - easyToRememberButSecure
+gaurav.chauhan@network.co - aBitMoreComplex
+nandini.pillai@web.net - thisIsMyPassword
+rohit.verma@internet.org - superSecretKey
+
+ CREATE TABLE Review (
+    review_id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    rating FLOAT NOT NULL,
+    comment VARCHAR(500) NOT NULL,
+    user_id BIGINT NOT NULL,
+    book_id VARCHAR(20) NOT NULL
+);
+
+INSERT INTO Review (review_id, rating, comment, user_id, book_id) VALUES
+(1, 5.0, 'A magical journey filled with wonder.', 22, 'B003'),
+(2, 4.5, 'Harry Potter is a masterpiece!', 23, 'B003'),
+(3, 4.0, 'A fantastic world with great storytelling.', 26, 'B003'),
+(4, 3.5, 'Good but a bit slow at times.', 27, 'B003'),
+(5, 5.0, 'Absolutely loved the characters!', 28, 'B003'),
+
+-- Book with **No Reviews** (B008)
+
+(8, 4.0, 'Essential guide for writing clean Java code.', 31, 'B001'),
+(9, 3.5, 'Good principles, but needs real-world examples.', 32, 'B001'),
+(10, 4.5, 'Best practices in Java explained well!', 33, 'B001'),
+(11, 5.0, 'A great book for software engineers.', 34, 'B002'),
+(12, 3.5, 'Concepts are solid but quite dense.', 35, 'B002'),
+(14, 4.5, 'An excellent book for mastering Spring.', 37, 'B007'),
+(17, 4.5, 'A compelling novel with deep themes.', 26, 'B004'),
+(18, 4.0, 'Classic literature at its best!', 27, 'B004'),
+(19, 3.5, 'Took time to get invested, but worth the read.', 28, 'B004'),
+(20, 4.5, 'Shakespeare’s brilliance shines through.', 29, 'B005'),
+(21, 4.0, 'Hamlet’s philosophical depth is intriguing.', 30, 'B005'),
+(22, 3.5, 'A tragedy that requires deep reading.', 31, 'B005'),
+(24, 4.5, 'Dan Brown never disappoints.', 33, 'B006'),
+(25, 3.5, 'Exciting, but the historical parts felt stretched.', 34, 'B006'),
+(26, 5.0, 'One of the most engaging mystery novels.', 35, 'B006'),
+(29, 3.5, 'Decent coverage, but a bit technical.', 22, 'B001'),
+(32, 3.5, 'Useful concepts but can be difficult to grasp.', 27, 'B002'),
+(34, 4.5, 'A must-read for all ages!', 29, 'B003'),
+(35, 4.0, 'Loved the characters and plot!', 30, 'B003'),
+(36, 3.5, 'Interesting but predictable.', 31, 'B003'),
+(39, 4.0, 'Solid lessons for developers.', 34, 'B001'),
+(40, 5.0, 'Java mastery starts here!', 35, 'B001'),
+-- Harsh criticism for various books
+(42, 1.5, 'Confusing and poorly structured.', 23, 'B002'),
+(45, 2.0, 'Too slow-paced, couldn’t stay engaged.', 28, 'B005'),
+(46, 1.0, 'Felt like a waste of time reading this.', 29, 'B006'),
+(47, 0.5, 'Absolutely horrible, worst book I’ve read.', 30, 'B007'),
+(49, 2.5, 'Some useful content, but mostly repetitive.', 32, 'B002'),
+(50, 2.0, 'Lacks depth, just a bunch of surface-level points.', 33, 'B004'),
+(51, 1.5, 'Could not connect with any characters.', 34, 'B005'),
+(52, 1.0, 'Boring story, had to force myself to finish.', 35, 'B006'),
+(53, 0.5, 'Disappointing, didn’t feel thrilling at all.', 36, 'B007'),
+(55, 1.5, 'Not useful for experienced developers.', 22, 'B002'),
+(56, 2.5, 'Had a few good moments, but overall lacked depth.', 23, 'B004'),
+(57, 1.0, 'The main plot twist was predictable.', 26, 'B006'),
+(58, 0.5, 'A total letdown, I regret buying it.', 27, 'B007'),
+(59, 2.0, 'The execution of ideas was poor.', 28, 'B001'),
+(60, 1.5, 'Overexplained simple concepts.', 29, 'B002'),
+(61, 1.0, 'Felt more like an essay than a novel.', 30, 'B004'),
+(63, 2.5, 'Started off well but lost momentum.', 32, 'B006'),
+(64, 1.5, 'I wanted to like this book, but I couldn’t.', 33, 'B007'),
+(66, 0.5, 'Sloppy writing, felt unfinished.', 35, 'B002'),
+(67, 1.5, 'Extremely cliché and uninspired.', 36, 'B004'),
+(68, 1.0, 'Found many factual errors, very frustrating.', 37, 'B005'),
+(69, 2.5, 'A few good moments, but mostly dull.', 22, 'B006'),
+(70, 1.0, 'Too long, should have been half the length.', 23, 'B007'); 
